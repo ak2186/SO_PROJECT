@@ -1,0 +1,196 @@
+"""
+Prescription Controller
+Handles prescription management
+"""
+
+from fastapi import HTTPException
+from datetime import datetime
+from typing import Optional
+from bson import ObjectId
+from app.config.database import Database
+from app.models.prescription import PrescriptionCreate
+
+
+async def create_prescription(provider_id: str, data: PrescriptionCreate):
+    """Provider creates a prescription for a patient"""
+    db = Database.get_db()
+
+    # Check patient exists
+    patient = await db.users.find_one({"_id": ObjectId(data.patient_id)})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    if patient["role"] != "patient":
+        raise HTTPException(status_code=400, detail="Selected user is not a patient")
+
+    prescription = {
+        "patient_id": data.patient_id,
+        "provider_id": provider_id,
+        "medication_name": data.medication_name,
+        "dosage": data.dosage,
+        "frequency": data.frequency,
+        "duration": data.duration,
+        "notes": data.notes,
+        "status": "active",
+        "refills_allowed": data.refills_allowed,
+        "refills_used": 0,
+        "refill_requests": [],
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+
+    result = await db.prescriptions.insert_one(prescription)
+    prescription["_id"] = str(result.inserted_id)
+
+    return {
+        "message": "Prescription created successfully",
+        "prescription": prescription
+    }
+
+
+async def get_patient_prescriptions(
+    patient_id: str,
+    page: int = 1,
+    limit: int = 20,
+    status: Optional[str] = None,
+):
+    """Get all prescriptions for a patient"""
+    db = Database.get_db()
+
+    query = {"patient_id": patient_id}
+    if status:
+        query["status"] = status
+
+    skip = (page - 1) * limit
+    total = await db.prescriptions.count_documents(query)
+    cursor = db.prescriptions.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    prescriptions = await cursor.to_list(length=limit)
+
+    for p in prescriptions:
+        p["_id"] = str(p["_id"])
+        # Get provider name
+        provider = await db.users.find_one({"_id": ObjectId(p["provider_id"])})
+        if provider:
+            p["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit,
+        "prescriptions": prescriptions,
+    }
+
+
+async def get_provider_prescriptions(
+    provider_id: str,
+    page: int = 1,
+    limit: int = 20,
+    status: Optional[str] = None,
+):
+    """Get all prescriptions issued by a provider"""
+    db = Database.get_db()
+
+    query = {"provider_id": provider_id}
+    if status:
+        query["status"] = status
+
+    skip = (page - 1) * limit
+    total = await db.prescriptions.count_documents(query)
+    cursor = db.prescriptions.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    prescriptions = await cursor.to_list(length=limit)
+
+    for p in prescriptions:
+        p["_id"] = str(p["_id"])
+        # Get patient name
+        patient = await db.users.find_one({"_id": ObjectId(p["patient_id"])})
+        if patient:
+            p["patient_name"] = f"{patient['first_name']} {patient['last_name']}"
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit,
+        "prescriptions": prescriptions,
+    }
+
+
+async def request_refill(prescription_id: str, patient_id: str, notes: Optional[str] = None):
+    """Patient requests a refill"""
+    db = Database.get_db()
+
+    prescription = await db.prescriptions.find_one({"_id": ObjectId(prescription_id)})
+    if not prescription:
+        raise HTTPException(status_code=404, detail="Prescription not found")
+
+    if prescription["patient_id"] != patient_id:
+        raise HTTPException(status_code=403, detail="Not authorized to request refill for this prescription")
+
+    if prescription["status"] != "active":
+        raise HTTPException(status_code=400, detail="Prescription is not active")
+
+    if prescription["refills_used"] >= prescription["refills_allowed"]:
+        raise HTTPException(status_code=400, detail="No refills remaining")
+
+    # Check no pending refill request already exists
+    pending = [r for r in prescription["refill_requests"] if r["status"] == "pending"]
+    if pending:
+        raise HTTPException(status_code=400, detail="You already have a pending refill request")
+
+    refill_request = {
+        "id": str(ObjectId()),
+        "requested_at": datetime.utcnow(),
+        "status": "pending",
+        "notes": notes,
+        "reviewed_at": None,
+    }
+
+    await db.prescriptions.update_one(
+        {"_id": ObjectId(prescription_id)},
+        {"$push": {"refill_requests": refill_request}}
+    )
+
+    return {"message": "Refill request submitted successfully", "refill_request": refill_request}
+
+
+async def review_refill(prescription_id: str, refill_id: str, provider_id: str, action: str, notes: Optional[str] = None):
+    """Provider approves or denies a refill request"""
+    db = Database.get_db()
+
+    if action not in ["approved", "denied"]:
+        raise HTTPException(status_code=400, detail="Action must be 'approved' or 'denied'")
+
+    prescription = await db.prescriptions.find_one({"_id": ObjectId(prescription_id)})
+    if not prescription:
+        raise HTTPException(status_code=404, detail="Prescription not found")
+
+    if prescription["provider_id"] != provider_id:
+        raise HTTPException(status_code=403, detail="Not authorized to review this prescription")
+
+    # Find the refill request
+    refill = next((r for r in prescription["refill_requests"] if r["id"] == refill_id), None)
+    if not refill:
+        raise HTTPException(status_code=404, detail="Refill request not found")
+
+    if refill["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Refill request already reviewed")
+
+    # Update the refill request status
+    await db.prescriptions.update_one(
+        {"_id": ObjectId(prescription_id), "refill_requests.id": refill_id},
+        {"$set": {
+            "refill_requests.$.status": action,
+            "refill_requests.$.reviewed_at": datetime.utcnow(),
+            "refill_requests.$.notes": notes,
+            "updated_at": datetime.utcnow(),
+        }}
+    )
+
+    # If approved, increment refills used
+    if action == "approved":
+        await db.prescriptions.update_one(
+            {"_id": ObjectId(prescription_id)},
+            {"$inc": {"refills_used": 1}}
+        )
+
+    return {"message": f"Refill request {action} successfully"}

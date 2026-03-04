@@ -1,0 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap");
+
+body {
+  font-family: "DM Sans", sans-serif;
+  background: #060d1a;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+h1 {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+h2,
+h3 {
+  font-weight: 600;
+}

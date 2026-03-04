@@ -1,0 +1,301 @@
+.goal-dashboard {
+    background: #060d1a;
+    min-height: 100vh;
+    padding: 40px 0;
+  }
+  
+  .goal-dashboard-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  
+  .page-header {
+    margin-bottom: 36px;
+  }
+  
+  .page-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #3b82f6;
+    margin: 0 0 6px 0;
+  }
+  
+  .page-subtext {
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 14px;
+  }
+  
+  .goal-dashboard h1 {
+    font-size: 32px;
+    margin-bottom: 6px;
+    color: #f1f5f9;
+  }
+  
+  .goals-container {
+    width: 100%;
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .goal-card {
+    background: #0f172a;
+    border-radius: 14px;
+    padding: 28px;
+    flex: 1;
+    min-width: 420px;
+    min-height: 600px;
+    border: 1px solid #1e293b;
+    transition: 0.3s ease;
+  }
+  
+  .goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .goal-title {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+  }
+  
+  .icon-box {
+    border: 1px solid #1e293b;
+    padding: 12px;
+    border-radius: 10px;
+  }
+  
+  .goal-header h3 {
+    margin: 0;
+    color: #f1f5f9;
+  }
+  
+  .goal-header p {
+    margin: 2px 0 0;
+    color: #94a3b8;
+    font-size: 14px;
+  }
+  
+  .edit-btn {
+    background: #1e293b;
+    color: #94a3b8;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .progress-circle {
+    width: 235px;
+    height: 235px;
+    border-radius: 50%;
+    margin: 40px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: 0.8s ease;
+  }
+  
+  .inner-circle {
+    width: 200px;
+    height: 200px;
+    background: #0f172a;
+    color: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .inner-circle h2 {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 300;
+  }
+  
+  .inner-circle p {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+  }
+  
+  .numbers {
+    text-align: center;
+    color: #f1f5f9;
+    font-size: large;
+  }
+  
+  .numbers h2 {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 300;
+  }
+  
+  .numbers span {
+    color: #64748b;
+    font-weight: normal;
+    font-size: 25px;
+  }
+  
+  .success-text {
+    color: #10b981;
+    font-weight: 500;
+  }
+  
+  .week-box {
+    margin-top: 24px;
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid #1e293b;
+    background: #0b1220;
+    transition: 0.2s ease;
+  }
+  
+  .week-box:hover {
+    background: #111827;
+  }
+  
+  .week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .week-box p {
+    margin: 0;
+    color: gray;
+    font-size: 14px;
+  }
+  
+  .week-box h2 {
+    margin: 5px 0;
+    font-size: 35px;
+    font-weight: 300;
+  }
+  
+  .edit-section {
+    margin-top: 40px; /* brings it lower */
+    padding: 22px;
+    border-radius: 14px;
+    background: #0b1220;
+    border: 1px solid #1e293b;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  
+  .edit-section label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #cdd3db;
+    letter-spacing: 0.5px;
+  }
+  
+  .edit-section input {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #1e293b;
+    background: #111827;
+    color: #f1f5f9;
+    font-size: 14px;
+    transition: 0.2s ease;
+  }
+  
+  .edit-section input:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+  
+  .edit-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 12px;
+  }
+  
+  .save-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+  
+  .save-btn:hover {
+    background: #2563eb;
+  }
+  
+  .cancel-btn {
+    background: #1e293b;
+    color: #f1f5f9;
+    border: 1px solid #1e293b;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+  
+  .cancel-btn:hover {
+    background: #111827;
+  }
+  
+  .weekly-graph {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 160px;
+    width: 100%;
+  }
+  
+  .bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 12%;
+  }
+  
+  .bar {
+    width: 100%;
+    min-height: 8px;
+    border-radius: 6px 6px 0 0;
+    transition: 0.4s ease;
+  }
+  
+  .day-label {
+    font-size: 12px;
+    margin-top: 6px;
+    color: gray;
+  }
+  
+  .tab-animate > * {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.5s ease forwards;
+  }
+  
+  .tab-animate > *:nth-child(1) { animation-delay: 0.05s; }
+  .tab-animate > *:nth-child(2) { animation-delay: 0.1s; }
+  .tab-animate > *:nth-child(3) { animation-delay: 0.15s; }
+  .tab-animate > *:nth-child(4) { animation-delay: 0.2s; }
+  
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }  
