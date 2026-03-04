@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./goals.css";
 import { Pencil, Flame, Footprints, TrendingUp } from "lucide-react";
+import { biomarkersAPI } from "../../utils/api";
 
 const GoalCard = ({
   title,
@@ -165,6 +166,20 @@ const GoalCard = ({
 };
 
 export const Goals = () => {
+  const [currentSteps, setCurrentSteps] = useState(8459);
+  const [currentCalories, setCurrentCalories] = useState(1230);
+
+  useEffect(() => {
+    biomarkersAPI.getCurrent()
+      .then((data) => {
+        const r = data?.current_readings;
+        if (!r) return;
+        if (r.steps) setCurrentSteps(r.steps.value);
+        if (r.calories) setCurrentCalories(Math.round(r.calories.value));
+      })
+      .catch(() => { });
+  }, []);
+
   return (
     <div className="goal-dashboard page-enter">
       <div className="goal-dashboard-inner tab-animate">
@@ -179,7 +194,7 @@ export const Goals = () => {
           <GoalCard
             title="Steps Goal"
             subtitle="Daily Step Target"
-            current={8459}
+            current={currentSteps}
             initialTarget={10000}
             color="#6366f1"
             backgroundColor="rgba(99,102,241,0.1)"
@@ -191,7 +206,7 @@ export const Goals = () => {
           <GoalCard
             title="Calories Goal"
             subtitle="Daily Calorie Burn Target"
-            current={1230}
+            current={currentCalories}
             initialTarget={3000}
             color="#f97316"
             backgroundColor="rgba(249,115,22,0.1)"

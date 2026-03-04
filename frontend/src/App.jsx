@@ -15,6 +15,9 @@ import { Prescriptions } from "./pages/patient/Prescriptions";
 import { Assistant } from "./pages/patient/Assistant";
 import { Settings } from "./pages/patient/Settings";
 
+import { PatientVitals } from "./pages/patient/Vitals";
+
+import { PatientList } from "./pages/provider/PatientList";
 import { Appointments as ProviderAppointments } from "./pages/provider/Appointments";
 import { Prescriptions as ProviderPrescriptions } from "./pages/provider/Prescriptions";
 import { Settings as ProviderSettings } from "./pages/provider/Settings";
@@ -73,6 +76,12 @@ export default function App() {
 
           {/* Patient sub-pages */}
           <Route element={<Layout />}>
+            <Route path="/patient/vitals" element={
+              <ProtectedRoute role="patient">
+                <PatientVitals />
+              </ProtectedRoute>
+            }
+            />
             <Route path="/patient/goals" element={
               <ProtectedRoute role="patient">
                 <Goals />

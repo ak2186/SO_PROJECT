@@ -182,9 +182,8 @@ export const adminAPI = {
         request(`/admin/users/${userId}`, { method: "DELETE" }),
 
     changeRole: (userId, role) =>
-        request(`/admin/users/${userId}/role`, {
+        request(`/admin/users/${userId}/role?new_role=${encodeURIComponent(role)}`, {
             method: "PATCH",
-            body: JSON.stringify({ role }),
         }),
 
     createProvider: (data) =>
