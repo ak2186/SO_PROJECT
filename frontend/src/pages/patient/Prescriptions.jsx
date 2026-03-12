@@ -1,51 +1,47 @@
 import { useState, useEffect } from "react";
 import { prescriptionsAPI } from "../../utils/api";
 
-const initialPrescriptions = [
-  { id: 1, name: "Atorvastatin", dosage: "20mg", frequency: "Once daily", refillsLeft: 3, quantityLeft: 28, totalQuantity: 30, doctor: "Dr. Sarah Mitchell", prescribed: "Jan 15, 2026", category: "Cardiovascular", active: true },
-  { id: 2, name: "Metformin", dosage: "500mg", frequency: "Twice daily", refillsLeft: 5, quantityLeft: 12, totalQuantity: 60, doctor: "Dr. James Patel", prescribed: "Dec 20, 2025", category: "Diabetes", active: true },
-  { id: 3, name: "Lisinopril", dosage: "10mg", frequency: "Once daily", refillsLeft: 0, quantityLeft: 4, totalQuantity: 30, doctor: "Dr. Sarah Mitchell", prescribed: "Nov 10, 2025", category: "Blood Pressure", active: true },
-  { id: 4, name: "Amoxicillin", dosage: "250mg", frequency: "Three times daily", refillsLeft: 0, quantityLeft: 0, totalQuantity: 21, doctor: "Dr. James Patel", prescribed: "Oct 5, 2025", category: "Antibiotic", active: false },
-  { id: 5, name: "Cetirizine", dosage: "10mg", frequency: "Once daily (as needed)", refillsLeft: 2, quantityLeft: 20, totalQuantity: 30, doctor: "Dr. Lena Horowitz", prescribed: "Jan 28, 2026", category: "Allergy", active: true },
-];
-
 const categoryColors = {
   Cardiovascular: { bg: "rgba(59,130,246,0.12)", text: "#60a5fa", border: "rgba(59,130,246,0.25)" },
   Diabetes: { bg: "rgba(16,185,129,0.12)", text: "#34d399", border: "rgba(16,185,129,0.25)" },
   "Blood Pressure": { bg: "rgba(245,158,11,0.12)", text: "#fbbf24", border: "rgba(245,158,11,0.25)" },
   Antibiotic: { bg: "rgba(239,68,68,0.12)", text: "#f87171", border: "rgba(239,68,68,0.25)" },
   Allergy: { bg: "rgba(139,92,246,0.12)", text: "#a78bfa", border: "rgba(139,92,246,0.25)" },
+  General: { bg: "rgba(100,116,139,0.12)", text: "#94a3b8", border: "rgba(100,116,139,0.25)" },
 };
 
 export const Prescriptions = () => {
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
+  const [prescriptions, setPrescriptions] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [toast, setToast] = useState(null);
   const [refillRequested, setRefillRequested] = useState({});
+  const [loading, setLoading] = useState(true);
 
   // Fetch prescriptions from backend
   useEffect(() => {
     prescriptionsAPI.getMyPrescriptions()
       .then((data) => {
-        if (data && Array.isArray(data.prescriptions) && data.prescriptions.length > 0) {
+        if (data && Array.isArray(data.prescriptions)) {
           const mapped = data.prescriptions.map((rx) => ({
-            id: rx.id || rx._id,
-            name: rx.medication_name || rx.name || "Medication",
+            id: rx._id || rx.id,
+            name: rx.medication_name || "Medication",
             dosage: rx.dosage || "",
             frequency: rx.frequency || "",
-            refillsLeft: rx.refills_remaining ?? rx.refillsLeft ?? 0,
-            quantityLeft: rx.quantity_remaining ?? rx.quantityLeft ?? 0,
-            totalQuantity: rx.total_quantity ?? rx.totalQuantity ?? 30,
-            doctor: rx.provider_name || rx.doctor || "",
-            prescribed: rx.prescribed_date ? new Date(rx.prescribed_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : rx.prescribed || "",
+            refillsLeft: (rx.refills_allowed ?? 0) - (rx.refills_used ?? 0),
+            quantityLeft: rx.quantity_remaining ?? 0,
+            totalQuantity: rx.total_quantity ?? 30,
+            doctor: rx.provider_name || "",
+            prescribed: rx.created_at ? new Date(rx.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
             category: rx.category || "General",
-            active: rx.status === "active" || rx.active !== false,
+            active: rx.status === "active",
+            duration: rx.duration || "",
           }));
           setPrescriptions(mapped);
         }
       })
-      .catch(() => { }); // fallback to mock data
+      .catch(() => { })
+      .finally(() => setLoading(false));
   }, []);
 
   const showToast = (msg, type = "success") => {
@@ -147,8 +143,11 @@ export const Prescriptions = () => {
 
         {/* Prescription Cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !loading && (
             <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No prescriptions found.</div>
+          )}
+          {loading && (
+            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "16px" }}>Loading prescriptions...</div>
           )}
           {filtered.map((rx, i) => {
             const cat = categoryColors[rx.category] || categoryColors.Antibiotic;

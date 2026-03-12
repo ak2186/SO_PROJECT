@@ -9,10 +9,20 @@ from app.models.appointment import AppointmentCreate
 from app.middleware.auth_middleware import get_current_user_token, require_role
 from app.controllers.appointment_controller import (
     create_appointment, get_patient_appointments,
-    get_provider_appointments, cancel_appointment, confirm_appointment
+    get_provider_appointments, cancel_appointment, confirm_appointment,
+    list_providers
 )
 
 router = APIRouter(prefix="/api/appointments", tags=["Appointments"])
+
+
+@router.get("/providers")
+async def get_providers(
+    current_user=Depends(get_current_user_token),
+):
+    """List all available providers for booking"""
+    require_role(current_user, ["patient"])
+    return await list_providers()
 
 
 @router.post("")

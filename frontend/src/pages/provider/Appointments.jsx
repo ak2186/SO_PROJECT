@@ -1,53 +1,40 @@
 import { useState, useEffect } from "react";
 import { appointmentsAPI } from "../../utils/api";
 
-const todayAppts = [
-  { id: 1, patient: "Sarah Johnson", age: 34, time: "10:30 AM", reason: "Annual checkup", status: "confirmed", avatar: "SJ" },
-  { id: 2, patient: "Michael Chen", age: 52, time: "11:15 AM", reason: "Follow-up - Blood pressure", status: "confirmed", avatar: "MC" },
-  { id: 3, patient: "Emma Davis", age: 28, time: "2:00 PM", reason: "Consultation - Allergies", status: "pending", avatar: "ED" },
-  { id: 4, patient: "Robert Williams", age: 61, time: "3:30 PM", reason: "Diabetes management", status: "confirmed", avatar: "RW" },
-];
-
-const upcoming = [
-  { id: 5, patient: "Lisa Anderson", age: 45, date: "Feb 21, 2026", time: "9:00 AM", reason: "Physical exam", status: "confirmed", avatar: "LA" },
-  { id: 6, patient: "David Martinez", age: 38, date: "Feb 22, 2026", time: "1:30 PM", reason: "Chest pain consult", status: "pending", avatar: "DM" },
-  { id: 7, patient: "Jennifer Taylor", age: 29, date: "Feb 25, 2026", time: "11:00 AM", reason: "Prenatal checkup", status: "confirmed", avatar: "JT" },
-];
-
-const avatarColors = { SJ: "#10b981", MC: "#3b82f6", ED: "#f59e0b", RW: "#8b5cf6", LA: "#06b6d4", DM: "#ec4899", JT: "#14b8a6" };
+const defaultAvatarColors = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899", "#14b8a6"];
 
 export const Appointments = () => {
   const [tab, setTab] = useState("today");
-  const [appts, setAppts] = useState({ today: todayAppts, upcoming });
+  const [appts, setAppts] = useState({ today: [], upcoming: [] });
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch provider appointments from backend
   useEffect(() => {
-    appointmentsAPI.getProviderAppointments()
+    appointmentsAPI.getProviderAppointments({ limit: 100 })
       .then((data) => {
-        if (data && Array.isArray(data.appointments) && data.appointments.length > 0) {
+        if (data && Array.isArray(data.appointments)) {
           const today = new Date().toDateString();
-          const mapped = data.appointments.map((a) => ({
-            id: a.id || a._id,
-            patient: a.patient_name || a.patient || "Patient",
-            age: a.patient_age || a.age || "",
-            time: a.time || "",
-            date: a.date ? new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-            reason: a.reason || a.notes || "",
-            status: a.status || "pending",
-            avatar: (a.patient_name || a.patient || "PT").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-          }));
+          const mapped = data.appointments
+            .filter(a => a.status !== "cancelled")
+            .map((a, idx) => ({
+              id: a._id || a.id,
+              patient: a.patient_name || "Patient",
+              age: a.patient_age || "",
+              time: a.appointment_date ? new Date(a.appointment_date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
+              date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+              reason: a.reason || a.notes || "",
+              status: a.status || "pending",
+              avatar: (a.patient_name || "PT").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
+              _color: defaultAvatarColors[idx % defaultAvatarColors.length],
+            }));
           const todayList = mapped.filter(a => a.date && new Date(a.date).toDateString() === today);
           const upcomingList = mapped.filter(a => !a.date || new Date(a.date).toDateString() !== today);
-          if (mapped.length > 0) {
-            setAppts({
-              today: todayList.length > 0 ? todayList : todayAppts,
-              upcoming: upcomingList.length > 0 ? upcomingList : upcoming,
-            });
-          }
+          setAppts({ today: todayList, upcoming: upcomingList });
         }
       })
-      .catch(() => { }); // fallback to mock data
+      .catch(() => { })
+      .finally(() => setLoading(false));
   }, []);
 
   const showToast = (msg) => {
@@ -130,9 +117,15 @@ export const Appointments = () => {
 
         {/* Appointments List */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {loading && (
+            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
+          )}
+          {!loading && appts[tab].length === 0 && (
+            <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No {tab === "today" ? "today's" : "upcoming"} appointments.</div>
+          )}
           {appts[tab].map((a, i) => (
             <div key={a.id} className="appt-card" style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${i * 0.08}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
-              <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: avatarColors[a.avatar] || "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
+              <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: a._color || "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
                 {a.avatar}
               </div>
               <div style={{ flex: 1 }}>

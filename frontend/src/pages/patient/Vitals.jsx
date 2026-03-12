@@ -1,95 +1,101 @@
 import { useState, useEffect } from "react";
 import { SegmentedToggle } from "../../components/SegmentedToggle";
 import {
-  vitalsToday as mockVitalsToday,
-  vitalsWeek as mockVitalsWeek,
   thresholds,
   calcStatsFromToday,
   calcStatsFromWeek,
 } from "../../data/vitalsMock";
-import { biomarkersAPI } from "../../utils/api";
+import { biomarkersAPI, googleFitAPI } from "../../utils/api";
 
 export const PatientVitals = () => {
   const [timeRange, setTimeRange] = useState("today");
-  const [vitalsToday, setVitalsToday] = useState(mockVitalsToday);
-  const [vitalsWeek, setVitalsWeek] = useState(mockVitalsWeek);
+  const [vitalsToday, setVitalsToday] = useState({ heartRate: [], spo2: [] });
+  const [vitalsWeek, setVitalsWeek] = useState({ heartRate: [], spo2: [] });
   const [stepsData, setStepsData] = useState({
-    today: 8420,
+    today: 0,
     goal: 10000,
-    distance: 6.2,
-    activeTime: 2.5,
-    streak: 7,
-    hourlySteps: [
-      { hour: "6 AM", steps: 120 },
-      { hour: "7 AM", steps: 540 },
-      { hour: "8 AM", steps: 380 },
-      { hour: "9 AM", steps: 650 },
-      { hour: "10 AM", steps: 480 },
-      { hour: "11 AM", steps: 720 },
-      { hour: "12 PM", steps: 890 },
-      { hour: "1 PM", steps: 310 },
-      { hour: "2 PM", steps: 580 },
-      { hour: "3 PM", steps: 920 },
-      { hour: "4 PM", steps: 680 },
-      { hour: "5 PM", steps: 780 },
-      { hour: "6 PM", steps: 520 },
-      { hour: "7 PM", steps: 340 },
-    ],
+    distance: 0,
+    activeTime: 0,
+    streak: 0,
+    hourlySteps: [],
   });
   const [caloriesData, setCaloriesData] = useState({
-    today: 2280,
-    totalBurned: 2280,
-    active: 860,
-    resting: 1420,
-    breakdown: [
-      { label: "Resting", value: 1420, color: "#f59e0b" },
-      { label: "Walking", value: 380, color: "#f59e0b" },
-      { label: "Exercise", value: 400, color: "#f59e0b" },
-      { label: "Other", value: 80, color: "#f59e0b" },
-    ],
+    today: 0,
+    totalBurned: 0,
+    active: 0,
+    resting: 0,
+    breakdown: [],
   });
 
-  // Fetch biomarker data from backend
-  useEffect(() => {
-    // Fetch current readings for steps/calories
+  // Apply timeseries data from the sync/today response to state
+  const applyTimeseries = (data) => {
+    const ts = data?.timeseries;
+    const d = data?.synced_data;
+    if (!ts && !d) return;
+
+    if (ts?.heart_rate?.length) {
+      setVitalsToday((prev) => ({
+        ...prev,
+        heartRate: ts.heart_rate.map((p) => ({ t: p.t, v: Math.round(p.v) })),
+      }));
+    }
+    if (ts?.spo2?.length) {
+      setVitalsToday((prev) => ({
+        ...prev,
+        spo2: ts.spo2.map((p) => ({ t: p.t, v: Math.round(p.v) })),
+      }));
+    }
+    if (d?.steps != null) {
+      setStepsData((prev) => ({
+        ...prev,
+        today: d.steps,
+        hourlySteps: ts?.steps || [],
+      }));
+    }
+    if (d?.calories != null) {
+      const cal = Math.round(d.calories);
+      setCaloriesData((prev) => ({
+        ...prev,
+        today: cal,
+        totalBurned: cal,
+        breakdown: ts?.calories || [],
+      }));
+    }
+  };
+
+  // Fetch stored biomarker data from DB (fast, cached)
+  const fetchBiomarkerData = () => {
+    // Quick: load today's stored timeseries from the /today endpoint
+    googleFitAPI.today()
+      .then(applyTimeseries)
+      .catch(() => { });
+
+    // Also fetch current summary readings (for non-GFit data like BP)
     biomarkersAPI.getCurrent()
       .then((data) => {
         const r = data?.current_readings;
         if (!r) return;
-        if (r.steps) {
+        if (r.steps && !stepsData.today) {
           setStepsData((prev) => ({ ...prev, today: r.steps.value }));
         }
-        if (r.calories) {
+        if (r.calories && !caloriesData.today) {
           const cal = Math.round(r.calories.value);
           setCaloriesData((prev) => ({ ...prev, today: cal, totalBurned: cal }));
         }
       })
       .catch(() => { });
+  };
 
-    // Fetch history for heart rate / spo2 charts
-    biomarkersAPI.getHistory({ limit: 50 })
-      .then((data) => {
-        if (!data?.readings || data.readings.length === 0) return;
-        const readings = data.readings.reverse(); // oldest first
-        const hrReadings = readings.filter((r) => r.heart_rate != null);
-        const spo2Readings = readings.filter((r) => r.spo2 != null);
+  useEffect(() => {
+    // 1. Show cached timeseries immediately
+    fetchBiomarkerData();
 
-        if (hrReadings.length > 0) {
-          const hrToday = hrReadings.map((r) => ({
-            t: r.recorded_at,
-            v: Math.round(r.heart_rate),
-          }));
-          setVitalsToday((prev) => ({ ...prev, heartRate: hrToday }));
-        }
-        if (spo2Readings.length > 0) {
-          const spo2Today = spo2Readings.map((r) => ({
-            t: r.recorded_at,
-            v: Math.round(r.spo2),
-          }));
-          setVitalsToday((prev) => ({ ...prev, spo2: spo2Today }));
-        }
-      })
-      .catch(() => { });
+    // 2. If Google Fit connected, sync fresh data from Google, then apply directly
+    if (localStorage.getItem("healix_gfit_connected") === "true") {
+      googleFitAPI.sync()
+        .then(applyTimeseries)
+        .catch(() => { });
+    }
   }, []);
 
   const hrStats =
@@ -110,9 +116,16 @@ export const PatientVitals = () => {
 
   // Calculate time in range for SpO2
   const spo2InRange = vitalsToday.spo2.filter(d => d.v >= thresholds.spo2.low && d.v <= thresholds.spo2.high).length;
-  const spo2TimeInRange = Math.round((spo2InRange / vitalsToday.spo2.length) * 100);
+  const spo2TimeInRange = vitalsToday.spo2.length > 0 ? Math.round((spo2InRange / vitalsToday.spo2.length) * 100) : 0;
 
-  const stepsProgress = (stepsData.today / stepsData.goal) * 100;
+  const stepsProgress = stepsData.goal > 0 ? (stepsData.today / stepsData.goal) * 100 : 0;
+
+  // Data availability flags
+  const hasHrData = vitalsToday.heartRate.length > 0 || vitalsWeek.heartRate.length > 0;
+  const hasSpo2Data = vitalsToday.spo2.length > 0 || vitalsWeek.spo2.length > 0;
+  const hasStepsData = stepsData.today > 0;
+  const hasCaloriesData = caloriesData.today > 0;
+  const hasAnyData = hasHrData || hasSpo2Data || hasStepsData || hasCaloriesData;
 
   const StatBox = ({ label, value, unit }) => (
     <div style={{
@@ -149,8 +162,29 @@ export const PatientVitals = () => {
   );
 
   const LineChart = ({ data, color, label, showArea = true }) => {
+    if (!data || data.length < 2) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
+          No chart data available
+        </div>
+      );
+    }
     const isToday = Array.isArray(data) && data[0]?.t;
-    const values = isToday ? data.map(d => d.v) : data.map(d => d.avg || d.v);
+
+    // --- Downsample dense data (e.g. hundreds of heart-rate readings) ---
+    const MAX_POINTS = 60;
+    let displayData = data;
+    if (data.length > MAX_POINTS) {
+      // Pick evenly-spaced indices, always including first and last
+      const step = (data.length - 1) / (MAX_POINTS - 1);
+      displayData = [];
+      for (let i = 0; i < MAX_POINTS; i++) {
+        const idx = Math.round(i * step);
+        displayData.push(data[idx]);
+      }
+    }
+
+    const values = isToday ? displayData.map(d => d.v) : displayData.map(d => d.avg || d.v);
     const max = Math.max(...values);
     const min = Math.min(...values);
     const range = max - min || 1;
@@ -169,6 +203,11 @@ export const PatientVitals = () => {
 
     const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
     const areaD = `${pathD} L ${points[points.length - 1].x} ${height - padding} L ${padding} ${height - padding} Z`;
+
+    // --- Decide how many x-axis labels & dots to show ---
+    const MAX_LABELS = 8;
+    const labelStep = Math.max(1, Math.floor(points.length / MAX_LABELS));
+    const isDense = displayData.length > 20;
 
     return (
       <div style={{ position: "relative", width: "100%", height: "240px" }}>
@@ -200,6 +239,24 @@ export const PatientVitals = () => {
             />
           ))}
 
+          {/* Y-axis labels */}
+          {[0, 1, 2, 3, 4].map(i => {
+            const yVal = Math.round(max - (i / 4) * range);
+            return (
+              <text
+                key={`y-${i}`}
+                x={padding - 6}
+                y={padding + (chartHeight / 4) * i + 4}
+                textAnchor="end"
+                fill="#475569"
+                fontSize="9"
+                fontWeight="600"
+              >
+                {yVal}
+              </text>
+            );
+          })}
+
           {/* Area fill */}
           {showArea && (
             <path
@@ -213,50 +270,47 @@ export const PatientVitals = () => {
             d={pathD}
             fill="none"
             stroke={color}
-            strokeWidth="3"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
             filter="url(#glow)"
-            style={{
-              animation: "drawLine 1.5s ease-out forwards",
-              strokeDasharray: 1000,
-              strokeDashoffset: 1000,
-            }}
           />
 
-          {/* Data points */}
-          {points.map((p, i) => (
-            <g key={i}>
-              <circle
-                cx={p.x}
-                cy={p.y}
-                r="5"
-                fill={color}
-                stroke="#0f172a"
-                strokeWidth="2"
-                style={{
-                  animation: `fadeIn 0.3s ease ${i * 0.05}s both`,
-                  cursor: "pointer",
-                }}
-              />
-            </g>
-          ))}
-
-          {/* X-axis labels */}
+          {/* Data points — only show dots on label positions for dense data */}
           {points.map((p, i) => {
-            if (i % (isToday ? 2 : 1) !== 0 && i !== points.length - 1) return null;
+            if (isDense && i % labelStep !== 0 && i !== points.length - 1) return null;
+            return (
+              <g key={i}>
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={isDense ? 3.5 : 5}
+                  fill={color}
+                  stroke="#0f172a"
+                  strokeWidth="2"
+                  style={{ cursor: "pointer" }}
+                />
+                {/* Tooltip on hover */}
+                <title>{`${Math.round(p.val)}`}</title>
+              </g>
+            );
+          })}
+
+          {/* X-axis labels — evenly spaced, max ~8 labels */}
+          {points.map((p, i) => {
+            if (i % labelStep !== 0 && i !== points.length - 1) return null;
             const timeLabel = isToday
-              ? new Date(data[i].t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-              : data[i].day;
+              ? new Date(displayData[i].t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+              : displayData[i].day;
 
             return (
               <text
                 key={`label-${i}`}
                 x={p.x}
-                y={height - 10}
+                y={height - 8}
                 textAnchor="middle"
                 fill="#64748b"
-                fontSize="10"
+                fontSize="9"
                 fontWeight="600"
               >
                 {timeLabel}
@@ -264,44 +318,43 @@ export const PatientVitals = () => {
             );
           })}
         </svg>
-
-        <style>{`
-          @keyframes drawLine {
-            to { strokeDashoffset: 0; }
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0); }
-            to { opacity: 1; transform: scale(1); }
-          }
-        `}</style>
       </div>
     );
   };
 
-  const BarChart = ({ data, maxValue, color }) => (
-    <div style={{ height: "180px", display: "flex", alignItems: "flex-end", gap: "8px", padding: "20px 0 0" }}>
-      {data.map((item, i) => {
-        const heightPct = (item.steps || item.value) / maxValue * 100;
-        return (
-          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-            <div style={{
-              width: "100%",
-              height: `${heightPct}%`,
-              background: `linear-gradient(to top, ${color}, ${color}dd)`,
-              borderRadius: "6px 6px 0 0",
-              minHeight: "8px",
-              transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: `0 0 20px ${color}44`,
-              animation: `fadeUp 0.6s ease ${i * 0.05}s both`,
-            }} />
-            <div style={{ color: "#64748b", fontSize: "9px", fontWeight: "600", textAlign: "center" }}>
-              {item.hour || item.label}
+  const BarChart = ({ data, maxValue, color }) => {
+    if (!data || data.length === 0) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "180px", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
+          No activity data available
+        </div>
+      );
+    }
+    return (
+      <div style={{ height: "180px", display: "flex", alignItems: "flex-end", gap: "8px", padding: "20px 0 0" }}>
+        {data.map((item, i) => {
+          const heightPct = (item.steps || item.value) / maxValue * 100;
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+              <div style={{
+                width: "100%",
+                height: `${heightPct}%`,
+                background: `linear-gradient(to top, ${color}, ${color}dd)`,
+                borderRadius: "6px 6px 0 0",
+                minHeight: "8px",
+                transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: `0 0 20px ${color}44`,
+                animation: `fadeUp 0.6s ease ${i * 0.05}s both`,
+              }} />
+              <div style={{ color: "#64748b", fontSize: "9px", fontWeight: "600", textAlign: "center" }}>
+                {item.hour || item.label}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -488,7 +541,7 @@ export const PatientVitals = () => {
                   lineHeight: 1,
                   textShadow: "0 0 30px rgba(239,68,68,0.5)",
                 }}>
-                  {hrStats.current}
+                  {hasHrData ? hrStats.current : "—"}
                   <span style={{ fontSize: "16px", color: "#64748b", fontWeight: "600", marginLeft: "4px" }}>BPM</span>
                 </div>
                 <div className="status-badge" style={{
@@ -497,7 +550,7 @@ export const PatientVitals = () => {
                   color: hrWarning ? "#ef4444" : "#10b981",
                   marginTop: "8px",
                 }}>
-                  {hrWarning ? "⚠️ Warning" : "✓ Normal"}
+                  {!hasHrData ? "No data" : hrWarning ? "⚠️ Warning" : "✓ Normal"}
                 </div>
               </div>
             </div>
@@ -508,9 +561,9 @@ export const PatientVitals = () => {
               gap: "16px",
               marginBottom: "28px",
             }}>
-              <StatBox label="Current" value={hrStats.current} unit="BPM" />
-              <StatBox label="Resting" value={hrStats.resting} unit="BPM" />
-              <StatBox label="Peak" value={hrStats.peak} unit="BPM" />
+              <StatBox label="Current" value={hasHrData ? hrStats.current : "—"} unit="BPM" />
+              <StatBox label="Resting" value={hasHrData ? hrStats.resting : "—"} unit="BPM" />
+              <StatBox label="Peak" value={hasHrData ? hrStats.peak : "—"} unit="BPM" />
             </div>
 
             <LineChart
@@ -568,7 +621,7 @@ export const PatientVitals = () => {
                   lineHeight: 1,
                   textShadow: "0 0 30px rgba(59,130,246,0.5)",
                 }}>
-                  {spo2Stats.current}
+                  {hasSpo2Data ? spo2Stats.current : "—"}
                   <span style={{ fontSize: "16px", color: "#64748b", fontWeight: "600", marginLeft: "4px" }}>%</span>
                 </div>
                 <div className="status-badge" style={{
@@ -577,7 +630,7 @@ export const PatientVitals = () => {
                   color: spo2Warning ? "#ef4444" : "#10b981",
                   marginTop: "8px",
                 }}>
-                  {spo2Warning ? "⚠️ Warning" : "✓ Excellent"}
+                  {!hasSpo2Data ? "No data" : spo2Warning ? "⚠️ Warning" : "✓ Excellent"}
                 </div>
               </div>
             </div>
@@ -588,10 +641,10 @@ export const PatientVitals = () => {
               gap: "16px",
               marginBottom: "28px",
             }}>
-              <StatBox label="Current" value={spo2Stats.current} unit="%" />
-              <StatBox label="Average" value={Math.round((spo2Stats.current + spo2Stats.peak + spo2Stats.resting) / 3 * 10) / 10} unit="%" />
-              <StatBox label="Lowest" value={spo2Stats.resting} unit="%" />
-              <StatBox label="Time in Range" value={spo2TimeInRange} unit="%" />
+              <StatBox label="Current" value={hasSpo2Data ? spo2Stats.current : "—"} unit="%" />
+              <StatBox label="Average" value={hasSpo2Data ? Math.round((spo2Stats.current + spo2Stats.peak + spo2Stats.resting) / 3 * 10) / 10 : "—"} unit="%" />
+              <StatBox label="Lowest" value={hasSpo2Data ? spo2Stats.resting : "—"} unit="%" />
+              <StatBox label="Time in Range" value={hasSpo2Data ? spo2TimeInRange : "—"} unit="%" />
             </div>
 
             <LineChart
@@ -656,10 +709,10 @@ export const PatientVitals = () => {
                   letterSpacing: "-1.5px",
                   lineHeight: 1,
                 }}>
-                  {stepsData.today.toLocaleString()}
+                  {hasStepsData ? stepsData.today.toLocaleString() : "—"}
                 </div>
                 <p style={{ color: "#64748b", fontSize: "13px", margin: "4px 0 0 0" }}>
-                  of {stepsData.goal.toLocaleString()} goal
+                  {hasStepsData ? `of ${stepsData.goal.toLocaleString()} goal` : "No data yet"}
                 </p>
               </div>
             </div>
@@ -770,10 +823,10 @@ export const PatientVitals = () => {
                   letterSpacing: "-1.5px",
                   lineHeight: 1,
                 }}>
-                  {caloriesData.today.toLocaleString()}
+                  {hasCaloriesData ? caloriesData.today.toLocaleString() : "—"}
                 </div>
                 <p style={{ color: "#64748b", fontSize: "13px", margin: "4px 0 0 0" }}>
-                  calories today
+                  {hasCaloriesData ? "calories today" : "No data yet"}
                 </p>
               </div>
             </div>

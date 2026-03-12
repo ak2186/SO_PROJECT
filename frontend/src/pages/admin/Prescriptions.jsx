@@ -1,38 +1,29 @@
 import { useState, useEffect } from "react";
-import { prescriptionsAPI } from "../../utils/api";
-
-const allPrescriptions = [
-  { id: 1, patient: "Sarah Johnson", provider: "Dr. Mitchell", medication: "Atorvastatin 20mg", status: "active", issued: "Jan 15, 2026", refills: 3 },
-  { id: 2, patient: "Michael Chen", provider: "Dr. Patel", medication: "Metformin 500mg", status: "active", issued: "Dec 20, 2025", refills: 5 },
-  { id: 3, patient: "Emma Davis", provider: "Dr. Horowitz", medication: "Cetirizine 10mg", status: "active", issued: "Jan 28, 2026", refills: 2 },
-  { id: 4, patient: "Robert Williams", provider: "Dr. Mitchell", medication: "Lisinopril 10mg", status: "expired", issued: "Nov 10, 2025", refills: 0 },
-  { id: 5, patient: "Lisa Anderson", provider: "Dr. Patel", medication: "Levothyroxine 50mcg", status: "active", issued: "Jan 10, 2026", refills: 6 },
-  { id: 6, patient: "David Martinez", provider: "Dr. Patel", medication: "Amoxicillin 250mg", status: "completed", issued: "Oct 5, 2025", refills: 0 },
-];
+import { adminAPI } from "../../utils/api";
 
 export const Prescriptions = () => {
-  const [prescriptions, setPrescriptions] = useState(allPrescriptions);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
 
-  // Fetch from backend
   useEffect(() => {
-    prescriptionsAPI.getProviderPrescriptions()
+    adminAPI.getAllPrescriptions({ limit: 200 })
       .then((data) => {
-        if (data && Array.isArray(data.prescriptions) && data.prescriptions.length > 0) {
-          const mapped = data.prescriptions.map((rx) => ({
-            id: rx.id || rx._id,
-            patient: rx.patient_name || rx.patient || "Patient",
-            provider: rx.provider_name || rx.doctor || "Provider",
-            medication: `${rx.medication_name || rx.name || "Medication"} ${rx.dosage || ""}`.trim(),
-            status: rx.status || "active",
-            issued: rx.prescribed_date ? new Date(rx.prescribed_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-            refills: rx.refills_remaining ?? rx.refills ?? 0,
-          }));
-          if (mapped.length > 0) setPrescriptions(mapped);
-        }
+        const list = Array.isArray(data) ? data : data.prescriptions || [];
+        const mapped = list.map((rx) => ({
+          id: rx._id || rx.id,
+          patient: rx.patient_name || "Patient",
+          provider: rx.provider_name || "Provider",
+          medication: `${rx.medication_name || "Medication"} ${rx.dosage || ""}`.trim(),
+          status: rx.status || "active",
+          issued: rx.created_at ? new Date(rx.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+          refills: rx.refills_allowed != null ? (rx.refills_allowed - (rx.refills_used || 0)) : 0,
+        }));
+        setPrescriptions(mapped);
       })
-      .catch(() => { }); // fallback to mock data
+      .catch(() => setPrescriptions([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = prescriptions.filter(rx => {
@@ -109,7 +100,10 @@ export const Prescriptions = () => {
           </div>
 
           {/* Rows */}
-          {filtered.length === 0 && (
+          {loading && (
+            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "15px" }}>Loading prescriptions...</div>
+          )}
+          {!loading && filtered.length === 0 && (
             <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No prescriptions found.</div>
           )}
           {filtered.map(rx => (

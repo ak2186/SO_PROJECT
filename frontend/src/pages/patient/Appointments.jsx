@@ -1,54 +1,53 @@
 import { useState, useEffect } from "react";
 import { appointmentsAPI } from "../../utils/api";
 
-const upcoming = [
-  { id: 1, doctor: "Dr. Sarah Mitchell", specialty: "Cardiologist", date: "Feb 20, 2026", time: "10:30 AM", location: "Heart Care Clinic, Room 204", avatar: "SM" },
-  { id: 2, doctor: "Dr. James Patel", specialty: "General Physician", date: "Feb 25, 2026", time: "2:00 PM", location: "City Medical Centre, Room 101", avatar: "JP" },
-  { id: 3, doctor: "Dr. Lena Horowitz", specialty: "Dermatologist", date: "Mar 3, 2026", time: "11:00 AM", location: "Skin & Wellness Clinic", avatar: "LH" },
-];
-
-const past = [
-  { id: 4, doctor: "Dr. Sarah Mitchell", specialty: "Cardiologist", date: "Jan 15, 2026", time: "9:00 AM", status: "Completed", avatar: "SM" },
-  { id: 5, doctor: "Dr. Omar Rashid", specialty: "Neurologist", date: "Dec 28, 2025", time: "3:30 PM", status: "Completed", avatar: "OR" },
-  { id: 6, doctor: "Dr. James Patel", specialty: "General Physician", date: "Dec 10, 2025", time: "1:00 PM", status: "Cancelled", avatar: "JP" },
-];
-
-const avatarColors = {
-  SM: "#3b82f6", JP: "#10b981", LH: "#f59e0b", OR: "#8b5cf6",
-};
-
 export const Appointments = () => {
   const [tab, setTab] = useState("upcoming");
   const [showModal, setShowModal] = useState(false);
   const [cancelId, setCancelId] = useState(null);
-  const [appts, setAppts] = useState(upcoming);
-  const [pastAppts, setPastAppts] = useState(past);
-  const [form, setForm] = useState({ doctor: "", specialty: "", date: "", time: "", location: "" });
+  const [appts, setAppts] = useState([]);
+  const [pastAppts, setPastAppts] = useState([]);
+  const [providers, setProviders] = useState([]);
+  const [form, setForm] = useState({ provider_id: "", date: "", time: "", reason: "" });
   const [showSchedule, setShowSchedule] = useState(false);
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch appointments from backend
   useEffect(() => {
     appointmentsAPI.getMyAppointments()
       .then((data) => {
-        if (data && Array.isArray(data.appointments) && data.appointments.length > 0) {
+        if (data && Array.isArray(data.appointments)) {
           const mapped = data.appointments.map((a) => ({
-            id: a.id || a._id,
-            doctor: a.provider_name || a.doctor || "Doctor",
-            specialty: a.specialty || a.department || "",
-            date: a.date ? new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-            time: a.time || "",
+            id: a._id || a.id,
+            doctor: a.provider_name || "Doctor",
+            specialty: a.specialty || "",
+            date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+            time: a.appointment_date ? new Date(a.appointment_date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
             location: a.location || "",
             status: a.status || "pending",
-            avatar: (a.provider_name || a.doctor || "DR").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
+            reason: a.reason || "",
+            avatar: (a.provider_name || "DR").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
           }));
           const active = mapped.filter(a => !["completed", "cancelled"].includes(a.status?.toLowerCase()));
           const done = mapped.filter(a => ["completed", "cancelled"].includes(a.status?.toLowerCase()));
-          if (active.length > 0) setAppts(active);
-          if (done.length > 0) setPastAppts(done.map(a => ({ ...a, status: a.status.charAt(0).toUpperCase() + a.status.slice(1) })));
+          setAppts(active);
+          setPastAppts(done.map(a => ({ ...a, status: a.status.charAt(0).toUpperCase() + a.status.slice(1) })));
         }
       })
-      .catch(() => { }); // fallback to mock data
+      .catch(() => { })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Fetch providers for booking
+  useEffect(() => {
+    appointmentsAPI.getProviders()
+      .then((data) => {
+        if (data && Array.isArray(data.providers)) {
+          setProviders(data.providers);
+        }
+      })
+      .catch(() => { });
   }, []);
 
   const showToast = (msg, type = "success") => {
@@ -60,39 +59,42 @@ export const Appointments = () => {
   const confirmCancel = async () => {
     try {
       await appointmentsAPI.cancel(cancelId);
-    } catch { }
-    setAppts((prev) => prev.filter((a) => a.id !== cancelId));
+      setAppts((prev) => prev.filter((a) => a.id !== cancelId));
+      showToast("Appointment cancelled.");
+    } catch {
+      showToast("Failed to cancel appointment.", "error");
+    }
     setShowModal(false);
-    showToast("Appointment cancelled.");
   };
 
   const handleSchedule = async () => {
-    if (!form.doctor || !form.date || !form.time) return showToast("Please fill all required fields.", "error");
+    if (!form.provider_id || !form.date || !form.time) return showToast("Please select a provider, date and time.", "error");
+    const dateTime = new Date(`${form.date}T${form.time}`);
     try {
       const result = await appointmentsAPI.book({
-        provider_name: form.doctor,
-        specialty: form.specialty,
-        date: form.date,
-        time: form.time,
-        location: form.location,
+        provider_id: form.provider_id,
+        appointment_date: dateTime.toISOString(),
+        reason: form.reason || null,
       });
+      const provider = providers.find(p => (p._id || p.id) === form.provider_id);
+      const providerName = provider ? `${provider.first_name} ${provider.last_name}` : "Doctor";
       const newAppt = {
-        id: result.id || result._id || Date.now(),
-        doctor: form.doctor,
-        specialty: form.specialty,
-        date: form.date,
-        time: form.time,
-        location: form.location,
-        avatar: form.doctor.slice(0, 2).toUpperCase(),
+        id: result.appointment?._id || result.appointment?.id || Date.now(),
+        doctor: providerName,
+        specialty: "",
+        date: dateTime.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        time: dateTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+        status: "pending",
+        reason: form.reason,
+        avatar: providerName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
       };
       setAppts((prev) => [...prev, newAppt]);
-    } catch {
-      const newAppt = { id: Date.now(), ...form, avatar: form.doctor.slice(0, 2).toUpperCase() };
-      setAppts((prev) => [...prev, newAppt]);
+      showToast("Appointment scheduled!");
+    } catch (err) {
+      showToast(err.message || "Failed to schedule appointment.", "error");
     }
     setShowSchedule(false);
-    setForm({ doctor: "", specialty: "", date: "", time: "", location: "" });
-    showToast("Appointment scheduled!");
+    setForm({ provider_id: "", date: "", time: "", reason: "" });
   };
 
   return (
@@ -149,12 +151,15 @@ export const Appointments = () => {
         {/* Upcoming Appointments */}
         {tab === "upcoming" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {appts.length === 0 && (
+            {appts.length === 0 && !loading && (
               <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No upcoming appointments.</div>
+            )}
+            {loading && (
+              <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
             )}
             {appts.map((a, i) => (
               <div key={a.id} className="appt-card" style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${i * 0.08}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
-                <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: avatarColors[a.avatar] || "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
+                <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
                   {a.avatar}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -182,7 +187,7 @@ export const Appointments = () => {
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {pastAppts.map((a, i) => (
               <div key={a.id} className="appt-card" style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${i * 0.08}s both`, opacity: 0.85, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
-                <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: avatarColors[a.avatar] || "#475569", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
+                <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "#475569", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
                   {a.avatar}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -222,12 +227,29 @@ export const Appointments = () => {
             <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "16px", padding: "36px", width: "440px" }}>
               <h3 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 24px 0" }}>Schedule Appointment</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                {[["Doctor Name *", "doctor", "text", "e.g. Dr. Sarah Mitchell"], ["Specialty", "specialty", "text", "e.g. Cardiologist"], ["Date *", "date", "date", ""], ["Time *", "time", "time", ""], ["Location", "location", "text", "Clinic / Room"]].map(([label, key, type, ph]) => (
-                  <div key={key}>
-                    <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</label>
-                    <input type={type} placeholder={ph} className="schedule-input" value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} />
-                  </div>
-                ))}
+                <div>
+                  <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Select Doctor *</label>
+                  <select className="schedule-input" value={form.provider_id} onChange={e => setForm(p => ({ ...p, provider_id: e.target.value }))}>
+                    <option value="">-- Choose a provider --</option>
+                    {providers.map(pr => (
+                      <option key={pr._id || pr.id} value={pr._id || pr.id}>
+                        {pr.first_name} {pr.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Date *</label>
+                  <input type="date" className="schedule-input" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Time *</label>
+                  <input type="time" className="schedule-input" value={form.time} onChange={e => setForm(p => ({ ...p, time: e.target.value }))} />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Reason</label>
+                  <input type="text" placeholder="e.g. Annual checkup" className="schedule-input" value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} />
+                </div>
               </div>
               <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
                 <button onClick={() => setShowSchedule(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "1px solid #1e293b", background: "transparent", color: "#94a3b8", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Cancel</button>

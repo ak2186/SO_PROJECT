@@ -1,38 +1,32 @@
 import { useState, useEffect } from "react";
-import { appointmentsAPI } from "../../utils/api";
-
-const allAppointments = [
-  { id: 1, patient: "Sarah Johnson", provider: "Dr. Mitchell", date: "Feb 20, 2026", time: "10:30 AM", status: "confirmed", department: "Cardiology" },
-  { id: 2, patient: "Michael Chen", provider: "Dr. Patel", date: "Feb 20, 2026", time: "11:15 AM", status: "confirmed", department: "General" },
-  { id: 3, patient: "Emma Davis", provider: "Dr. Horowitz", date: "Feb 20, 2026", time: "2:00 PM", status: "pending", department: "Dermatology" },
-  { id: 4, patient: "Robert Williams", provider: "Dr. Mitchell", date: "Feb 21, 2026", time: "9:00 AM", status: "confirmed", department: "Cardiology" },
-  { id: 5, patient: "Lisa Anderson", provider: "Dr. Patel", date: "Feb 22, 2026", time: "1:30 PM", status: "cancelled", department: "General" },
-];
+import { adminAPI, appointmentsAPI } from "../../utils/api";
 
 export const Appointments = () => {
-  const [appts, setAppts] = useState(allAppointments);
+  const [appts, setAppts] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Try to fetch from backend (admin may use provider endpoint or dedicated admin endpoint)
+  // Fetch all appointments via admin endpoint
   useEffect(() => {
-    appointmentsAPI.getProviderAppointments()
+    adminAPI.getAllAppointments({ limit: 200 })
       .then((data) => {
-        if (data && Array.isArray(data.appointments) && data.appointments.length > 0) {
+        if (data && Array.isArray(data.appointments)) {
           const mapped = data.appointments.map((a) => ({
-            id: a.id || a._id,
-            patient: a.patient_name || a.patient || "Patient",
-            provider: a.provider_name || a.doctor || "Provider",
-            date: a.date ? new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-            time: a.time || "",
+            id: a._id || a.id,
+            patient: a.patient_name || "Patient",
+            provider: a.provider_name || "Provider",
+            date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+            time: a.appointment_date ? new Date(a.appointment_date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
             status: a.status || "pending",
-            department: a.department || a.specialty || "General",
+            department: a.department || "",
           }));
-          if (mapped.length > 0) setAppts(mapped);
+          setAppts(mapped);
         }
       })
-      .catch(() => { }); // fallback to mock data
+      .catch(() => { })
+      .finally(() => setLoading(false));
   }, []);
 
   const showToast = (msg) => {
@@ -130,7 +124,10 @@ export const Appointments = () => {
           </div>
 
           {/* Rows */}
-          {filtered.length === 0 && (
+          {loading && (
+            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
+          )}
+          {!loading && filtered.length === 0 && (
             <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No appointments found.</div>
           )}
           {filtered.map(a => (

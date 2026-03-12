@@ -11,6 +11,16 @@ from app.config.database import Database
 from app.models.appointment import AppointmentCreate
 
 
+async def list_providers():
+    """List all providers (for patient booking)"""
+    db = Database.get_db()
+    cursor = db.users.find({"role": "provider", "status": "active"}, {"hashed_password": 0})
+    providers = await cursor.to_list(length=200)
+    for p in providers:
+        p["_id"] = str(p["_id"])
+    return {"providers": providers}
+
+
 async def create_appointment(patient_id: str, data: AppointmentCreate):
     """Book a new appointment"""
     db = Database.get_db()
@@ -119,10 +129,12 @@ async def get_provider_appointments(
     for a in appointments:
         a["_id"] = str(a["_id"])
 
-        # Get patient name
+        # Get patient details
         patient = await db.users.find_one({"_id": ObjectId(a["patient_id"])})
         if patient:
             a["patient_name"] = f"{patient['first_name']} {patient['last_name']}"
+            a["patient_age"] = patient.get("age", "")
+            a["patient_gender"] = patient.get("gender", "")
 
     return {
         "total": total,

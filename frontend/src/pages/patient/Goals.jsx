@@ -166,10 +166,10 @@ const GoalCard = ({
 };
 
 export const Goals = () => {
-  const [currentSteps, setCurrentSteps] = useState(8459);
-  const [currentCalories, setCurrentCalories] = useState(1230);
+  const [currentSteps, setCurrentSteps] = useState(0);
+  const [currentCalories, setCurrentCalories] = useState(0);
 
-  useEffect(() => {
+  const fetchGoalData = () => {
     biomarkersAPI.getCurrent()
       .then((data) => {
         const r = data?.current_readings;
@@ -178,6 +178,12 @@ export const Goals = () => {
         if (r.calories) setCurrentCalories(Math.round(r.calories.value));
       })
       .catch(() => { });
+  };
+
+  useEffect(() => {
+    fetchGoalData();
+    const timer = setTimeout(fetchGoalData, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

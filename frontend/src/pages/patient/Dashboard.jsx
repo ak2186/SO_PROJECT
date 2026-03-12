@@ -1,41 +1,65 @@
 
 import { useState, useEffect } from "react";
-import { vitalsToday, calcStatsFromToday } from "../../data/vitalsMock";
-import { biomarkersAPI } from "../../utils/api";
+import { biomarkersAPI, googleFitAPI } from "../../utils/api";
 
 export const PatientDashboard = () => {
-  const [hrStats, setHrStats] = useState(calcStatsFromToday(vitalsToday.heartRate));
-  const [spo2Stats, setSpo2Stats] = useState(calcStatsFromToday(vitalsToday.spo2));
-  const [stepsVal, setStepsVal] = useState("8,432");
-  const [caloriesVal, setCaloriesVal] = useState("1,847");
+  const [hrValue, setHrValue] = useState(null);
+  const [spo2Value, setSpo2Value] = useState(null);
+  const [stepsVal, setStepsVal] = useState(null);
+  const [caloriesVal, setCaloriesVal] = useState(null);
+  const [stepsProgress, setStepsProgress] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchCurrentReadings = () => {
     biomarkersAPI.getCurrent()
       .then((data) => {
         const r = data?.current_readings;
         if (!r) return;
-        if (r.heart_rate) {
-          setHrStats((prev) => ({ ...prev, current: r.heart_rate.value }));
-        }
-        if (r.spo2) {
-          setSpo2Stats((prev) => ({ ...prev, current: r.spo2.value }));
-        }
+        if (r.heart_rate) setHrValue(Math.round(r.heart_rate.value));
+        if (r.spo2) setSpo2Value(Math.round(r.spo2.value));
         if (r.steps) {
-          setStepsVal(Number(r.steps.value).toLocaleString());
+          const steps = Number(r.steps.value);
+          setStepsVal(steps);
+          setStepsProgress(Math.min(Math.round((steps / 10000) * 100), 100));
         }
-        if (r.calories) {
-          setCaloriesVal(Number(Math.round(r.calories.value)).toLocaleString());
-        }
+        if (r.calories) setCaloriesVal(Math.round(r.calories.value));
       })
-      .catch(() => { }); // fallback to mock
+      .catch(() => { })
+      .finally(() => setLoading(false));
+  };
+
+  // Apply synced data directly from sync/today response (freshest values)
+  const applyGfitData = (data) => {
+    const d = data?.synced_data;
+    if (!d) return;
+    if (d.heart_rate != null) setHrValue(Math.round(d.heart_rate));
+    if (d.spo2 != null) setSpo2Value(Math.round(d.spo2));
+    if (d.steps != null) {
+      setStepsVal(d.steps);
+      setStepsProgress(Math.min(Math.round((d.steps / 10000) * 100), 100));
+    }
+    if (d.calories != null) setCaloriesVal(Math.round(d.calories));
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    // 1. Show cached DB data immediately
+    fetchCurrentReadings();
+
+    // 2. If Google Fit is connected, sync fresh data then apply it directly
+    if (localStorage.getItem("healix_gfit_connected") === "true") {
+      googleFitAPI.sync()
+        .then(applyGfitData)
+        .catch(() => { });
+    }
   }, []);
 
   const healthCards = [
     {
       title: "Heart Rate",
-      value: hrStats.current,
+      value: hrValue != null ? hrValue : "—",
       unit: "bpm",
-      subtitle: "Current reading",
+      subtitle: hrValue != null ? "Current reading" : "No data yet",
       icon: "❤️",
       color: "#ef4444",
       gradient: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.05) 100%)",
@@ -44,9 +68,9 @@ export const PatientDashboard = () => {
     },
     {
       title: "Blood Oxygen",
-      value: spo2Stats.current,
+      value: spo2Value != null ? spo2Value : "—",
       unit: "%",
-      subtitle: "SpO₂ level",
+      subtitle: spo2Value != null ? "SpO₂ level" : "No data yet",
       icon: "💧",
       color: "#3b82f6",
       gradient: "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.05) 100%)",
@@ -55,10 +79,10 @@ export const PatientDashboard = () => {
     },
     {
       title: "Steps Today",
-      value: stepsVal,
+      value: stepsVal != null ? stepsVal.toLocaleString() : "—",
       unit: "steps",
-      subtitle: "84% of goal",
-      progress: 84,
+      subtitle: stepsVal != null ? `${stepsProgress}% of goal` : "No data yet",
+      progress: stepsVal != null ? stepsProgress : 0,
       icon: "👟",
       color: "#10b981",
       gradient: "linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.05) 100%)",
@@ -67,21 +91,15 @@ export const PatientDashboard = () => {
     },
     {
       title: "Calories Burned",
-      value: caloriesVal,
+      value: caloriesVal != null ? caloriesVal.toLocaleString() : "—",
       unit: "kcal",
-      subtitle: "Active energy",
+      subtitle: caloriesVal != null ? "Active energy" : "No data yet",
       icon: "🔥",
       color: "#f59e0b",
       gradient: "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(217,119,6,0.05) 100%)",
       glow: "0 0 60px rgba(245,158,11,0.4)",
       iconGlow: "drop-shadow(0 0 20px rgba(245,158,11,0.6))",
     },
-  ];
-
-  const weeklySummary = [
-    { label: "Avg Heart Rate", value: "78", unit: "bpm", color: "#ef4444", icon: "💓" },
-    { label: "Active Minutes", value: "342", unit: "min", color: "#10b981", icon: "⚡" },
-    { label: "Sleep Quality", value: "7.2", unit: "hrs", color: "#8b5cf6", icon: "😴" },
   ];
 
   return (
@@ -336,91 +354,6 @@ export const PatientDashboard = () => {
           ))}
         </div>
 
-        {/* Weekly Summary */}
-        <div style={{ animation: "fadeUp 0.8s ease 0.5s both", position: "relative", zIndex: 1 }}>
-          <h2 className="gradient-text" style={{
-            fontSize: "36px",
-            fontWeight: "800",
-            marginBottom: "32px",
-            letterSpacing: "-1px",
-          }}>
-            Weekly Summary
-          </h2>
-
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "24px",
-          }}>
-            {weeklySummary.map((item, i) => (
-              <div
-                key={i}
-                className="weekly-card"
-                style={{
-                  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "24px",
-                  padding: "32px",
-                  position: "relative",
-                  overflow: "hidden",
-                  animation: `fadeUp 0.6s ease ${0.6 + i * 0.12}s both`,
-                }}
-              >
-                {/* Top accent bar */}
-                <div style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: "4px",
-                  background: `linear-gradient(90deg, ${item.color}, transparent)`,
-                  boxShadow: `0 0 20px ${item.color}88`,
-                }} />
-
-                {/* Icon */}
-                <div style={{
-                  fontSize: "32px",
-                  marginBottom: "16px",
-                  filter: `drop-shadow(0 0 16px ${item.color}88)`,
-                }}>
-                  {item.icon}
-                </div>
-
-                {/* Label */}
-                <div style={{
-                  color: "#94a3b8",
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  letterSpacing: "1.5px",
-                  marginBottom: "12px",
-                }}>
-                  {item.label}
-                </div>
-
-                {/* Value */}
-                <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                  <span style={{
-                    color: item.color,
-                    fontSize: "40px",
-                    fontWeight: "900",
-                    letterSpacing: "-1.5px",
-                    textShadow: `0 0 30px ${item.color}66`,
-                  }}>
-                    {item.value}
-                  </span>
-                  <span style={{
-                    color: "#64748b",
-                    fontSize: "16px",
-                    fontWeight: "700",
-                  }}>
-                    {item.unit}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </>
   );

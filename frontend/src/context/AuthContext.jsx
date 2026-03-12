@@ -1,11 +1,25 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI, setToken, removeToken, getToken } from "../utils/api";
+import { authAPI, setToken, removeToken, getToken, googleFitAPI } from "../utils/api";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Auto-sync Google Fit data silently
+  const syncGoogleFitSilently = async () => {
+    const isConnected = localStorage.getItem("healix_gfit_connected");
+    if (isConnected === "true") {
+      try {
+        await googleFitAPI.sync();
+        localStorage.setItem("healix_gfit_last_sync", new Date().toLocaleString());
+        console.log("[HEALIX] Google Fit data synced on login");
+      } catch {
+        console.log("[HEALIX] Google Fit sync skipped (not connected or error)");
+      }
+    }
+  };
 
   // On mount, check if we have a stored token and fetch user profile
   useEffect(() => {
@@ -14,7 +28,7 @@ export const AuthProvider = ({ children }) => {
       authAPI
         .me()
         .then((userData) => {
-          setUser({
+          const userObj = {
             id: userData.id,
             role: userData.role,
             name: `${userData.first_name} ${userData.last_name}`,
@@ -24,7 +38,12 @@ export const AuthProvider = ({ children }) => {
             age: userData.age,
             gender: userData.gender,
             health_conditions: userData.health_conditions,
-          });
+          };
+          setUser(userObj);
+          // Auto-sync Google Fit for patients
+          if (userData.role === "patient") {
+            syncGoogleFitSilently();
+          }
         })
         .catch(() => {
           removeToken();
@@ -58,6 +77,12 @@ export const AuthProvider = ({ children }) => {
       health_conditions: userData.health_conditions,
     };
     setUser(userObj);
+
+    // Auto-sync Google Fit for patients on login
+    if (userObj.role === "patient") {
+      syncGoogleFitSilently();
+    }
+
     return userObj;
   };
 

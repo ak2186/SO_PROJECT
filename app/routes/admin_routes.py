@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from app.middleware.auth_middleware import get_current_user_token, require_role
-from app.controllers.admin_controller import get_audit_logs, get_all_users, delete_user, update_user_role, create_provider
+from app.controllers.admin_controller import get_audit_logs, get_all_users, delete_user, update_user_role, create_provider, get_all_appointments, get_all_prescriptions
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -27,6 +27,29 @@ async def read_audit_logs(
 ):
     require_role(current_user, ["admin"])
     return await get_audit_logs(page, limit, action, user_id, date_from, date_to)
+
+
+@router.get("/appointments")
+async def read_all_appointments(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=500),
+    status: Optional[str] = Query(None),
+    current_user=Depends(get_current_user_token),
+):
+    require_role(current_user, ["admin"])
+    return await get_all_appointments(page, limit, status)
+
+
+@router.get("/prescriptions")
+async def read_all_prescriptions(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=500),
+    status: Optional[str] = Query(None),
+    current_user=Depends(get_current_user_token),
+):
+    require_role(current_user, ["admin"])
+    return await get_all_prescriptions(page, limit, status)
+
 
 @router.get("/users")
 async def read_all_users(

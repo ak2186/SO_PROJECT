@@ -75,6 +75,9 @@ export const authAPI = {
 
 // ─── Appointments ───────────────────────────────────────
 export const appointmentsAPI = {
+    // List available providers (for booking)
+    getProviders: () => request("/appointments/providers"),
+
     // Patient: get my appointments
     getMyAppointments: (params = {}) => {
         const query = new URLSearchParams(params).toString();
@@ -171,6 +174,21 @@ export const biomarkersAPI = {
         }),
 };
 
+// ─── Google Fit ─────────────────────────────────────────
+export const googleFitAPI = {
+    connect: () => request("/googlefit/connect"),
+
+    sync: () => {
+        const tzMin = new Date().getTimezoneOffset(); // e.g. -330 for IST
+        return request(`/googlefit/sync?tz_offset=${tzMin}`, { method: "POST" });
+    },
+
+    today: () => {
+        const tzMin = new Date().getTimezoneOffset();
+        return request(`/googlefit/today?tz_offset=${tzMin}`);
+    },
+};
+
 // ─── Admin ──────────────────────────────────────────────
 export const adminAPI = {
     getUsers: (params = {}) => {
@@ -195,5 +213,15 @@ export const adminAPI = {
     getAuditLogs: (params = {}) => {
         const query = new URLSearchParams(params).toString();
         return request(`/admin/audit-logs${query ? `?${query}` : ""}`);
+    },
+
+    getAllAppointments: (params = {}) => {
+        const query = new URLSearchParams(params).toString();
+        return request(`/admin/appointments${query ? `?${query}` : ""}`);
+    },
+
+    getAllPrescriptions: (params = {}) => {
+        const query = new URLSearchParams(params).toString();
+        return request(`/admin/prescriptions${query ? `?${query}` : ""}`);
     },
 };

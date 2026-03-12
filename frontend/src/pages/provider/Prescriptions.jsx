@@ -1,44 +1,67 @@
 import { useState, useEffect } from "react";
 import { prescriptionsAPI } from "../../utils/api";
 
-const initialRequests = [
-  { id: 1, patient: "Sarah Johnson", medication: "Atorvastatin 20mg", currentRefills: 3, requestedDate: "Feb 18, 2026", status: "pending", avatar: "SJ" },
-  { id: 2, patient: "Robert Williams", medication: "Metformin 500mg", currentRefills: 5, requestedDate: "Feb 17, 2026", status: "pending", avatar: "RW" },
-  { id: 3, patient: "Emma Davis", medication: "Lisinopril 10mg", currentRefills: 0, requestedDate: "Feb 16, 2026", status: "approved", avatar: "ED" },
-];
-
-const activePrescriptions = [
-  { id: 4, patient: "Michael Chen", medication: "Amlodipine 5mg", dosage: "Once daily", refills: 4, issued: "Jan 20, 2026", avatar: "MC" },
-  { id: 5, patient: "Lisa Anderson", medication: "Levothyroxine 50mcg", dosage: "Once daily", refills: 6, issued: "Jan 10, 2026", avatar: "LA" },
-  { id: 6, patient: "David Martinez", medication: "Omeprazole 20mg", dosage: "Once daily before meals", refills: 3, issued: "Feb 5, 2026", avatar: "DM" },
-];
-
-const avatarColors = { SJ: "#10b981", MC: "#3b82f6", ED: "#f59e0b", RW: "#8b5cf6", LA: "#06b6d4", DM: "#ec4899" };
+const defaultAvatarColors = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"];
 
 export const Prescriptions = () => {
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState([]);
+  const [activePrescriptions, setActivePrescriptions] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("pending");
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch provider prescriptions from backend
   useEffect(() => {
-    prescriptionsAPI.getProviderPrescriptions()
+    prescriptionsAPI.getProviderPrescriptions({ limit: 100 })
       .then((data) => {
-        if (data && Array.isArray(data.prescriptions) && data.prescriptions.length > 0) {
-          const mapped = data.prescriptions.map((rx) => ({
-            id: rx.id || rx._id,
-            patient: rx.patient_name || rx.patient || "Patient",
-            medication: `${rx.medication_name || rx.name || "Medication"} ${rx.dosage || ""}`.trim(),
-            currentRefills: rx.refills_remaining ?? rx.refillsLeft ?? 0,
-            requestedDate: rx.requested_date ? new Date(rx.requested_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-            status: rx.status || "pending",
-            avatar: (rx.patient_name || rx.patient || "PT").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-          }));
-          if (mapped.length > 0) setRequests(mapped);
+        if (data && Array.isArray(data.prescriptions)) {
+          // Separate prescriptions with pending refill requests vs active prescriptions
+          const refillReqs = [];
+          const active = [];
+
+          data.prescriptions.forEach((rx, idx) => {
+            const avatar = (rx.patient_name || "PT").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+            const color = defaultAvatarColors[idx % defaultAvatarColors.length];
+
+            // Extract pending refill requests
+            if (rx.refill_requests && rx.refill_requests.length > 0) {
+              rx.refill_requests.forEach((rr) => {
+                refillReqs.push({
+                  id: rr.id,
+                  prescriptionId: rx._id || rx.id,
+                  patient: rx.patient_name || "Patient",
+                  medication: `${rx.medication_name || "Medication"} ${rx.dosage || ""}`.trim(),
+                  currentRefills: (rx.refills_allowed ?? 0) - (rx.refills_used ?? 0),
+                  requestedDate: rr.requested_at ? new Date(rr.requested_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+                  status: rr.status || "pending",
+                  avatar,
+                  _color: color,
+                });
+              });
+            }
+
+            // Add to active prescriptions list
+            if (rx.status === "active") {
+              active.push({
+                id: rx._id || rx.id,
+                patient: rx.patient_name || "Patient",
+                medication: `${rx.medication_name || "Medication"} ${rx.dosage || ""}`.trim(),
+                dosage: rx.frequency || "",
+                refills: (rx.refills_allowed ?? 0) - (rx.refills_used ?? 0),
+                issued: rx.created_at ? new Date(rx.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+                avatar,
+                _color: color,
+              });
+            }
+          });
+
+          setRequests(refillReqs);
+          setActivePrescriptions(active);
         }
       })
-      .catch(() => { }); // fallback to mock data
+      .catch(() => { })
+      .finally(() => setLoading(false));
   }, []);
 
   const showToast = (msg) => {
@@ -46,14 +69,24 @@ export const Prescriptions = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleApprove = (id) => {
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "approved" } : r));
-    showToast("Refill request approved!");
+  const handleApprove = async (r) => {
+    try {
+      await prescriptionsAPI.handleRefill(r.prescriptionId, r.id, { action: "approved" });
+      setRequests(prev => prev.map(req => req.id === r.id ? { ...req, status: "approved" } : req));
+      showToast("Refill request approved!");
+    } catch {
+      showToast("Failed to approve refill.");
+    }
   };
 
-  const handleDeny = (id) => {
-    setRequests(prev => prev.filter(r => r.id !== id));
-    showToast("Refill request denied.");
+  const handleDeny = async (r) => {
+    try {
+      await prescriptionsAPI.handleRefill(r.prescriptionId, r.id, { action: "denied" });
+      setRequests(prev => prev.filter(req => req.id !== r.id));
+      showToast("Refill request denied.");
+    } catch {
+      showToast("Failed to deny refill.");
+    }
   };
 
   const filtered = requests.filter(r => {
@@ -125,12 +158,15 @@ export const Prescriptions = () => {
         {/* Refill Requests */}
         <h2 style={{ color: "#f1f5f9", fontSize: "18px", fontWeight: "700", marginBottom: "16px", animation: "fadeUp 0.5s ease 0.16s both" }}>Refill Requests</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "40px" }}>
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !loading && (
             <div style={{ textAlign: "center", color: "#334155", padding: "40px", fontSize: "16px" }}>No refill requests found.</div>
+          )}
+          {loading && (
+            <div style={{ textAlign: "center", color: "#64748b", padding: "40px", fontSize: "16px" }}>Loading...</div>
           )}
           {filtered.map((r, i) => (
             <div key={r.id} className="rx-card" style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${0.16 + i * 0.06}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)", opacity: r.status === "approved" ? 0.6 : 1 }}>
-              <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: avatarColors[r.avatar] || "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
+              <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: r._color || "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
                 {r.avatar}
               </div>
               <div style={{ flex: 1 }}>
@@ -143,11 +179,11 @@ export const Prescriptions = () => {
               </div>
               {r.status === "pending" ? (
                 <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
-                  <button onClick={() => handleApprove(r.id)} className="action-btn"
+                  <button onClick={() => handleApprove(r)} className="action-btn"
                     style={{ padding: "8px 18px", borderRadius: "8px", border: "none", background: "#10b981", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
                     Approve
                   </button>
-                  <button onClick={() => handleDeny(r.id)} className="action-btn"
+                  <button onClick={() => handleDeny(r)} className="action-btn"
                     style={{ padding: "8px 18px", borderRadius: "8px", border: "1px solid #ef4444", background: "transparent", color: "#ef4444", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
                     Deny
                   </button>
@@ -164,10 +200,13 @@ export const Prescriptions = () => {
         {/* Active Prescriptions */}
         <h2 style={{ color: "#f1f5f9", fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Active Prescriptions</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px" }}>
+          {activePrescriptions.length === 0 && !loading && (
+            <div style={{ textAlign: "center", color: "#334155", padding: "40px", fontSize: "16px" }}>No active prescriptions.</div>
+          )}
           {activePrescriptions.map((p, i) => (
             <div key={p.id} style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: avatarColors[p.avatar] || "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "14px", color: "#fff" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: p._color || "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "14px", color: "#fff" }}>
                   {p.avatar}
                 </div>
                 <div style={{ flex: 1 }}>

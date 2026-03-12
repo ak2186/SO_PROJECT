@@ -110,6 +110,74 @@ async def update_user_role(user_id: str, new_role: str):
 
     return {"message": f"User {user['email']} role updated to {new_role}"}
 
+async def get_all_appointments(
+    page: int = 1,
+    limit: int = 20,
+    status: Optional[str] = None,
+):
+    """Admin: get all appointments across all providers/patients"""
+    db = await get_database()
+    query = {}
+    if status:
+        query["status"] = status
+
+    skip = (page - 1) * limit
+    total = await db.appointments.count_documents(query)
+    cursor = db.appointments.find(query).sort("appointment_date", -1).skip(skip).limit(limit)
+    appointments = await cursor.to_list(length=limit)
+
+    for a in appointments:
+        a["_id"] = str(a["_id"])
+        provider = await db.users.find_one({"_id": ObjectId(a["provider_id"])})
+        if provider:
+            a["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
+        patient = await db.users.find_one({"_id": ObjectId(a["patient_id"])})
+        if patient:
+            a["patient_name"] = f"{patient['first_name']} {patient['last_name']}"
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit,
+        "appointments": appointments,
+    }
+
+
+async def get_all_prescriptions(
+    page: int = 1,
+    limit: int = 20,
+    status: Optional[str] = None,
+):
+    """Admin: get all prescriptions across all providers/patients"""
+    db = await get_database()
+    query = {}
+    if status:
+        query["status"] = status
+
+    skip = (page - 1) * limit
+    total = await db.prescriptions.count_documents(query)
+    cursor = db.prescriptions.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    prescriptions = await cursor.to_list(length=limit)
+
+    for p in prescriptions:
+        p["_id"] = str(p["_id"])
+        provider = await db.users.find_one({"_id": ObjectId(p["provider_id"])})
+        if provider:
+            p["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
+        patient = await db.users.find_one({"_id": ObjectId(p["patient_id"])})
+        if patient:
+            p["patient_name"] = f"{patient['first_name']} {patient['last_name']}"
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit,
+        "prescriptions": prescriptions,
+    }
+
+
 async def create_provider(user_data: dict):
     db = await get_database()
 
