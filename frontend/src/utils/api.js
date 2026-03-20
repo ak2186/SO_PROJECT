@@ -36,8 +36,8 @@ async function request(endpoint, options = {}) {
         headers,
     });
 
-    // If unauthorized, clear token
-    if (res.status === 401) {
+    // Only clear token on 401 from the /auth/me endpoint (token truly invalid)
+    if (res.status === 401 && endpoint === "/auth/me") {
         removeToken();
     }
 
@@ -71,6 +71,12 @@ export const authAPI = {
 
     logout: () =>
         request("/auth/logout", { method: "POST" }).catch(() => { }),
+
+    updateProfile: (data) =>
+        request("/auth/profile", {
+            method: "PUT",
+            body: JSON.stringify(data),
+        }),
 };
 
 // ─── Appointments ───────────────────────────────────────
@@ -224,4 +230,18 @@ export const adminAPI = {
         const query = new URLSearchParams(params).toString();
         return request(`/admin/prescriptions${query ? `?${query}` : ""}`);
     },
+};
+
+// ─── Notifications ─────────────────────────────────────
+export const notificationsAPI = {
+    getAll: (params = {}) => {
+        const query = new URLSearchParams(params).toString();
+        return request(`/notifications${query ? `?${query}` : ""}`);
+    },
+
+    markRead: (notificationId) =>
+        request(`/notifications/${notificationId}/read`, { method: "PATCH" }),
+
+    markAllRead: () =>
+        request("/notifications/read-all", { method: "PATCH" }),
 };

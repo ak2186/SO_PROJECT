@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./pages/auth/Login";
-import { Signup } from "./pages/auth/Signup";
 import { PatientDashboard } from "./pages/patient/Dashboard";
 import { ProviderDashboard } from "./pages/provider/Dashboard";
 import { AdminDashboard } from "./pages/admin/Dashboard";
@@ -16,6 +15,8 @@ import { Assistant } from "./pages/patient/Assistant";
 import { Settings } from "./pages/patient/Settings";
 
 import { PatientVitals } from "./pages/patient/Vitals";
+import { ProfileSetup } from "./pages/patient/ProfileSetup";
+import { Landing } from "./pages/patient/Landing";
 
 import { PatientList } from "./pages/provider/PatientList";
 import { Appointments as ProviderAppointments } from "./pages/provider/Appointments";
@@ -34,9 +35,32 @@ export default function App() {
           {/* Default redirect to login */}
           <Route path="/" element={<Navigate to="/login" />} />
 
-          {/* Auth pages */}
+          {/* Auth page */}
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/auth" element={<Login />} />
+          <Route path="/signup" element={<Navigate to="/login" replace />} />
+
+          {/* Profile Setup (new patients, no navbar) */}
+          <Route
+            path="/profile-setup"
+            element={
+              <ProtectedRoute role="patient">
+                <ProfileSetup />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Landing page (all roles, with navbar) */}
+          <Route element={<Layout />}>
+            <Route
+              path="/landing"
+              element={
+                <ProtectedRoute>
+                  <Landing />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
 
           {/* Patient pages */}
           <Route element={<Layout />}>

@@ -21,6 +21,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const buildUserObj = (userData) => ({
+    id: userData.id,
+    role: userData.role,
+    name: `${userData.first_name} ${userData.last_name}`,
+    email: userData.email,
+    first_name: userData.first_name,
+    last_name: userData.last_name,
+    age: userData.age,
+    gender: userData.gender,
+    date_of_birth: userData.date_of_birth,
+    health_conditions: userData.health_conditions,
+    blood_type: userData.blood_type,
+    height: userData.height,
+    weight: userData.weight,
+    phone_number: userData.phone_number,
+    medical_insurance: userData.medical_insurance,
+    emergency_contact_name: userData.emergency_contact_name,
+    emergency_contact_phone: userData.emergency_contact_phone,
+    emergency_contact_relationship: userData.emergency_contact_relationship,
+    profile_completed: userData.profile_completed,
+  });
+
   // On mount, check if we have a stored token and fetch user profile
   useEffect(() => {
     const token = getToken();
@@ -28,17 +50,7 @@ export const AuthProvider = ({ children }) => {
       authAPI
         .me()
         .then((userData) => {
-          const userObj = {
-            id: userData.id,
-            role: userData.role,
-            name: `${userData.first_name} ${userData.last_name}`,
-            email: userData.email,
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            age: userData.age,
-            gender: userData.gender,
-            health_conditions: userData.health_conditions,
-          };
+          const userObj = buildUserObj(userData);
           setUser(userObj);
           // Auto-sync Google Fit for patients
           if (userData.role === "patient") {
@@ -65,17 +77,7 @@ export const AuthProvider = ({ children }) => {
 
     // Fetch user profile after login
     const userData = await authAPI.me();
-    const userObj = {
-      id: userData.id,
-      role: userData.role,
-      name: `${userData.first_name} ${userData.last_name}`,
-      email: userData.email,
-      first_name: userData.first_name,
-      last_name: userData.last_name,
-      age: userData.age,
-      gender: userData.gender,
-      health_conditions: userData.health_conditions,
-    };
+    const userObj = buildUserObj(userData);
     setUser(userObj);
 
     // Auto-sync Google Fit for patients on login
@@ -83,6 +85,16 @@ export const AuthProvider = ({ children }) => {
       syncGoogleFitSilently();
     }
 
+    return userObj;
+  };
+
+  /**
+   * Refresh user data from the backend
+   */
+  const refreshUser = async () => {
+    const userData = await authAPI.me();
+    const userObj = buildUserObj(userData);
+    setUser(userObj);
     return userObj;
   };
 
@@ -104,7 +116,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

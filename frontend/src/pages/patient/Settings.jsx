@@ -1,19 +1,31 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { googleFitAPI } from "../../utils/api";
+import { googleFitAPI, authAPI } from "../../utils/api";
 
 export const Settings = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [personal, setPersonal] = useState({
-    name: user?.name || "Your Name",
-    email: user?.email || "you@example.com",
-    phone: "+44 7911 123456",
-    dob: "1999-03-14"
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
+    email: user?.email || "",
+    phone_number: user?.phone_number || "",
+    date_of_birth: user?.date_of_birth || "",
+    gender: user?.gender || "",
+    age: user?.age ?? "",
+    health_conditions: user?.health_conditions || "",
+    blood_type: user?.blood_type || "",
+    height: user?.height ?? "",
+    weight: user?.weight ?? "",
+    medical_insurance: user?.medical_insurance || "",
+    emergency_contact_name: user?.emergency_contact_name || "",
+    emergency_contact_phone: user?.emergency_contact_phone || "",
+    emergency_contact_relationship: user?.emergency_contact_relationship || "",
   });
   const [passwords, setPasswords] = useState({ current: "", newPass: "", confirm: "" });
   const [activeSection, setActiveSection] = useState("personal");
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // Google Fit state
@@ -46,16 +58,44 @@ export const Settings = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handlePersonalSave = () => {
+  const handlePersonalSave = async () => {
     const e = {};
-    if (!personal.name.trim()) e.name = "Name is required";
+    if (!personal.first_name.trim()) e.first_name = "First name is required";
+    if (!personal.last_name.trim()) e.last_name = "Last name is required";
     if (!personal.email.includes("@")) e.email = "Valid email required";
-    if (personal.phone && personal.phone.length < 8) e.phone = "Enter a valid phone number";
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    showToast("Personal details updated!");
+    setSaving(true);
+
+    try {
+      // Build update payload — only send non-empty values
+      const payload = {};
+      payload.first_name = personal.first_name.trim();
+      payload.last_name = personal.last_name.trim();
+      payload.email = personal.email.trim();
+      if (personal.phone_number) payload.phone_number = personal.phone_number.trim();
+      if (personal.date_of_birth) payload.date_of_birth = personal.date_of_birth;
+      if (personal.gender) payload.gender = personal.gender;
+      if (personal.age !== "" && personal.age !== null) payload.age = Number(personal.age);
+      if (personal.health_conditions) payload.health_conditions = personal.health_conditions.trim();
+      if (personal.blood_type) payload.blood_type = personal.blood_type;
+      if (personal.height !== "" && personal.height !== null) payload.height = Number(personal.height);
+      if (personal.weight !== "" && personal.weight !== null) payload.weight = Number(personal.weight);
+      if (personal.medical_insurance) payload.medical_insurance = personal.medical_insurance.trim();
+      if (personal.emergency_contact_name) payload.emergency_contact_name = personal.emergency_contact_name.trim();
+      if (personal.emergency_contact_phone) payload.emergency_contact_phone = personal.emergency_contact_phone.trim();
+      if (personal.emergency_contact_relationship) payload.emergency_contact_relationship = personal.emergency_contact_relationship.trim();
+
+      await authAPI.updateProfile(payload);
+      await refreshUser();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      showToast("Personal details updated!");
+    } catch (err) {
+      showToast(err.message || "Failed to save changes", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handlePasswordSave = () => {
@@ -94,9 +134,9 @@ export const Settings = () => {
       setGfitConnected(true);
 
       const synced = Object.keys(result?.synced_data || {});
-      const errors = result?.errors || [];
+      const syncErrors = result?.errors || [];
       let msg = synced.length ? `Synced: ${synced.join(", ")}` : "No new data found";
-      if (errors.length) msg += ` | Skipped: ${errors.length}`;
+      if (syncErrors.length) msg += ` | Skipped: ${syncErrors.length}`;
       showToast(msg);
     } catch (err) {
       const msg = err.message || "Sync failed";
@@ -126,6 +166,8 @@ export const Settings = () => {
     { id: "integrations", label: "Integrations", icon: "🔗" },
   ];
 
+  const labelStyle = { display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" };
+
   const inputStyle = (err) => ({
     width: "100%",
     padding: "12px 14px",
@@ -139,6 +181,25 @@ export const Settings = () => {
     fontFamily: "'DM Sans', sans-serif",
     transition: "border-color 0.2s",
   });
+
+  const selectStyle = {
+    ...inputStyle(false),
+    appearance: "none",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 14px center",
+    paddingRight: "36px",
+  };
+
+  const sectionDivider = (title) => (
+    <div style={{ gridColumn: "1/-1", marginTop: "12px", marginBottom: "4px", display: "flex", alignItems: "center", gap: "12px" }}>
+      <span style={{ color: "#94a3b8", fontSize: "13px", fontWeight: "700", whiteSpace: "nowrap" }}>{title}</span>
+      <div style={{ flex: 1, height: "1px", background: "#1e293b" }} />
+    </div>
+  );
+
+  const displayName = `${personal.first_name} ${personal.last_name}`.trim();
+  const initials = [personal.first_name, personal.last_name].filter(Boolean).map(n => n[0]).join("").slice(0, 2) || "?";
 
   return (
     <>
@@ -194,33 +255,42 @@ export const Settings = () => {
                 <div>
                   <div style={{ marginBottom: "28px" }}>
                     <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Personal Details</h2>
-                    <p style={{ color: "#475569", fontSize: "14px", margin: 0 }}>Update your name, email, phone and date of birth.</p>
+                    <p style={{ color: "#475569", fontSize: "14px", margin: 0 }}>Update your profile information, health details, and emergency contacts.</p>
                   </div>
 
                   {/* Avatar */}
                   <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "32px", padding: "20px", background: "#060d1a", borderRadius: "12px", border: "1px solid #1e293b" }}>
                     <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "linear-gradient(135deg,#3b82f6,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "22px", color: "#fff", flexShrink: 0 }}>
-                      {personal.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                      {initials}
                     </div>
                     <div>
-                      <div style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "16px" }}>{personal.name || "Your Name"}</div>
+                      <div style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "16px" }}>{displayName || "Your Name"}</div>
                       <div style={{ color: "#475569", fontSize: "13px" }}>Patient Account</div>
                     </div>
                   </div>
 
                   {/* Form Fields */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                    {/* Full Name */}
-                    <div style={{ gridColumn: "1/-1" }}>
-                      <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Full Name</label>
-                      <input type="text" className="settings-input" style={inputStyle(errors.name)} value={personal.name}
-                        onChange={e => setPersonal(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" />
-                      {errors.name && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.name}</p>}
+
+                    {/* First Name */}
+                    <div>
+                      <label style={labelStyle}>First Name</label>
+                      <input type="text" className="settings-input" style={inputStyle(errors.first_name)} value={personal.first_name}
+                        onChange={e => setPersonal(p => ({ ...p, first_name: e.target.value }))} placeholder="First name" />
+                      {errors.first_name && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.first_name}</p>}
+                    </div>
+
+                    {/* Last Name */}
+                    <div>
+                      <label style={labelStyle}>Last Name</label>
+                      <input type="text" className="settings-input" style={inputStyle(errors.last_name)} value={personal.last_name}
+                        onChange={e => setPersonal(p => ({ ...p, last_name: e.target.value }))} placeholder="Last name" />
+                      {errors.last_name && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.last_name}</p>}
                     </div>
 
                     {/* Email */}
                     <div>
-                      <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Email Address</label>
+                      <label style={labelStyle}>Email Address</label>
                       <input type="email" className="settings-input" style={inputStyle(errors.email)} value={personal.email}
                         onChange={e => setPersonal(p => ({ ...p, email: e.target.value }))} placeholder="you@example.com" />
                       {errors.email && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.email}</p>}
@@ -228,24 +298,121 @@ export const Settings = () => {
 
                     {/* Phone */}
                     <div>
-                      <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Phone Number</label>
-                      <input type="tel" className="settings-input" style={inputStyle(errors.phone)} value={personal.phone}
-                        onChange={e => setPersonal(p => ({ ...p, phone: e.target.value }))} placeholder="+44 7911 000000" />
-                      {errors.phone && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.phone}</p>}
+                      <label style={labelStyle}>Phone Number</label>
+                      <input type="tel" className="settings-input" style={inputStyle(false)} value={personal.phone_number}
+                        onChange={e => setPersonal(p => ({ ...p, phone_number: e.target.value }))} placeholder="+1 234 567 8900" />
                     </div>
 
                     {/* DOB */}
                     <div>
-                      <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Date of Birth</label>
-                      <input type="date" className="settings-input" style={{ ...inputStyle(false), colorScheme: "dark" }} value={personal.dob}
-                        onChange={e => setPersonal(p => ({ ...p, dob: e.target.value }))} />
+                      <label style={labelStyle}>Date of Birth</label>
+                      <input type="date" className="settings-input" style={{ ...inputStyle(false), colorScheme: "dark" }} value={personal.date_of_birth}
+                        onChange={e => setPersonal(p => ({ ...p, date_of_birth: e.target.value }))} />
+                    </div>
+
+                    {/* Gender */}
+                    <div>
+                      <label style={labelStyle}>Gender</label>
+                      <select className="settings-input" style={selectStyle} value={personal.gender}
+                        onChange={e => setPersonal(p => ({ ...p, gender: e.target.value }))}>
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+
+                    {/* Age */}
+                    <div>
+                      <label style={labelStyle}>Age</label>
+                      <input type="number" className="settings-input" style={inputStyle(false)} value={personal.age}
+                        onChange={e => setPersonal(p => ({ ...p, age: e.target.value }))} placeholder="e.g. 25" min="0" max="150" />
+                    </div>
+
+                    {/* Health Conditions */}
+                    <div>
+                      <label style={labelStyle}>Health Conditions</label>
+                      <input type="text" className="settings-input" style={inputStyle(false)} value={personal.health_conditions}
+                        onChange={e => setPersonal(p => ({ ...p, health_conditions: e.target.value }))} placeholder="e.g. Asthma, Diabetes" />
+                    </div>
+
+                    {sectionDivider("Health Information")}
+
+                    {/* Blood Type */}
+                    <div>
+                      <label style={labelStyle}>Blood Type</label>
+                      <select className="settings-input" style={selectStyle} value={personal.blood_type}
+                        onChange={e => setPersonal(p => ({ ...p, blood_type: e.target.value }))}>
+                        <option value="">Select blood type</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                      </select>
+                    </div>
+
+                    {/* Height */}
+                    <div>
+                      <label style={labelStyle}>Height (cm)</label>
+                      <input type="number" className="settings-input" style={inputStyle(false)} value={personal.height}
+                        onChange={e => setPersonal(p => ({ ...p, height: e.target.value }))} placeholder="e.g. 175" min="0" step="0.1" />
+                    </div>
+
+                    {/* Weight */}
+                    <div>
+                      <label style={labelStyle}>Weight (kg)</label>
+                      <input type="number" className="settings-input" style={inputStyle(false)} value={personal.weight}
+                        onChange={e => setPersonal(p => ({ ...p, weight: e.target.value }))} placeholder="e.g. 70" min="0" step="0.1" />
+                    </div>
+
+                    {/* Medical Insurance */}
+                    <div>
+                      <label style={labelStyle}>Medical Insurance</label>
+                      <input type="text" className="settings-input" style={inputStyle(false)} value={personal.medical_insurance}
+                        onChange={e => setPersonal(p => ({ ...p, medical_insurance: e.target.value }))} placeholder="Insurance provider" />
+                    </div>
+
+                    {sectionDivider("Emergency Contact")}
+
+                    {/* Emergency Contact Name */}
+                    <div>
+                      <label style={labelStyle}>Contact Name</label>
+                      <input type="text" className="settings-input" style={inputStyle(false)} value={personal.emergency_contact_name}
+                        onChange={e => setPersonal(p => ({ ...p, emergency_contact_name: e.target.value }))} placeholder="Full name" />
+                    </div>
+
+                    {/* Emergency Contact Phone */}
+                    <div>
+                      <label style={labelStyle}>Contact Phone</label>
+                      <input type="tel" className="settings-input" style={inputStyle(false)} value={personal.emergency_contact_phone}
+                        onChange={e => setPersonal(p => ({ ...p, emergency_contact_phone: e.target.value }))} placeholder="+1 234 567 8900" />
+                    </div>
+
+                    {/* Emergency Contact Relationship */}
+                    <div>
+                      <label style={labelStyle}>Relationship</label>
+                      <select className="settings-input" style={selectStyle} value={personal.emergency_contact_relationship}
+                        onChange={e => setPersonal(p => ({ ...p, emergency_contact_relationship: e.target.value }))}>
+                        <option value="">Select relationship</option>
+                        <option value="Parent">Parent</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Sibling">Sibling</option>
+                        <option value="Child">Child</option>
+                        <option value="Friend">Friend</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
                   </div>
 
                   <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
-                    <button className="save-btn" onClick={handlePersonalSave}
-                      style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: "8px" }}>
-                      {saved ? <span style={{ animation: "checkIn 0.3s ease" }}>✓ Saved!</span> : "Save Changes"}
+                    <button className="save-btn" onClick={handlePersonalSave} disabled={saving}
+                      style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: "8px", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
+                      {saving ? "Saving..." : saved ? <span style={{ animation: "checkIn 0.3s ease" }}>Saved!</span> : "Save Changes"}
                     </button>
                   </div>
                 </div>
@@ -303,7 +470,7 @@ export const Settings = () => {
                           fontFamily: "'DM Sans',sans-serif", cursor: "pointer",
                           display: "flex", alignItems: "center", gap: "8px",
                         }}>
-                          🔗 Connect Google Fit
+                          Connect Google Fit
                         </button>
                       )}
                       <button onClick={handleGfitSync} disabled={gfitSyncing} style={{
@@ -315,7 +482,7 @@ export const Settings = () => {
                         opacity: gfitSyncing ? 0.6 : 1,
                         display: "flex", alignItems: "center", gap: "8px",
                       }}>
-                        {gfitSyncing ? "⏳ Syncing..." : "🔄 Sync Now"}
+                        {gfitSyncing ? "Syncing..." : "Sync Now"}
                       </button>
                       {gfitConnected && (
                         <button onClick={handleGfitDisconnect} style={{
@@ -353,7 +520,7 @@ export const Settings = () => {
                   <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     {/* Current */}
                     <div>
-                      <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Current Password</label>
+                      <label style={labelStyle}>Current Password</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.current)} value={passwords.current}
                         onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))} placeholder="••••••••" />
                       {errors.current && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.current}</p>}
@@ -361,7 +528,7 @@ export const Settings = () => {
 
                     {/* New */}
                     <div>
-                      <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>New Password</label>
+                      <label style={labelStyle}>New Password</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.newPass)} value={passwords.newPass}
                         onChange={e => setPasswords(p => ({ ...p, newPass: e.target.value }))} placeholder="At least 8 characters" />
                       {errors.newPass && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.newPass}</p>}
@@ -385,7 +552,7 @@ export const Settings = () => {
 
                     {/* Confirm */}
                     <div>
-                      <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Confirm New Password</label>
+                      <label style={labelStyle}>Confirm New Password</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.confirm)} value={passwords.confirm}
                         onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} placeholder="Repeat new password" />
                       {errors.confirm && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.confirm}</p>}

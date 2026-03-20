@@ -12,6 +12,35 @@ from datetime import datetime
 from bson import ObjectId
 from app.utils.audit_logger import AuditLogger
 from fastapi import Request
+from app.models.user import UserUpdate
+
+
+def _user_response(user: dict) -> UserResponse:
+    """Build a UserResponse from a MongoDB user document."""
+    return UserResponse(
+        id=str(user["_id"]),
+        email=user["email"],
+        first_name=user["first_name"],
+        last_name=user["last_name"],
+        age=user.get("age"),
+        gender=user.get("gender"),
+        date_of_birth=user.get("date_of_birth"),
+        role=user["role"],
+        status=user["status"],
+        health_conditions=user.get("health_conditions"),
+        blood_type=user.get("blood_type"),
+        height=user.get("height"),
+        weight=user.get("weight"),
+        phone_number=user.get("phone_number"),
+        medical_insurance=user.get("medical_insurance"),
+        emergency_contact_name=user.get("emergency_contact_name"),
+        emergency_contact_phone=user.get("emergency_contact_phone"),
+        emergency_contact_relationship=user.get("emergency_contact_relationship"),
+        profile_completed=user.get("profile_completed", False),
+        created_at=user["created_at"],
+        updated_at=user.get("updated_at"),
+    )
+
 
 async def register_user(user_data: UserCreate) -> UserResponse:
     """
@@ -52,18 +81,7 @@ async def register_user(user_data: UserCreate) -> UserResponse:
     created_user = await db.users.find_one({"_id": result.inserted_id})
     
     # Return user response (without password)
-    return UserResponse(
-        id=str(created_user["_id"]),
-        email=created_user["email"],
-        first_name=created_user["first_name"],
-        last_name=created_user["last_name"],
-        age=created_user.get("age"),
-        gender=created_user.get("gender"),
-        role=created_user["role"],
-        status=created_user["status"],
-        health_conditions=created_user.get("health_conditions"),
-        created_at=created_user["created_at"]
-    )
+    return _user_response(created_user)
 
 
 async def login_user(login_data: UserLogin, request: Request) -> Token:
@@ -171,16 +189,33 @@ async def get_current_user(user_id: str) -> UserResponse:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    return UserResponse(
-        id=str(user["_id"]),
-        email=user["email"],
-        first_name=user["first_name"],
-        last_name=user["last_name"],
-        age=user.get("age"),
-        gender=user.get("gender"),
-        role=user["role"],
-        status=user["status"],
-        health_conditions=user.get("health_conditions"),
-        created_at=user["created_at"]
+
+    return _user_response(user)
+
+
+async def update_user_profile(user_id: str, update_data: UserUpdate) -> UserResponse:
+    """Update user profile fields."""
+    db = Database.get_db()
+
+    update_dict = update_data.model_dump(exclude_none=True)
+    if not update_dict:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update"
+        )
+
+    update_dict["updated_at"] = datetime.utcnow()
+
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": update_dict}
     )
+
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    return _user_response(user)

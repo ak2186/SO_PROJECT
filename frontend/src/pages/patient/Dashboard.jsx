@@ -46,9 +46,9 @@ export const PatientDashboard = () => {
     // 1. Show cached DB data immediately
     fetchCurrentReadings();
 
-    // 2. If Google Fit is connected, sync fresh data then apply it directly
+    // 2. If Google Fit is connected, fetch today's cached data (Landing already synced)
     if (localStorage.getItem("healix_gfit_connected") === "true") {
-      googleFitAPI.sync()
+      googleFitAPI.today()
         .then(applyGfitData)
         .catch(() => { });
     }

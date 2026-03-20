@@ -22,6 +22,10 @@ export const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showRevokeModal, setShowRevokeModal] = useState(null);
+  const [showCreateProvider, setShowCreateProvider] = useState(false);
+  const [providerForm, setProviderForm] = useState({ first_name: "", last_name: "", email: "", password: "", gender: "" });
+  const [providerError, setProviderError] = useState("");
+  const [providerLoading, setProviderLoading] = useState(false);
 
   // Fetch users from backend
   useEffect(() => {
@@ -90,6 +94,41 @@ export const AdminDashboard = () => {
     setShowRevokeModal(null);
   };
 
+  const handleCreateProvider = async (e) => {
+    e.preventDefault();
+    if (!providerForm.first_name || !providerForm.last_name || !providerForm.email || !providerForm.password) {
+      setProviderError("Please fill all required fields.");
+      return;
+    }
+    setProviderError("");
+    setProviderLoading(true);
+    try {
+      const result = await adminAPI.createProvider(providerForm);
+      const p = result.provider;
+      const name = `${p.first_name} ${p.last_name}`;
+      const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+      setUsers((prev) => [
+        {
+          id: p._id,
+          name,
+          email: p.email,
+          role: "Healthcare Provider",
+          backendRole: "provider",
+          joinDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          status: "Active",
+          avatar: initials,
+        },
+        ...prev,
+      ]);
+      setShowCreateProvider(false);
+      setProviderForm({ first_name: "", last_name: "", email: "", password: "", gender: "" });
+    } catch (err) {
+      setProviderError(err.message || "Failed to create provider.");
+    } finally {
+      setProviderLoading(false);
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -136,19 +175,40 @@ export const AdminDashboard = () => {
       }}>
 
         {/* Header */}
-        <div style={{ marginBottom: "32px", animation: "fadeUp 0.6s ease both" }}>
-          <h1 style={{
-            color: "#f1f5f9",
-            fontSize: "32px",
-            fontWeight: "800",
-            margin: "0 0 6px 0",
-            letterSpacing: "-1px",
-          }}>
-            Admin Dashboard
-          </h1>
-          <p style={{ color: "#64748b", fontSize: "15px", margin: 0 }}>
-            Manage users and account privileges
-          </p>
+        <div style={{ marginBottom: "32px", animation: "fadeUp 0.6s ease both", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <h1 style={{
+              color: "#f1f5f9",
+              fontSize: "32px",
+              fontWeight: "800",
+              margin: "0 0 6px 0",
+              letterSpacing: "-1px",
+            }}>
+              Admin Dashboard
+            </h1>
+            <p style={{ color: "#64748b", fontSize: "15px", margin: 0 }}>
+              Manage users and account privileges
+            </p>
+          </div>
+          <button
+            onClick={() => { setShowCreateProvider(true); setProviderError(""); }}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "10px",
+              border: "none",
+              background: "linear-gradient(135deg, #1d4ed8, #0891b2)",
+              color: "#fff",
+              fontWeight: "700",
+              fontSize: "14px",
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            + Create Provider
+          </button>
         </div>
 
         {/* Stats Cards */}
@@ -450,6 +510,115 @@ export const AdminDashboard = () => {
                   Confirm Grant
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Provider Modal */}
+        {showCreateProvider && (
+          <div className="modal-overlay" onClick={() => setShowCreateProvider(false)}>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#0f172a",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "20px",
+                padding: "32px",
+                width: "480px",
+              }}
+            >
+              <div style={{ fontSize: "48px", marginBottom: "16px", textAlign: "center" }}>👨‍⚕️</div>
+              <h2 style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", margin: "0 0 8px 0", textAlign: "center" }}>
+                Create Provider Account
+              </h2>
+              <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 24px 0", textAlign: "center" }}>
+                Create a new healthcare provider account
+              </p>
+
+              {providerError && (
+                <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", marginBottom: "16px" }}>
+                  {providerError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateProvider}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Name *</label>
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={providerForm.first_name}
+                      onChange={(e) => setProviderForm(f => ({ ...f, first_name: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Last Name *</label>
+                    <input
+                      type="text"
+                      placeholder="Last Name"
+                      value={providerForm.last_name}
+                      onChange={(e) => setProviderForm(f => ({ ...f, last_name: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email *</label>
+                  <input
+                    type="email"
+                    placeholder="provider@hospital.com"
+                    value={providerForm.email}
+                    onChange={(e) => setProviderForm(f => ({ ...f, email: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Password *</label>
+                    <input
+                      type="password"
+                      placeholder="Min 8 chars"
+                      value={providerForm.password}
+                      onChange={(e) => setProviderForm(f => ({ ...f, password: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Gender</label>
+                    <select
+                      value={providerForm.gender}
+                      onChange={(e) => setProviderForm(f => ({ ...f, gender: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif", appearance: "none" }}
+                    >
+                      <option value="">Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "24px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateProvider(false)}
+                    style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#94a3b8", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={providerLoading}
+                    style={{ padding: "10px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #1d4ed8, #0891b2)", color: "#fff", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: providerLoading ? 0.7 : 1 }}
+                  >
+                    {providerLoading ? "Creating..." : "Create Provider"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

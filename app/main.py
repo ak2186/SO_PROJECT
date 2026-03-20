@@ -21,6 +21,7 @@ from app.routes import googlefit_routes
 from app.routes import appointment_routes
 from app.routes import prescription_routes
 from app.routes import chat_routes
+from app.routes import notification_routes
 
 # Set up logging
 logging.basicConfig(
@@ -107,6 +108,7 @@ app.include_router(appointment_routes.router)
 app.include_router(prescription_routes.router)
 # app.include_router(export_routes.router, prefix="/api/export", tags=["Export"])
 app.include_router(chat_routes.router)
+app.include_router(notification_routes.router)
 
 
 # Global exception handler

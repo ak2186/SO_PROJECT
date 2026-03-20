@@ -33,9 +33,19 @@ class UserBase(BaseModel):
     last_name: str
     age: Optional[int] = None
     gender: Optional[str] = None
+    date_of_birth: Optional[str] = None
     role: str = "patient"  # patient, provider, admin
     status: str = "active"  # active, inactive
     health_conditions: Optional[str] = None
+    blood_type: Optional[str] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    phone_number: Optional[str] = None
+    medical_insurance: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    profile_completed: bool = False
 
 
 class UserCreate(UserBase):
@@ -65,7 +75,17 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = None
     age: Optional[int] = None
     gender: Optional[str] = None
+    date_of_birth: Optional[str] = None
     health_conditions: Optional[str] = None
+    blood_type: Optional[str] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    phone_number: Optional[str] = None
+    medical_insurance: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    profile_completed: Optional[bool] = None
 
 
 class UserInDB(UserBase):
@@ -85,6 +105,7 @@ class UserResponse(UserBase):
     """User data returned in API responses (NO password)"""
     id: str
     created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

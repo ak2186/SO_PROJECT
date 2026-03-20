@@ -4,8 +4,8 @@ API endpoints for registration and login
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.user import UserCreate, UserResponse, UserLogin, Token
-from app.controllers.auth_controller import register_user, login_user, get_current_user
+from app.models.user import UserCreate, UserResponse, UserLogin, Token, UserUpdate
+from app.controllers.auth_controller import register_user, login_user, get_current_user, update_user_profile
 from app.middleware.auth_middleware import get_current_user_token
 from app.models.user import TokenData
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -65,6 +65,15 @@ async def get_me(token_data: TokenData = Depends(get_current_user_token)):
     - Current user's data
     """
     return await get_current_user(token_data.user_id)
+
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    update_data: UserUpdate,
+    token_data: TokenData = Depends(get_current_user_token),
+):
+    """Update the current user's profile"""
+    return await update_user_profile(token_data.user_id, update_data)
 
 
 @router.post("/logout")
