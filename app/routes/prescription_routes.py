@@ -6,10 +6,10 @@ API endpoints for prescription management
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
 from pydantic import BaseModel
-from app.models.prescription import PrescriptionCreate
+from app.models.prescription import PrescriptionCreate, SelfPrescriptionCreate
 from app.middleware.auth_middleware import get_current_user_token, require_role
 from app.controllers.prescription_controller import (
-    create_prescription, get_patient_prescriptions,
+    create_prescription, create_self_prescription, get_patient_prescriptions,
     get_provider_prescriptions, request_refill, review_refill
 )
 
@@ -32,6 +32,16 @@ async def new_prescription(
 ):
     require_role(current_user, ["provider"])
     return await create_prescription(current_user.user_id, data)
+
+
+@router.post("/self")
+async def add_self_prescription(
+    data: SelfPrescriptionCreate,
+    current_user=Depends(get_current_user_token),
+):
+    """Patient adds their own existing medication"""
+    require_role(current_user, ["patient"])
+    return await create_self_prescription(current_user.user_id, data)
 
 
 @router.get("/my")

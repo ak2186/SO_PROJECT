@@ -81,7 +81,7 @@ export const Appointments = () => {
       const newAppt = {
         id: result.appointment?._id || result.appointment?.id || Date.now(),
         doctor: providerName,
-        specialty: "",
+        specialty: provider?.specialty || "",
         date: dateTime.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
         time: dateTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
         status: "pending",
@@ -224,34 +224,52 @@ export const Appointments = () => {
         {/* Schedule Modal */}
         {showSchedule && (
           <div className="modal-overlay">
-            <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "16px", padding: "36px", width: "440px" }}>
-              <h3 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 24px 0" }}>Schedule Appointment</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div>
-                  <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Select Doctor *</label>
-                  <select className="schedule-input" value={form.provider_id} onChange={e => setForm(p => ({ ...p, provider_id: e.target.value }))}>
-                    <option value="">-- Choose a provider --</option>
-                    {providers.map(pr => (
-                      <option key={pr._id || pr.id} value={pr._id || pr.id}>
-                        {pr.first_name} {pr.last_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "16px", padding: "36px", width: "540px", maxHeight: "85vh", overflowY: "auto" }}>
+              <h3 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 20px 0" }}>Schedule Appointment</h3>
+
+              {/* Doctor Selection Cards */}
+              <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Select Doctor *</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "18px", maxHeight: "240px", overflowY: "auto", paddingRight: "4px" }}>
+                {providers.map(pr => {
+                  const prId = pr._id || pr.id;
+                  const selected = form.provider_id === prId;
+                  const initials = `${pr.first_name?.[0] || ""}${pr.last_name?.[0] || ""}`.toUpperCase();
+                  return (
+                    <div key={prId} onClick={() => setForm(p => ({ ...p, provider_id: prId }))}
+                      style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderRadius: "12px", border: `1px solid ${selected ? "#3b82f6" : "#1e293b"}`, background: selected ? "rgba(59,130,246,0.08)" : "#060d1a", cursor: "pointer", transition: "all 0.15s ease" }}>
+                      <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: selected ? "#3b82f6" : "#1e293b", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "14px", color: "#fff", flexShrink: 0 }}>
+                        {initials}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "14px" }}>Dr. {pr.first_name} {pr.last_name}</div>
+                        {pr.specialty && <div style={{ color: "#3b82f6", fontSize: "12px", fontWeight: "600", marginTop: "2px" }}>{pr.specialty}</div>}
+                        <div style={{ display: "flex", gap: "12px", marginTop: "4px", flexWrap: "wrap" }}>
+                          {pr.available_hours && <span style={{ color: "#64748b", fontSize: "11px" }}>🕐 {pr.available_hours}</span>}
+                          {pr.working_days && <span style={{ color: "#64748b", fontSize: "11px" }}>📅 {pr.working_days}</span>}
+                        </div>
+                      </div>
+                      {selected && <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", color: "#fff", flexShrink: 0 }}>✓</div>}
+                    </div>
+                  );
+                })}
+                {providers.length === 0 && <div style={{ color: "#475569", fontSize: "13px", padding: "20px", textAlign: "center" }}>No providers available.</div>}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
                 <div>
                   <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Date *</label>
-                  <input type="date" className="schedule-input" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
+                  <input type="date" className="schedule-input" style={{ colorScheme: "dark" }} value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
                 </div>
                 <div>
                   <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Time *</label>
-                  <input type="time" className="schedule-input" value={form.time} onChange={e => setForm(p => ({ ...p, time: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Reason</label>
-                  <input type="text" placeholder="e.g. Annual checkup" className="schedule-input" value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} />
+                  <input type="time" className="schedule-input" style={{ colorScheme: "dark" }} value={form.time} onChange={e => setForm(p => ({ ...p, time: e.target.value }))} />
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+              <div style={{ marginBottom: "14px" }}>
+                <label style={{ display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Reason</label>
+                <input type="text" placeholder="e.g. Annual checkup" className="schedule-input" value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} />
+              </div>
+              <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
                 <button onClick={() => setShowSchedule(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "1px solid #1e293b", background: "transparent", color: "#94a3b8", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Cancel</button>
                 <button onClick={handleSchedule} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "none", background: "#3b82f6", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Confirm</button>
               </div>

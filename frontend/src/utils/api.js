@@ -133,6 +133,13 @@ export const prescriptionsAPI = {
             body: JSON.stringify(data),
         }),
 
+    // Patient: add own medication
+    addSelf: (data) =>
+        request("/prescriptions/self", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
     // Request a refill (patient)
     requestRefill: (prescriptionId) =>
         request(`/prescriptions/${prescriptionId}/refill`, { method: "POST" }),

@@ -94,10 +94,13 @@ async def get_patient_appointments(
     for a in appointments:
         a["_id"] = str(a["_id"])
 
-        # Get provider name
+        # Get provider details
         provider = await db.users.find_one({"_id": ObjectId(a["provider_id"])})
         if provider:
             a["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
+            a["specialty"] = provider.get("specialty", "")
+            a["available_hours"] = provider.get("available_hours", "")
+            a["working_days"] = provider.get("working_days", "")
 
     return {
         "total": total,

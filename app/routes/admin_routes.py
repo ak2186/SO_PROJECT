@@ -14,6 +14,9 @@ class CreateProviderRequest(BaseModel):
     last_name: str
     age: Optional[int] = None
     gender: Optional[str] = None
+    specialty: Optional[str] = None
+    available_hours: Optional[str] = None
+    working_days: Optional[str] = None
 
 @router.get("/audit-logs")
 async def read_audit_logs(

@@ -28,6 +28,15 @@ class PrescriptionCreate(BaseModel):
     refills_allowed: int = 0
 
 
+class SelfPrescriptionCreate(BaseModel):
+    """Data when a patient adds their own existing medication"""
+    medication_name: str
+    dosage: str
+    frequency: str
+    duration: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class PrescriptionResponse(BaseModel):
     """Prescription data returned in API responses"""
     id: str

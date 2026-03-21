@@ -8,7 +8,37 @@ from datetime import datetime
 from typing import Optional
 from bson import ObjectId
 from app.config.database import Database
-from app.models.prescription import PrescriptionCreate
+from app.models.prescription import PrescriptionCreate, SelfPrescriptionCreate
+
+
+async def create_self_prescription(patient_id: str, data: SelfPrescriptionCreate):
+    """Patient adds their own existing medication"""
+    db = Database.get_db()
+
+    prescription = {
+        "patient_id": patient_id,
+        "provider_id": "self",
+        "medication_name": data.medication_name,
+        "dosage": data.dosage,
+        "frequency": data.frequency,
+        "duration": data.duration or "",
+        "notes": data.notes,
+        "status": "active",
+        "refills_allowed": 0,
+        "refills_used": 0,
+        "refill_requests": [],
+        "source": "self",
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+
+    result = await db.prescriptions.insert_one(prescription)
+    prescription["_id"] = str(result.inserted_id)
+
+    return {
+        "message": "Medication added successfully",
+        "prescription": prescription,
+    }
 
 
 async def create_prescription(provider_id: str, data: PrescriptionCreate):
@@ -67,10 +97,16 @@ async def get_patient_prescriptions(
 
     for p in prescriptions:
         p["_id"] = str(p["_id"])
-        # Get provider name
-        provider = await db.users.find_one({"_id": ObjectId(p["provider_id"])})
-        if provider:
-            p["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
+        # Get provider name (skip for self-added medications)
+        if p.get("provider_id") == "self" or p.get("source") == "self":
+            p["provider_name"] = "Self-added"
+        else:
+            try:
+                provider = await db.users.find_one({"_id": ObjectId(p["provider_id"])})
+                if provider:
+                    p["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
+            except Exception:
+                p["provider_name"] = "Unknown"
 
     return {
         "total": total,

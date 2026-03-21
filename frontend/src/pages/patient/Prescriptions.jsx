@@ -17,9 +17,26 @@ export const Prescriptions = () => {
   const [toast, setToast] = useState(null);
   const [refillRequested, setRefillRequested] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ medication_name: "", dosage: "", frequency: "", duration: "", notes: "" });
+  const [addSaving, setAddSaving] = useState(false);
 
-  // Fetch prescriptions from backend
-  useEffect(() => {
+  useEffect(() => { fetchPrescriptions(); }, []);
+
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleRefill = async (id) => {
+    try {
+      await prescriptionsAPI.requestRefill(id);
+    } catch { }
+    setRefillRequested(p => ({ ...p, [id]: true }));
+    showToast("Refill request sent to your doctor!");
+  };
+
+  const fetchPrescriptions = () => {
     prescriptionsAPI.getMyPrescriptions()
       .then((data) => {
         if (data && Array.isArray(data.prescriptions)) {
@@ -36,25 +53,33 @@ export const Prescriptions = () => {
             category: rx.category || "General",
             active: rx.status === "active",
             duration: rx.duration || "",
+            source: rx.source || "",
           }));
           setPrescriptions(mapped);
         }
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, []);
-
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
   };
 
-  const handleRefill = async (id) => {
+  const handleAddMedication = async () => {
+    if (!addForm.medication_name || !addForm.dosage || !addForm.frequency) {
+      showToast("Please fill in medication name, dosage, and frequency.", "error");
+      return;
+    }
+    setAddSaving(true);
     try {
-      await prescriptionsAPI.requestRefill(id);
-    } catch { }
-    setRefillRequested(p => ({ ...p, [id]: true }));
-    showToast("Refill request sent to your doctor!");
+      await prescriptionsAPI.addSelf(addForm);
+      showToast("Medication added successfully!");
+      setShowAddModal(false);
+      setAddForm({ medication_name: "", dosage: "", frequency: "", duration: "", notes: "" });
+      setLoading(true);
+      fetchPrescriptions();
+    } catch (err) {
+      showToast(err.message || "Failed to add medication.", "error");
+    } finally {
+      setAddSaving(false);
+    }
   };
 
   const handleDownload = (rx) => {
@@ -139,7 +164,54 @@ export const Prescriptions = () => {
               </button>
             ))}
           </div>
+          <button className="rx-btn" onClick={() => setShowAddModal(true)}
+            style={{ marginLeft: "auto", padding: "9px 20px", borderRadius: "8px", border: "none", background: "#10b981", color: "#fff", fontWeight: "700", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap", letterSpacing: "0.3px" }}>
+            + Add My Medication
+          </button>
         </div>
+
+        {/* Add Medication Modal */}
+        {showAddModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center" }}
+            onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}>
+            <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "16px", padding: "32px", width: "460px", maxWidth: "90vw", animation: "fadeUp 0.3s ease" }}>
+              <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 6px 0" }}>Add Your Medication</h2>
+              <p style={{ color: "#64748b", fontSize: "13px", margin: "0 0 24px 0" }}>Add a medication you're already taking</p>
+
+              {[
+                { key: "medication_name", label: "Medication Name", placeholder: "e.g. Metformin", required: true },
+                { key: "dosage", label: "Dosage", placeholder: "e.g. 500mg", required: true },
+                { key: "frequency", label: "Frequency", placeholder: "e.g. Twice daily", required: true },
+                { key: "duration", label: "Duration (optional)", placeholder: "e.g. 3 months" },
+                { key: "notes", label: "Notes (optional)", placeholder: "Any additional notes" },
+              ].map(({ key, label, placeholder, required }) => (
+                <div key={key} style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                    {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={addForm[key]}
+                    onChange={(e) => setAddForm(f => ({ ...f, [key]: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 14px", background: "#060d1a", border: "1px solid #1e293b", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", fontFamily: "'DM Sans',sans-serif", boxSizing: "border-box" }}
+                  />
+                </div>
+              ))}
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                <button className="rx-btn" onClick={() => setShowAddModal(false)}
+                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid #1e293b", background: "transparent", color: "#94a3b8", fontWeight: "600", fontSize: "14px", fontFamily: "'DM Sans',sans-serif" }}>
+                  Cancel
+                </button>
+                <button className="rx-btn" onClick={handleAddMedication} disabled={addSaving}
+                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: addSaving ? "#1e293b" : "#10b981", color: addSaving ? "#64748b" : "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif" }}>
+                  {addSaving ? "Adding..." : "Add Medication"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Prescription Cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -162,6 +234,7 @@ export const Prescriptions = () => {
                       <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "18px" }}>{rx.name}</span>
                       <span style={{ color: "#94a3b8", fontSize: "14px", fontWeight: "500" }}>{rx.dosage}</span>
                       <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: cat.bg, color: cat.text, border: `1px solid ${cat.border}`, letterSpacing: "0.3px" }}>{rx.category}</span>
+                      {rx.source === "self" && <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(139,92,246,0.12)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>Self-added</span>}
                       {!rx.active && <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(71,85,105,0.2)", color: "#64748b", border: "1px solid #1e293b" }}>Inactive</span>}
                     </div>
                     <div style={{ color: "#64748b", fontSize: "13px", marginBottom: "16px" }}>

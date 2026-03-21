@@ -46,6 +46,10 @@ class UserBase(BaseModel):
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relationship: Optional[str] = None
     profile_completed: bool = False
+    # Provider-specific fields
+    specialty: Optional[str] = None
+    available_hours: Optional[str] = None  # e.g. "9:00 AM - 5:00 PM"
+    working_days: Optional[str] = None  # e.g. "Mon - Fri"
 
 
 class UserCreate(UserBase):
@@ -86,6 +90,9 @@ class UserUpdate(BaseModel):
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relationship: Optional[str] = None
     profile_completed: Optional[bool] = None
+    specialty: Optional[str] = None
+    available_hours: Optional[str] = None
+    working_days: Optional[str] = None
 
 
 class UserInDB(UserBase):
