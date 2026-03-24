@@ -33,25 +33,28 @@ export const Settings = () => {
   const [gfitSyncing, setGfitSyncing] = useState(false);
   const [gfitLastSync, setGfitLastSync] = useState(null);
 
+  const uid = user?.id;
+
   useEffect(() => {
-    const stored = localStorage.getItem("healix_gfit_connected");
+    if (!uid) return;
+    const stored = localStorage.getItem(`healix_gfit_connected_${uid}`);
     if (stored === "true") {
       setGfitConnected(true);
-      const lastSync = localStorage.getItem("healix_gfit_last_sync");
+      const lastSync = localStorage.getItem(`healix_gfit_last_sync_${uid}`);
       if (lastSync) setGfitLastSync(lastSync);
     }
 
     // Listen for postMessage from Google OAuth popup callback
     const handleMessage = (event) => {
       if (event.data?.type === "GFIT_CONNECTED") {
-        localStorage.setItem("healix_gfit_connected", "true");
+        localStorage.setItem(`healix_gfit_connected_${uid}`, "true");
         setGfitConnected(true);
         showToast("Google Fit connected! Click 'Sync Now' to pull your data.");
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [uid]);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -115,7 +118,7 @@ export const Settings = () => {
       if (data?.auth_url) {
         window.open(data.auth_url, "_blank", "width=500,height=600");
         showToast("Complete sign-in in the popup window, then click 'Sync Now'");
-        localStorage.setItem("healix_gfit_connected", "true");
+        localStorage.setItem(`healix_gfit_connected_${uid}`, "true");
         setGfitConnected(true);
       }
     } catch (err) {
@@ -129,8 +132,8 @@ export const Settings = () => {
       const result = await googleFitAPI.sync();
       const now = new Date().toLocaleString();
       setGfitLastSync(now);
-      localStorage.setItem("healix_gfit_last_sync", now);
-      localStorage.setItem("healix_gfit_connected", "true");
+      localStorage.setItem(`healix_gfit_last_sync_${uid}`, now);
+      localStorage.setItem(`healix_gfit_connected_${uid}`, "true");
       setGfitConnected(true);
 
       const synced = Object.keys(result?.synced_data || {});
@@ -142,7 +145,7 @@ export const Settings = () => {
       const msg = err.message || "Sync failed";
       if (msg.includes("not connected") || msg.includes("expired") || msg.includes("reconnect")) {
         setGfitConnected(false);
-        localStorage.removeItem("healix_gfit_connected");
+        localStorage.removeItem(`healix_gfit_connected_${uid}`);
         showToast("Google Fit session expired. Please reconnect.", "error");
       } else {
         showToast(msg, "error");
@@ -153,8 +156,8 @@ export const Settings = () => {
   };
 
   const handleGfitDisconnect = () => {
-    localStorage.removeItem("healix_gfit_connected");
-    localStorage.removeItem("healix_gfit_last_sync");
+    localStorage.removeItem(`healix_gfit_connected_${uid}`);
+    localStorage.removeItem(`healix_gfit_last_sync_${uid}`);
     setGfitConnected(false);
     setGfitLastSync(null);
     showToast("Google Fit disconnected");

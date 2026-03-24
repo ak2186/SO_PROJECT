@@ -9,6 +9,7 @@ from typing import Optional
 from bson import ObjectId
 from app.config.database import Database
 from app.models.prescription import PrescriptionCreate, SelfPrescriptionCreate
+from app.controllers.notification_controller import create_notification
 
 
 async def create_self_prescription(patient_id: str, data: SelfPrescriptionCreate):
@@ -70,6 +71,16 @@ async def create_prescription(provider_id: str, data: PrescriptionCreate):
 
     result = await db.prescriptions.insert_one(prescription)
     prescription["_id"] = str(result.inserted_id)
+
+    # Notify patient about new prescription
+    provider = await db.users.find_one({"_id": ObjectId(provider_id)})
+    provider_name = f"Dr. {provider['last_name']}" if provider else "Your doctor"
+    await create_notification(
+        user_id=data.patient_id,
+        title="New Prescription",
+        message=f"{provider_name} prescribed {data.medication_name}",
+        notif_type="prescription",
+    )
 
     return {
         "message": "Prescription created successfully",
@@ -186,6 +197,16 @@ async def request_refill(prescription_id: str, patient_id: str, notes: Optional[
         {"$push": {"refill_requests": refill_request}}
     )
 
+    # Notify provider about refill request
+    patient = await db.users.find_one({"_id": ObjectId(patient_id)})
+    patient_name = f"{patient['first_name']} {patient['last_name']}" if patient else "A patient"
+    await create_notification(
+        user_id=prescription["provider_id"],
+        title="Refill Request",
+        message=f"{patient_name} requested a refill for {prescription['medication_name']}",
+        notif_type="prescription",
+    )
+
     return {"message": "Refill request submitted successfully", "refill_request": refill_request}
 
 
@@ -228,5 +249,14 @@ async def review_refill(prescription_id: str, refill_id: str, provider_id: str, 
             {"_id": ObjectId(prescription_id)},
             {"$inc": {"refills_used": 1}}
         )
+
+    # Notify patient about refill decision
+    status_text = "approved" if action == "approved" else "denied"
+    await create_notification(
+        user_id=prescription["patient_id"],
+        title=f"Refill {status_text.capitalize()}",
+        message=f"Your refill request for {prescription['medication_name']} has been {status_text}",
+        notif_type="prescription",
+    )
 
     return {"message": f"Refill request {action} successfully"}

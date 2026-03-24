@@ -23,12 +23,12 @@ export const Landing = () => {
   useEffect(() => {
     if (
       user?.role === "patient" &&
-      localStorage.getItem("healix_gfit_connected") === "true"
+      localStorage.getItem(`healix_gfit_connected_${user.id}`) === "true"
     ) {
       googleFitAPI
         .sync()
         .then(() => {
-          localStorage.setItem("healix_gfit_last_sync", new Date().toLocaleString());
+          localStorage.setItem(`healix_gfit_last_sync_${user.id}`, new Date().toLocaleString());
           console.log("[HEALIX] Google Fit synced from Landing page");
         })
         .catch(() => {
@@ -41,7 +41,8 @@ export const Landing = () => {
     notificationsAPI
       .getAll()
       .then((data) => {
-        if (Array.isArray(data)) setNotifications(data);
+        const list = data?.notifications ?? data;
+        if (Array.isArray(list)) setNotifications(list);
       })
       .catch(() => {})
       .finally(() => setLoadingNotifs(false));
@@ -83,7 +84,7 @@ export const Landing = () => {
   const handleMarkRead = async (id) => {
     try {
       await notificationsAPI.markRead(id);
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+      setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, read: true } : n)));
     } catch {}
   };
 
@@ -192,9 +193,9 @@ export const Landing = () => {
               const { icon, color, bg } = getNotifIcon(n.type);
               return (
                 <div
-                  key={n.id}
+                  key={n._id}
                   className="notif-item"
-                  onClick={() => !n.read && handleMarkRead(n.id)}
+                  onClick={() => !n.read && handleMarkRead(n._id)}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",

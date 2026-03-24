@@ -9,6 +9,7 @@ from typing import Optional
 from bson import ObjectId
 from app.config.database import Database
 from app.models.appointment import AppointmentCreate
+from app.controllers.notification_controller import create_notification
 
 
 async def list_providers():
@@ -66,6 +67,25 @@ async def create_appointment(patient_id: str, data: AppointmentCreate):
 
     result = await db.appointments.insert_one(appointment)
     appointment["_id"] = str(result.inserted_id)
+
+    # Notify the provider about the new appointment
+    patient = await db.users.find_one({"_id": ObjectId(patient_id)})
+    patient_name = f"{patient['first_name']} {patient['last_name']}" if patient else "A patient"
+    appt_date = data.appointment_date.strftime("%b %d, %Y at %I:%M %p")
+    await create_notification(
+        user_id=data.provider_id,
+        title="New Appointment Request",
+        message=f"{patient_name} booked an appointment for {appt_date}. Please review and confirm.",
+        notif_type="appointment",
+    )
+    # Notify the patient about their booking
+    provider_name = f"Dr. {provider['first_name']} {provider['last_name']}"
+    await create_notification(
+        user_id=patient_id,
+        title="Appointment Booked",
+        message=f"Your appointment with {provider_name} on {appt_date} is pending confirmation.",
+        notif_type="appointment",
+    )
 
     return {
         "message": "Appointment booked successfully",
@@ -168,6 +188,29 @@ async def cancel_appointment(appointment_id: str, user_id: str, role: str):
         {"$set": {"status": "cancelled", "updated_at": datetime.utcnow()}}
     )
 
+    # Notify the other party about the cancellation
+    appt_date = appointment["appointment_date"].strftime("%b %d, %Y at %I:%M %p")
+    if role == "patient":
+        # Patient cancelled → notify provider
+        patient = await db.users.find_one({"_id": ObjectId(user_id)})
+        name = f"{patient['first_name']} {patient['last_name']}" if patient else "A patient"
+        await create_notification(
+            user_id=appointment["provider_id"],
+            title="Appointment Cancelled",
+            message=f"{name} cancelled their appointment on {appt_date}.",
+            notif_type="appointment",
+        )
+    else:
+        # Provider/admin cancelled → notify patient
+        provider = await db.users.find_one({"_id": ObjectId(appointment["provider_id"])})
+        name = f"Dr. {provider['first_name']} {provider['last_name']}" if provider else "Your doctor"
+        await create_notification(
+            user_id=appointment["patient_id"],
+            title="Appointment Cancelled",
+            message=f"{name} cancelled your appointment on {appt_date}.",
+            notif_type="appointment",
+        )
+
     return {"message": "Appointment cancelled successfully"}
 
 
@@ -185,6 +228,17 @@ async def confirm_appointment(appointment_id: str, provider_id: str):
     await db.appointments.update_one(
         {"_id": ObjectId(appointment_id)},
         {"$set": {"status": "confirmed", "updated_at": datetime.utcnow()}}
+    )
+
+    # Notify the patient that appointment is confirmed
+    provider = await db.users.find_one({"_id": ObjectId(provider_id)})
+    provider_name = f"Dr. {provider['first_name']} {provider['last_name']}" if provider else "Your doctor"
+    appt_date = appointment["appointment_date"].strftime("%b %d, %Y at %I:%M %p")
+    await create_notification(
+        user_id=appointment["patient_id"],
+        title="Appointment Confirmed",
+        message=f"{provider_name} confirmed your appointment on {appt_date}.",
+        notif_type="appointment",
     )
 
     return {"message": "Appointment confirmed successfully"}

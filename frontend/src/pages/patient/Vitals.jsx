@@ -6,8 +6,10 @@ import {
   calcStatsFromWeek,
 } from "../../data/vitalsMock";
 import { biomarkersAPI, googleFitAPI } from "../../utils/api";
+import { useAuth } from "../../context/AuthContext";
 
 export const PatientVitals = () => {
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState("today");
   const [vitalsToday, setVitalsToday] = useState({ heartRate: [], spo2: [] });
   const [vitalsWeek, setVitalsWeek] = useState({ heartRate: [], spo2: [] });
@@ -91,7 +93,7 @@ export const PatientVitals = () => {
     fetchBiomarkerData();
 
     // 2. If Google Fit connected, sync fresh data from Google, then apply directly
-    if (localStorage.getItem("healix_gfit_connected") === "true") {
+    if (user?.id && localStorage.getItem(`healix_gfit_connected_${user.id}`) === "true") {
       googleFitAPI.sync()
         .then(applyTimeseries)
         .catch(() => { });

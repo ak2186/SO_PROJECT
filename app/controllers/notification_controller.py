@@ -20,8 +20,7 @@ async def get_user_notifications(user_id: str, unread_only: bool = False):
     notifications = await cursor.to_list(length=50)
 
     for n in notifications:
-        n["id"] = str(n["_id"])
-        del n["_id"]
+        n["_id"] = str(n["_id"])
 
     return notifications
 

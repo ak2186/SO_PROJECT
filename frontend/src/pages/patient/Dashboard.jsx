@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { biomarkersAPI, googleFitAPI } from "../../utils/api";
+import { useAuth } from "../../context/AuthContext";
 
 export const PatientDashboard = () => {
+  const { user } = useAuth();
   const [hrValue, setHrValue] = useState(null);
   const [spo2Value, setSpo2Value] = useState(null);
   const [stepsVal, setStepsVal] = useState(null);
@@ -29,28 +31,44 @@ export const PatientDashboard = () => {
   };
 
   // Apply synced data directly from sync/today response (freshest values)
+  // If a metric is missing from today's data, reset it to null (no stale data)
   const applyGfitData = (data) => {
     const d = data?.synced_data;
-    if (!d) return;
-    if (d.heart_rate != null) setHrValue(Math.round(d.heart_rate));
-    if (d.spo2 != null) setSpo2Value(Math.round(d.spo2));
+    if (!d || Object.keys(d).length === 0) {
+      // No synced data at all — clear everything, show "no data"
+      setHrValue(null);
+      setSpo2Value(null);
+      setStepsVal(null);
+      setCaloriesVal(null);
+      setStepsProgress(0);
+      setLoading(false);
+      return;
+    }
+    // Set or clear each metric based on whether it exists in today's data
+    setHrValue(d.heart_rate != null ? Math.round(d.heart_rate) : null);
+    setSpo2Value(d.spo2 != null ? Math.round(d.spo2) : null);
     if (d.steps != null) {
       setStepsVal(d.steps);
       setStepsProgress(Math.min(Math.round((d.steps / 10000) * 100), 100));
+    } else {
+      setStepsVal(null);
+      setStepsProgress(0);
     }
-    if (d.calories != null) setCaloriesVal(Math.round(d.calories));
+    setCaloriesVal(d.calories != null ? Math.round(d.calories) : null);
     setLoading(false);
   };
 
   useEffect(() => {
-    // 1. Show cached DB data immediately
-    fetchCurrentReadings();
+    const gfitConnected = user?.id && localStorage.getItem(`healix_gfit_connected_${user.id}`) === "true";
 
-    // 2. If Google Fit is connected, fetch today's cached data (Landing already synced)
-    if (localStorage.getItem("healix_gfit_connected") === "true") {
+    if (gfitConnected) {
+      // Google Fit is connected — ONLY use today's synced data (no stale DB readings)
       googleFitAPI.today()
         .then(applyGfitData)
-        .catch(() => { });
+        .catch(() => setLoading(false));
+    } else {
+      // No Google Fit — fall back to latest DB readings
+      fetchCurrentReadings();
     }
   }, []);
 

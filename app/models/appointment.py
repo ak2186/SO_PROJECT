@@ -5,7 +5,7 @@ Defines the structure of appointment documents in MongoDB
 
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class AppointmentCreate(BaseModel):
@@ -18,7 +18,11 @@ class AppointmentCreate(BaseModel):
     @field_validator('appointment_date')
     @classmethod
     def validate_date(cls, v):
-        if v < datetime.utcnow():
+        now = datetime.now(timezone.utc)
+        # If incoming datetime is naive, treat as UTC
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        if v < now:
             raise ValueError('Appointment date must be in the future')
         return v
 

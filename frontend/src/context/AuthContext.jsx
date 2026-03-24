@@ -8,12 +8,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Auto-sync Google Fit data silently
-  const syncGoogleFitSilently = async () => {
-    const isConnected = localStorage.getItem("healix_gfit_connected");
+  const syncGoogleFitSilently = async (userId) => {
+    const isConnected = localStorage.getItem(`healix_gfit_connected_${userId}`);
     if (isConnected === "true") {
       try {
         await googleFitAPI.sync();
-        localStorage.setItem("healix_gfit_last_sync", new Date().toLocaleString());
+        localStorage.setItem(`healix_gfit_last_sync_${userId}`, new Date().toLocaleString());
         console.log("[HEALIX] Google Fit data synced on login");
       } catch {
         console.log("[HEALIX] Google Fit sync skipped (not connected or error)");
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
           setUser(userObj);
           // Auto-sync Google Fit for patients
           if (userData.role === "patient") {
-            syncGoogleFitSilently();
+            syncGoogleFitSilently(userData.id);
           }
         })
         .catch(() => {
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
 
     // Auto-sync Google Fit for patients on login
     if (userObj.role === "patient") {
-      syncGoogleFitSilently();
+      syncGoogleFitSilently(userObj.id);
     }
 
     return userObj;

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./goals.css";
 import { Pencil, Flame, Footprints, TrendingUp } from "lucide-react";
 import { biomarkersAPI } from "../../utils/api";
+import { useAuth } from "../../context/AuthContext";
 
 const GoalCard = ({
   title,
@@ -12,10 +13,19 @@ const GoalCard = ({
   color,
   backgroundColor,
   daysColor,
+  storageKey,
 }) => {
-  // Goal state
-  const [target, setTarget] = useState(initialTarget);
-  const [editTarget, setEditTarget] = useState(initialTarget);
+  // Load persisted target or use default
+  const loadTarget = () => {
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) return Number(saved);
+    }
+    return initialTarget;
+  };
+
+  const [target, setTarget] = useState(loadTarget);
+  const [editTarget, setEditTarget] = useState(loadTarget);
   const [isEditing, setIsEditing] = useState(false);
   const [percentage, setPercentage] = useState(0);
   const [showWeekly, setShowWeekly] = useState(false);
@@ -35,7 +45,9 @@ const GoalCard = ({
 
   // Save target
   const handleSave = () => {
-    setTarget(Number(editTarget));
+    const val = Number(editTarget);
+    setTarget(val);
+    if (storageKey) localStorage.setItem(storageKey, String(val));
     setIsEditing(false);
   };
 
@@ -166,6 +178,7 @@ const GoalCard = ({
 };
 
 export const Goals = () => {
+  const { user } = useAuth();
   const [currentSteps, setCurrentSteps] = useState(0);
   const [currentCalories, setCurrentCalories] = useState(0);
 
@@ -206,6 +219,7 @@ export const Goals = () => {
             backgroundColor="rgba(99,102,241,0.1)"
             daysColor="#6366f1"
             icon={<Footprints color="#6366f1" size={20} />}
+            storageKey={user?.id ? `healix_goal_steps_${user.id}` : null}
           />
 
           {/* Calories Goal */}
@@ -218,6 +232,7 @@ export const Goals = () => {
             backgroundColor="rgba(249,115,22,0.1)"
             daysColor="#f97316"
             icon={<Flame color="#f97316" size={20} />}
+            storageKey={user?.id ? `healix_goal_calories_${user.id}` : null}
           />
         </div>
       </div>

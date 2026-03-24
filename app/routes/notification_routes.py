@@ -20,7 +20,8 @@ async def read_notifications(
     current_user=Depends(get_current_user_token),
 ):
     """Get current user's notifications."""
-    return await get_user_notifications(current_user.user_id, unread_only)
+    notifs = await get_user_notifications(current_user.user_id, unread_only)
+    return {"notifications": notifs}
 
 
 @router.patch("/read-all")
