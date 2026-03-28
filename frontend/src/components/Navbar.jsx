@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { notificationsAPI } from "../utils/api";
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [notifications, setNotifications] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -76,298 +77,334 @@ export const Navbar = () => {
 
   const getRoleBadgeColor = () => {
     switch (user.role) {
-      case "patient":
-        return "#3b82f6";
-      case "provider":
-        return "#10b981";
-      case "admin":
-        return "#8b5cf6";
-      default:
-        return "#64748b";
+      case "patient":  return "#3b82f6";
+      case "provider": return "#10b981";
+      case "admin":    return "#8b5cf6";
+      default:         return "#64748b";
     }
   };
 
+  const isActive = (path) => {
+    if (path === basePath) return location.pathname === path;
+    return location.pathname.startsWith(path);
+  };
+
+  const navLinks = {
+    patient: [
+      { label: "Dashboard",     path: basePath },
+      { label: "Vitals",        path: `${basePath}/vitals` },
+      { label: "Goals",         path: `${basePath}/goals` },
+      { label: "Appointments",  path: `${basePath}/appointments` },
+      { label: "Prescriptions", path: `${basePath}/prescriptions` },
+      { label: "Assistant",     path: `${basePath}/assistant` },
+      { label: "Settings",      path: `${basePath}/settings` },
+    ],
+    provider: [
+      { label: "Patients",      path: `${basePath}/patients` },
+      { label: "Appointments",  path: `${basePath}/appointments` },
+      { label: "Prescriptions", path: `${basePath}/prescriptions` },
+      { label: "Settings",      path: `${basePath}/settings` },
+    ],
+    admin: [
+      { label: "User Management", path: basePath },
+      { label: "Appointments",    path: `${basePath}/appointments` },
+      { label: "Prescriptions",   path: `${basePath}/prescriptions` },
+      { label: "Settings",        path: `${basePath}/settings` },
+    ],
+  };
+
+  const links = navLinks[user.role] || [];
+  const accentColor = getRoleBadgeColor();
+
   return (
-    <nav
-      style={{
-        background: "#0b1220",
-        borderBottom: "1px solid #1e293b",
-        padding: "0 24px",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        backdropFilter: "blur(12px)",
-      }}
-    >
-      <div
+    <>
+      <style>{`
+        @keyframes pulse-badge {
+          0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(239,68,68,0.6); }
+          50%       { transform: scale(1.18); box-shadow: 0 0 0 5px rgba(239,68,68,0);   }
+        }
+        .nav-link {
+          color: #94a3b8;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 500;
+          padding: 6px 12px;
+          border-radius: 7px;
+          transition: color 0.15s ease, background 0.15s ease;
+          position: relative;
+        }
+        .nav-link:hover {
+          color: #f1f5f9;
+          background: rgba(255,255,255,0.07);
+        }
+        .nav-link.active {
+          color: #f1f5f9;
+          background: rgba(255,255,255,0.09);
+          font-weight: 600;
+        }
+        .nav-link.active::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60%;
+          height: 2px;
+          border-radius: 2px 2px 0 0;
+          background: ${accentColor};
+        }
+        .notif-badge {
+          position: absolute;
+          top: -4px; right: -4px;
+          background: #ef4444;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 800;
+          width: 18px; height: 18px;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          border: 2px solid rgba(6,13,26,0.9);
+          animation: pulse-badge 2s ease-in-out infinite;
+        }
+        .logout-btn {
+          background: transparent;
+          border: 1px solid #334155;
+          color: #94a3b8;
+          padding: 6px 16px;
+          border-radius: 7px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: "DM Sans", sans-serif;
+          cursor: pointer;
+          transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+        }
+        .logout-btn:hover {
+          border-color: #ef4444;
+          color: #ef4444;
+          background: rgba(239,68,68,0.06);
+        }
+        .bell-btn {
+          background: transparent;
+          border: 1px solid #334155;
+          color: #94a3b8;
+          padding: 6px 10px;
+          border-radius: 7px;
+          font-size: 18px;
+          cursor: pointer;
+          position: relative;
+          line-height: 1;
+          transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+        }
+        .bell-btn:hover, .bell-btn.open {
+          border-color: #3b82f6;
+          color: #f1f5f9;
+          background: rgba(59,130,246,0.08);
+        }
+        .notif-row:hover {
+          background: rgba(59,130,246,0.1) !important;
+        }
+      `}</style>
+
+      <nav
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: "64px",
-          maxWidth: "1400px",
-          margin: "0 auto",
+          background: "rgba(6, 13, 26, 0.82)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          padding: "0 24px",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          boxShadow: "0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.3)",
         }}
       >
-        {/* Logo */}
-        <Link
-          to={basePath}
+        <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "10px",
-            textDecoration: "none",
+            justifyContent: "space-between",
+            height: "64px",
+            maxWidth: "1400px",
+            margin: "0 auto",
           }}
         >
-          <img
-            src="/src/assets/logo.png"
-            alt="HEALIX"
-            style={{ width: "32px", height: "32px" }}
-          />
-          <span
-            style={{
-              color: "#f1f5f9",
+          {/* Logo */}
+          <Link
+            to={basePath}
+            style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}
+          >
+            <img src="/src/assets/logo.png" alt="HEALIX" style={{ width: "32px", height: "32px" }} />
+            <span style={{
+              background: "linear-gradient(135deg, #f1f5f9, #94a3b8)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
               fontWeight: "700",
               fontSize: "18px",
               letterSpacing: "-0.3px",
-            }}
-          >
-            HEALIX
-          </span>
-        </Link>
+            }}>
+              HEALIX
+            </span>
+          </Link>
 
-        {/* Nav Links */}
-        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          {user?.role === "patient" && [
-            { label: "Dashboard", path: basePath },
-            { label: "Vitals", path: `${basePath}/vitals` },
-            { label: "Goals", path: `${basePath}/goals` },
-            { label: "Appointments", path: `${basePath}/appointments` },
-            { label: "Prescriptions", path: `${basePath}/prescriptions` },
-            { label: "Assistant", path: `${basePath}/assistant` },
-            { label: "Settings", path: `${basePath}/settings` },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              style={{
-                color: "#94a3b8",
-                textDecoration: "none",
-                fontSize: "14px",
-                fontWeight: "500",
-                padding: "6px 12px",
-                borderRadius: "6px",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.color = "#f1f5f9";
-                e.target.style.background = "#1e293b";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.color = "#94a3b8";
-                e.target.style.background = "transparent";
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {/* Nav Links */}
+          <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+            {links.map((item) => (
+              <Link
+                key={item.label}
+                to={item.path}
+                className={`nav-link${isActive(item.path) ? " active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
 
-          {user?.role === "provider" && [
-            { label: "Patients", path: `${basePath}/patients` },
-            { label: "Appointments", path: `${basePath}/appointments` },
-            { label: "Prescriptions", path: `${basePath}/prescriptions` },
-            { label: "Settings", path: `${basePath}/settings` },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              style={{
-                color: "#94a3b8",
-                textDecoration: "none",
-                fontSize: "14px",
-                fontWeight: "500",
-                padding: "6px 12px",
-                borderRadius: "6px",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.color = "#f1f5f9";
-                e.target.style.background = "#1e293b";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.color = "#94a3b8";
-                e.target.style.background = "transparent";
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
-
-          {user?.role === "admin" && [
-            { label: "User Management", path: basePath },
-            { label: "Appointments", path: `${basePath}/appointments` },
-            { label: "Prescriptions", path: `${basePath}/prescriptions` },
-            { label: "Settings", path: `${basePath}/settings` },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              style={{
-                color: "#94a3b8",
-                textDecoration: "none",
-                fontSize: "14px",
-                fontWeight: "500",
-                padding: "6px 12px",
-                borderRadius: "6px",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.color = "#f1f5f9";
-                e.target.style.background = "#1e293b";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.color = "#94a3b8";
-                e.target.style.background = "transparent";
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-
-        {/* Right Section */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {/* Role Badge */}
-          <div
-            style={{
-              padding: "6px 12px",
-              borderRadius: "6px",
-              background: `${getRoleBadgeColor()}22`,
-              border: `1px solid ${getRoleBadgeColor()}44`,
-              color: getRoleBadgeColor(),
-              fontSize: "12px",
+          {/* Right Section */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {/* Role Badge */}
+            <div style={{
+              padding: "5px 11px",
+              borderRadius: "20px",
+              background: `${accentColor}18`,
+              border: `1px solid ${accentColor}35`,
+              color: accentColor,
+              fontSize: "11px",
               fontWeight: "700",
-              textTransform: "capitalize",
-            }}
-          >
-            {user.role}
-          </div>
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}>
+              {user.role}
+            </div>
 
-          {/* Notification Bell */}
-          <div ref={notifRef} style={{ position: "relative" }}>
-            <button
-              onClick={() => setShowNotifs(prev => !prev)}
-              style={{
-                background: showNotifs ? "#1e293b" : "transparent",
-                border: "1px solid #334155",
-                color: "#94a3b8",
-                padding: "6px 10px",
-                borderRadius: "6px",
-                fontSize: "18px",
-                cursor: "pointer",
-                position: "relative",
-                lineHeight: 1,
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#3b82f6"; e.currentTarget.style.color = "#f1f5f9"; }}
-              onMouseLeave={(e) => { if (!showNotifs) { e.currentTarget.style.borderColor = "#334155"; e.currentTarget.style.color = "#94a3b8"; } }}
-            >
-              🔔
-              {unreadCount > 0 && (
-                <span style={{
-                  position: "absolute", top: "-4px", right: "-4px",
-                  background: "#ef4444", color: "#fff", fontSize: "10px", fontWeight: "800",
-                  width: "18px", height: "18px", borderRadius: "50%",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  border: "2px solid #0b1220",
+            {/* Notification Bell */}
+            <div ref={notifRef} style={{ position: "relative" }}>
+              <button
+                onClick={() => setShowNotifs(prev => !prev)}
+                className={`bell-btn${showNotifs ? " open" : ""}`}
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span className="notif-badge">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {showNotifs && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 10px)", right: 0,
+                  width: "360px", maxHeight: "440px",
+                  background: "rgba(10,18,35,0.97)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "14px",
+                  boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+                  overflow: "hidden", zIndex: 200,
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
                 }}>
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notification Dropdown */}
-            {showNotifs && (
-              <div style={{
-                position: "absolute", top: "calc(100% + 8px)", right: 0,
-                width: "360px", maxHeight: "440px",
-                background: "#0f172a", border: "1px solid #1e293b", borderRadius: "12px",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-                overflow: "hidden", zIndex: 200,
-              }}>
-                {/* Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #1e293b" }}>
-                  <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "14px" }}>Notifications</span>
-                  {unreadCount > 0 && (
-                    <button onClick={handleMarkAllRead}
-                      style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "12px", fontWeight: "600", cursor: "pointer", padding: 0 }}>
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-
-                {/* List */}
-                <div style={{ maxHeight: "380px", overflowY: "auto" }}>
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: "40px 16px", textAlign: "center", color: "#475569", fontSize: "14px" }}>
-                      No notifications yet
+                  {/* Header */}
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "14px 16px",
+                    borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "14px" }}>Notifications</span>
+                      {unreadCount > 0 && (
+                        <span style={{
+                          background: "rgba(59,130,246,0.15)",
+                          color: "#3b82f6",
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          padding: "1px 7px",
+                          borderRadius: "20px",
+                          border: "1px solid rgba(59,130,246,0.25)",
+                        }}>
+                          {unreadCount} new
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    notifications.map((n) => (
-                      <div key={n._id}
-                        onClick={() => !n.read && handleMarkRead(n._id)}
-                        style={{
-                          display: "flex", gap: "12px", padding: "12px 16px",
-                          borderBottom: "1px solid #1e293b",
-                          background: n.read ? "transparent" : "rgba(59,130,246,0.05)",
-                          cursor: n.read ? "default" : "pointer",
-                          transition: "background 0.15s ease",
-                        }}
-                        onMouseEnter={(e) => { if (!n.read) e.currentTarget.style.background = "rgba(59,130,246,0.1)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = n.read ? "transparent" : "rgba(59,130,246,0.05)"; }}
-                      >
-                        <span style={{ fontSize: "20px", flexShrink: 0, marginTop: "2px" }}>{getNotifIcon(n.type)}</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ color: n.read ? "#94a3b8" : "#f1f5f9", fontSize: "13px", fontWeight: n.read ? "500" : "600", marginBottom: "2px" }}>{n.title}</div>
-                          <div style={{ color: "#64748b", fontSize: "12px", lineHeight: "1.4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.message}</div>
-                          <div style={{ color: "#475569", fontSize: "11px", marginTop: "4px" }}>{timeAgo(n.created_at)}</div>
-                        </div>
-                        {!n.read && <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6", flexShrink: 0, marginTop: "6px" }} />}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                    {unreadCount > 0 && (
+                      <button onClick={handleMarkAllRead} style={{
+                        background: "none", border: "none",
+                        color: "#3b82f6", fontSize: "12px", fontWeight: "600",
+                        cursor: "pointer", padding: 0,
+                        fontFamily: "DM Sans, sans-serif",
+                      }}>
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
 
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            style={{
-              background: "transparent",
-              border: "1px solid #334155",
-              color: "#94a3b8",
-              padding: "6px 16px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.borderColor = "#ef4444";
-              e.target.style.color = "#ef4444";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.borderColor = "#334155";
-              e.target.style.color = "#94a3b8";
-            }}
-          >
-            Logout
-          </button>
+                  {/* List */}
+                  <div style={{ maxHeight: "380px", overflowY: "auto" }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: "48px 16px", textAlign: "center" }}>
+                        <div style={{ fontSize: "32px", marginBottom: "10px" }}>🔕</div>
+                        <div style={{ color: "#f1f5f9", fontWeight: "600", fontSize: "14px", marginBottom: "4px" }}>
+                          You're all caught up
+                        </div>
+                        <div style={{ color: "#475569", fontSize: "13px" }}>No notifications yet</div>
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n._id}
+                          className="notif-row"
+                          onClick={() => !n.read && handleMarkRead(n._id)}
+                          style={{
+                            display: "flex", gap: "12px", padding: "12px 16px",
+                            borderBottom: "1px solid rgba(255,255,255,0.05)",
+                            background: n.read ? "transparent" : "rgba(59,130,246,0.06)",
+                            cursor: n.read ? "default" : "pointer",
+                            transition: "background 0.15s ease",
+                          }}
+                        >
+                          <span style={{ fontSize: "20px", flexShrink: 0, marginTop: "2px" }}>
+                            {getNotifIcon(n.type)}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              color: n.read ? "#94a3b8" : "#f1f5f9",
+                              fontSize: "13px",
+                              fontWeight: n.read ? "500" : "600",
+                              marginBottom: "2px",
+                            }}>
+                              {n.title}
+                            </div>
+                            <div style={{
+                              color: "#64748b", fontSize: "12px", lineHeight: "1.4",
+                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                            }}>
+                              {n.message}
+                            </div>
+                            <div style={{ color: "#475569", fontSize: "11px", marginTop: "4px" }}>
+                              {timeAgo(n.created_at)}
+                            </div>
+                          </div>
+                          {!n.read && (
+                            <span style={{
+                              width: "7px", height: "7px", borderRadius: "50%",
+                              background: "#3b82f6", flexShrink: 0, marginTop: "6px",
+                            }} />
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Logout Button */}
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 };
