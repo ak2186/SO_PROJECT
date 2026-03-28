@@ -29,7 +29,7 @@ Make sure you have the following installed:
 
 - **Python 3.10+** — [Download](https://www.python.org/downloads/)
 - **Node.js 18+** and **npm** — [Download](https://nodejs.org/)
-- **MongoDB** — [Download](https://www.mongodb.com/try/download/community) (local install or [MongoDB Atlas](https://www.mongodb.com/atlas) cloud)
+- **MongoDB** — The project uses **MongoDB Atlas** (cloud). No local MongoDB install needed.
 - **Git** — [Download](https://git-scm.com/)
 
 ---
@@ -75,7 +75,7 @@ cd ..
 cp .env.example .env
 ```
 
-Open `.env` and fill in your values:
+Open `.env` and update the MongoDB URL to use our shared Atlas cluster:
 
 ```env
 # Application
@@ -85,27 +85,27 @@ DEBUG=True
 HOST=0.0.0.0
 PORT=8000
 
-# MongoDB
-MONGODB_URL=mongodb://localhost:27017       # or your Atlas URI
+# MongoDB — IMPORTANT: Use the Atlas cloud URL below (NOT localhost)
+MONGODB_URL=mongodb+srv://healixadmin:HealixPass2026@cluster0.flj9bx2.mongodb.net/?appName=Cluster0
 MONGODB_DB_NAME=healix_db
 
-# JWT (change the secret key!)
-JWT_SECRET_KEY=your_super_secret_jwt_key_change_this_in_production
+# JWT
+JWT_SECRET_KEY=healix_super_secret_jwt_key_2024_change_in_production_abc123xyz
 JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1440
-JWT_REFRESH_TOKEN_EXPIRE_DAYS=30
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=200
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
 
 # Encryption
-ENCRYPTION_KEY=your_encryption_key_here
+ENCRYPTION_KEY=healix_encryption_key_2024_change_in_production
 
 # CORS
-ALLOWED_ORIGINS=http://localhost:5173
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:5173
 
 # Rate Limiting
 RATE_LIMIT_REQUESTS=100
-RATE_LIMIT_WINDOW_SECONDS=60
+RATE_LIMIT_WINDOW_SECONDS=900
 
-# Admin Account (auto-created on first run)
+# Admin Account (auto-created on first server start)
 ADMIN_EMAIL=admin@healix.com
 ADMIN_PASSWORD=Admin123!
 
@@ -117,6 +117,8 @@ GOOGLE_FIT_REDIRECT_URI=http://localhost:8000/api/googlefit/callback
 # Google Gemini (optional — for AI chat assistant)
 GEMINI_API_KEY=your_gemini_api_key
 ```
+
+> **Note:** The MongoDB Atlas URL above connects to our shared cloud database. All team members use the same database — no local MongoDB installation required. The admin account and seed doctors are already in the database.
 
 ---
 
@@ -504,8 +506,9 @@ The assistant has access to the patient's health data and can answer questions a
 ## Troubleshooting
 
 **MongoDB not connecting:**
-- Make sure MongoDB is running: `brew services start mongodb-community` (macOS) or `mongod` (manual)
-- If using Atlas, check your connection string and whitelist your IP
+- Make sure the `MONGODB_URL` in your `.env` is the Atlas connection string (starts with `mongodb+srv://`)
+- Check your internet connection — Atlas requires network access
+- If you get a DNS error, install dnspython: `pip install dnspython`
 
 **Frontend shows blank page or API errors:**
 - Make sure BOTH terminals are running (backend on 8000, frontend on 5173)
