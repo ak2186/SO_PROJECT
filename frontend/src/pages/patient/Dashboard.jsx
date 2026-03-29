@@ -1,10 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { biomarkersAPI, googleFitAPI } from "../../utils/api";
-import { useAuth } from "../../context/AuthContext";
 
 export const PatientDashboard = () => {
-  const { user } = useAuth();
   const [hrValue, setHrValue] = useState(null);
   const [spo2Value, setSpo2Value] = useState(null);
   const [stepsVal, setStepsVal] = useState(null);
@@ -30,45 +27,25 @@ export const PatientDashboard = () => {
       .finally(() => setLoading(false));
   };
 
-  // Apply synced data directly from sync/today response (freshest values)
-  // If a metric is missing from today's data, reset it to null (no stale data)
   const applyGfitData = (data) => {
     const d = data?.synced_data;
-    if (!d || Object.keys(d).length === 0) {
-      // No synced data at all — clear everything, show "no data"
-      setHrValue(null);
-      setSpo2Value(null);
-      setStepsVal(null);
-      setCaloriesVal(null);
-      setStepsProgress(0);
-      setLoading(false);
-      return;
-    }
-    // Set or clear each metric based on whether it exists in today's data
-    setHrValue(d.heart_rate != null ? Math.round(d.heart_rate) : null);
-    setSpo2Value(d.spo2 != null ? Math.round(d.spo2) : null);
+    if (!d) return;
+    if (d.heart_rate != null) setHrValue(Math.round(d.heart_rate));
+    if (d.spo2 != null) setSpo2Value(Math.round(d.spo2));
     if (d.steps != null) {
       setStepsVal(d.steps);
       setStepsProgress(Math.min(Math.round((d.steps / 10000) * 100), 100));
-    } else {
-      setStepsVal(null);
-      setStepsProgress(0);
     }
-    setCaloriesVal(d.calories != null ? Math.round(d.calories) : null);
+    if (d.calories != null) setCaloriesVal(Math.round(d.calories));
     setLoading(false);
   };
 
   useEffect(() => {
-    const gfitConnected = user?.id && localStorage.getItem(`healix_gfit_connected_${user.id}`) === "true";
-
-    if (gfitConnected) {
-      // Google Fit is connected — ONLY use today's synced data (no stale DB readings)
+    fetchCurrentReadings();
+    if (localStorage.getItem("healix_gfit_connected") === "true") {
       googleFitAPI.today()
         .then(applyGfitData)
-        .catch(() => setLoading(false));
-    } else {
-      // No Google Fit — fall back to latest DB readings
-      fetchCurrentReadings();
+        .catch(() => { });
     }
   }, []);
 
@@ -196,25 +173,45 @@ export const PatientDashboard = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
-        [data-theme="light"] .gradient-text {
-          background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
         
         .weekly-card {
-          transition: all 0.4s ease;
+          background: #0f172a;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 20px;
+          padding: 24px;
+          transition: all 0.3s ease;
         }
         
         .weekly-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        .activity-card {
+          background: #0f172a;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 20px;
+          padding: 32px;
+        }
+
+        .insight-card {
+          border: 1px solid;
+          border-radius: 16px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         }
       `}</style>
 
       <div style={{
-        background: "var(--bg)",
+        background: "#060d1a",
         minHeight: "100vh",
         padding: "40px 48px",
         fontFamily: "'DM Sans', sans-serif",
@@ -270,7 +267,7 @@ export const PatientDashboard = () => {
             Welcome Back
           </h1>
           <p style={{
-            color: "var(--text-subtle)",
+            color: "#64748b",
             fontSize: "18px",
             margin: 0,
             fontWeight: "500",
@@ -297,7 +294,6 @@ export const PatientDashboard = () => {
                 animation: `fadeUp 0.8s ease ${i * 0.12}s both`,
               }}
             >
-              {/* Glowing icon */}
               <div className="icon-float" style={{
                 fontSize: "48px",
                 marginBottom: "20px",
@@ -306,9 +302,8 @@ export const PatientDashboard = () => {
                 {card.icon}
               </div>
 
-              {/* Title */}
               <div style={{
-                color: "var(--text-muted)",
+                color: "#94a3b8",
                 fontSize: "13px",
                 fontWeight: "700",
                 textTransform: "uppercase",
@@ -318,7 +313,6 @@ export const PatientDashboard = () => {
                 {card.title}
               </div>
 
-              {/* Value */}
               <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "8px" }}>
                 <span className="value-glow" style={{
                   color: card.color,
@@ -331,7 +325,7 @@ export const PatientDashboard = () => {
                   {card.value}
                 </span>
                 <span style={{
-                  color: "var(--text-subtle)",
+                  color: "#64748b",
                   fontSize: "20px",
                   fontWeight: "700",
                 }}>
@@ -339,9 +333,8 @@ export const PatientDashboard = () => {
                 </span>
               </div>
 
-              {/* Subtitle */}
               <div style={{
-                color: "var(--text-subtle)",
+                color: "#64748b",
                 fontSize: "15px",
                 fontWeight: "500",
                 marginBottom: "16px",
@@ -349,8 +342,7 @@ export const PatientDashboard = () => {
                 {card.subtitle}
               </div>
 
-              {/* Progress bar for Steps */}
-              {card.progress && (
+              {card.progress != null && (
                 <div style={{
                   marginTop: "20px",
                   position: "relative",
@@ -376,6 +368,214 @@ export const PatientDashboard = () => {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Weekly Summary */}
+        <div style={{ marginBottom: "48px", position: "relative", zIndex: 1 }}>
+          <h2 style={{
+            color: "#f1f5f9",
+            fontSize: "24px",
+            fontWeight: "700",
+            margin: "0 0 24px 0",
+          }}>
+            Weekly Summary
+          </h2>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "20px",
+          }}>
+            {/* Avg Heart Rate */}
+            <div className="weekly-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
+                    Avg Heart Rate
+                  </div>
+                  <div style={{ color: "#f1f5f9", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
+                    74 <span style={{ fontSize: "16px", color: "#64748b", fontWeight: "600" }}>BPM</span>
+                  </div>
+                  <div style={{ color: "#64748b", fontSize: "12px", marginTop: "4px" }}>
+                    Last 7 days
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px" }}>📈</div>
+              </div>
+              <div style={{ color: "#10b981", fontSize: "13px", fontWeight: "600" }}>
+                ↓ 2 BPM from last week
+              </div>
+            </div>
+
+            {/* Active Minutes */}
+            <div className="weekly-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
+                    Active Minutes
+                  </div>
+                  <div style={{ color: "#f1f5f9", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
+                    145
+                  </div>
+                  <div style={{ color: "#64748b", fontSize: "12px", marginTop: "4px" }}>
+                    Minutes today
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px" }}>⚡</div>
+              </div>
+              <div style={{ color: "#10b981", fontSize: "13px", fontWeight: "600" }}>
+                Goal: 150 min/week
+              </div>
+            </div>
+
+            {/* Sleep */}
+            <div className="weekly-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
+                    Sleep
+                  </div>
+                  <div style={{ color: "#f1f5f9", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
+                    7.5<span style={{ fontSize: "20px" }}>h</span>
+                  </div>
+                  <div style={{ color: "#64748b", fontSize: "12px", marginTop: "4px" }}>
+                    Last night
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px" }}>🌙</div>
+              </div>
+              <div style={{ color: "#10b981", fontSize: "13px", fontWeight: "600" }}>
+                Good quality
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Today's Activity */}
+        <div style={{ marginBottom: "48px", position: "relative", zIndex: 1 }}>
+          <h2 style={{
+            color: "#f1f5f9",
+            fontSize: "24px",
+            fontWeight: "700",
+            margin: "0 0 24px 0",
+          }}>
+            Today's Activity
+          </h2>
+          <div className="activity-card">
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: "32px",
+            }}>
+              <div>
+                <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Distance
+                </div>
+                <div style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  6.2 <span style={{ fontSize: "16px", color: "#64748b" }}>km</span>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Floors Climbed
+                </div>
+                <div style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  12
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Active Hours
+                </div>
+                <div style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  8<span style={{ fontSize: "20px", color: "#64748b" }}>/12</span>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Streak
+                </div>
+                <div style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  7 <span style={{ fontSize: "16px", color: "#64748b" }}>days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Health Insights */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <h2 style={{
+            color: "#f1f5f9",
+            fontSize: "24px",
+            fontWeight: "700",
+            margin: "0 0 24px 0",
+          }}>
+            Health Insights
+          </h2>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
+            gap: "20px",
+          }}>
+            {/* Great Progress Card */}
+            <div className="insight-card" style={{
+              background: "rgba(16, 185, 129, 0.08)",
+              borderColor: "rgba(16, 185, 129, 0.3)",
+            }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "12px",
+                background: "rgba(16, 185, 129, 0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "24px",
+                flexShrink: 0,
+              }}>
+                📈
+              </div>
+              <div>
+                <div style={{ color: "#f1f5f9", fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
+                  Great progress this week!
+                </div>
+                <div style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.5" }}>
+                  You've met your steps goal 5 out of 7 days. Keep it up!
+                </div>
+              </div>
+            </div>
+
+            {/* Upcoming Appointment Card */}
+            <div className="insight-card" style={{
+              background: "rgba(59, 130, 246, 0.08)",
+              borderColor: "rgba(59, 130, 246, 0.3)",
+            }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "12px",
+                background: "rgba(59, 130, 246, 0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "24px",
+                flexShrink: 0,
+              }}>
+                📅
+              </div>
+              <div>
+                <div style={{ color: "#f1f5f9", fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
+                  Upcoming Appointment
+                </div>
+                <div style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.5" }}>
+                  Dr. Sarah Mitchell - Tomorrow at 10:30 AM
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
