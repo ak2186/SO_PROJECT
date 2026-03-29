@@ -76,7 +76,7 @@ export const Appointments = () => {
         .action-btn:hover { opacity: 0.85; transform: translateY(-1px); }
       `}</style>
 
-      <div style={{ background: "#060d1a", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -88,7 +88,7 @@ export const Appointments = () => {
         {/* Header */}
         <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
           <p style={{ color: "#10b981", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Provider Portal</p>
-          <h1 style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Patient Appointments</h1>
+          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Patient Appointments</h1>
         </div>
 
         {/* Stats */}
@@ -98,18 +98,18 @@ export const Appointments = () => {
             { label: "Pending Approval", value: [...appts.today, ...appts.upcoming].filter(a => a.status === "pending").length, color: "#f59e0b" },
             { label: "Upcoming This Week", value: appts.upcoming.length, color: "#06b6d4" },
           ].map((s, i) => (
-            <div key={i} style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "20px 24px" }}>
+            <div key={i} style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px 24px" }}>
               <div style={{ color: s.color, fontSize: "28px", fontWeight: "700", marginBottom: "4px" }}>{s.value}</div>
-              <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "500" }}>{s.label}</div>
+              <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "500" }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: "4px", marginBottom: "28px", background: "#0f172a", padding: "4px", borderRadius: "10px", width: "fit-content", animation: "fadeUp 0.5s ease 0.1s both" }}>
+        <div style={{ display: "flex", gap: "4px", marginBottom: "28px", background: "var(--bg-3)", padding: "4px", borderRadius: "10px", width: "fit-content", animation: "fadeUp 0.5s ease 0.1s both" }}>
           {["today", "upcoming"].map(t => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ padding: "8px 24px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: tab === t ? "#10b981" : "transparent", color: tab === t ? "#fff" : "#64748b", transition: "all 0.18s ease" }}>
+              style={{ padding: "8px 24px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: tab === t ? "#10b981" : "transparent", color: tab === t ? "#fff" : "var(--text-subtle)", transition: "all 0.18s ease" }}>
               {t === "today" ? "Today" : "Upcoming"}
             </button>
           ))}
@@ -118,20 +118,20 @@ export const Appointments = () => {
         {/* Appointments List */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {loading && (
-            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
           )}
           {!loading && appts[tab].length === 0 && (
-            <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No {tab === "today" ? "today's" : "upcoming"} appointments.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No {tab === "today" ? "today's" : "upcoming"} appointments.</div>
           )}
           {appts[tab].map((a, i) => (
-            <div key={a.id} className="appt-card" style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${i * 0.08}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
+            <div key={a.id} className="appt-card" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${i * 0.08}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
               <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: a._color || "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "16px", color: "#fff", flexShrink: 0 }}>
                 {a.avatar}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px", flexWrap: "wrap" }}>
-                  <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "16px" }}>{a.patient}</span>
-                  <span style={{ color: "#64748b", fontSize: "13px" }}>Age {a.age}</span>
+                  <span style={{ color: "var(--text)", fontWeight: "700", fontSize: "16px" }}>{a.patient}</span>
+                  <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>Age {a.age}</span>
                   {a.status === "pending" && (
                     <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
                       Pending Approval
@@ -140,8 +140,8 @@ export const Appointments = () => {
                 </div>
                 <div style={{ color: "#10b981", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>{a.reason}</div>
                 <div style={{ display: "flex", gap: "20px" }}>
-                  {tab === "upcoming" && <span style={{ color: "#64748b", fontSize: "13px" }}>📅 {a.date}</span>}
-                  <span style={{ color: "#64748b", fontSize: "13px" }}>🕐 {a.time}</span>
+                  {tab === "upcoming" && <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>📅 {a.date}</span>}
+                  <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>🕐 {a.time}</span>
                 </div>
               </div>
               <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>

@@ -140,7 +140,7 @@ export const AdminDashboard = () => {
           transition: all 0.2s ease;
         }
         .user-row:hover {
-          background: #1e293b;
+          background: var(--border-solid);
         }
         .action-btn {
           transition: all 0.15s ease;
@@ -168,7 +168,7 @@ export const AdminDashboard = () => {
       `}</style>
 
       <div style={{
-        background: "#060d1a",
+        background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
         fontFamily: "'DM Sans', sans-serif",
@@ -178,7 +178,7 @@ export const AdminDashboard = () => {
         <div style={{ marginBottom: "32px", animation: "fadeUp 0.6s ease both", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <h1 style={{
-              color: "#f1f5f9",
+              color: "var(--text)",
               fontSize: "32px",
               fontWeight: "800",
               margin: "0 0 6px 0",
@@ -186,7 +186,7 @@ export const AdminDashboard = () => {
             }}>
               Admin Dashboard
             </h1>
-            <p style={{ color: "#64748b", fontSize: "15px", margin: 0 }}>
+            <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: 0 }}>
               Manage users and account privileges
             </p>
           </div>
@@ -225,7 +225,7 @@ export const AdminDashboard = () => {
             { label: "Patients", value: stats.patients, icon: "🏥", color: "#8b5cf6" },
           ].map((stat, i) => (
             <div key={i} style={{
-              background: "#0f172a",
+              background: "var(--bg-3)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: "16px",
               padding: "24px",
@@ -246,7 +246,7 @@ export const AdminDashboard = () => {
                 {stat.icon}
               </div>
               <div>
-                <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
+                <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
                   {stat.label}
                 </div>
                 <div style={{ color: stat.color, fontSize: "32px", fontWeight: "800", letterSpacing: "-1.5px" }}>
@@ -280,10 +280,10 @@ export const AdminDashboard = () => {
               style={{
                 width: "100%",
                 padding: "14px 16px 14px 42px",
-                background: "#0f172a",
+                background: "var(--bg-3)",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: "12px",
-                color: "#f1f5f9",
+                color: "var(--text)",
                 fontSize: "14px",
                 outline: "none",
                 fontFamily: "'DM Sans', sans-serif",
@@ -295,7 +295,7 @@ export const AdminDashboard = () => {
 
         {/* User List Header */}
         <div style={{
-          color: "#f1f5f9",
+          color: "var(--text)",
           fontSize: "18px",
           fontWeight: "700",
           marginBottom: "16px",
@@ -306,7 +306,7 @@ export const AdminDashboard = () => {
 
         {/* Users Table */}
         <div style={{
-          background: "#0f172a",
+          background: "var(--bg-3)",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: "16px",
           overflow: "hidden",
@@ -317,12 +317,12 @@ export const AdminDashboard = () => {
             display: "grid",
             gridTemplateColumns: "2fr 2.5fr 1.5fr 1.5fr 1fr 1.2fr",
             padding: "16px 24px",
-            background: "#060d1a",
+            background: "var(--bg)",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}>
             {["User", "Email", "Role", "Join Date", "Status", "Actions"].map((header) => (
               <div key={header} style={{
-                color: "#64748b",
+                color: "var(--text-subtle)",
                 fontSize: "11px",
                 fontWeight: "700",
                 textTransform: "uppercase",
@@ -362,13 +362,13 @@ export const AdminDashboard = () => {
                 }}>
                   {user.avatar}
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "14px", fontWeight: "700" }}>
+                <div style={{ color: "var(--text)", fontSize: "14px", fontWeight: "700" }}>
                   {user.name}
                 </div>
               </div>
 
               {/* Email */}
-              <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+              <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>
                 {user.email}
               </div>
 
@@ -388,7 +388,7 @@ export const AdminDashboard = () => {
               </div>
 
               {/* Join Date */}
-              <div style={{ color: "#94a3b8", fontSize: "13px" }}>
+              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                 {user.joinDate}
               </div>
 
@@ -461,7 +461,7 @@ export const AdminDashboard = () => {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "#0f172a",
+                background: "var(--bg-3)",
                 border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: "20px",
                 padding: "32px",
@@ -470,11 +470,11 @@ export const AdminDashboard = () => {
               }}
             >
               <div style={{ fontSize: "48px", marginBottom: "16px" }}>👨‍⚕️</div>
-              <h2 style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", margin: "0 0 12px 0" }}>
+              <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 12px 0" }}>
                 Grant Provider Access
               </h2>
-              <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 24px 0", lineHeight: 1.6 }}>
-                Are you sure you want to grant Healthcare Provider privileges to <strong style={{ color: "#f1f5f9" }}>{selectedUser.name}</strong>?
+              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 24px 0", lineHeight: 1.6 }}>
+                Are you sure you want to grant Healthcare Provider privileges to <strong style={{ color: "var(--text)" }}>{selectedUser.name}</strong>?
               </p>
               <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
                 <button
@@ -484,7 +484,7 @@ export const AdminDashboard = () => {
                     borderRadius: "10px",
                     border: "1px solid rgba(255,255,255,0.1)",
                     background: "transparent",
-                    color: "#94a3b8",
+                    color: "var(--text-muted)",
                     fontWeight: "600",
                     fontSize: "14px",
                     cursor: "pointer",
@@ -520,7 +520,7 @@ export const AdminDashboard = () => {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "#0f172a",
+                background: "var(--bg-3)",
                 border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: "20px",
                 padding: "32px",
@@ -528,10 +528,10 @@ export const AdminDashboard = () => {
               }}
             >
               <div style={{ fontSize: "48px", marginBottom: "16px", textAlign: "center" }}>👨‍⚕️</div>
-              <h2 style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", margin: "0 0 8px 0", textAlign: "center" }}>
+              <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 8px 0", textAlign: "center" }}>
                 Create Provider Account
               </h2>
-              <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 24px 0", textAlign: "center" }}>
+              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 24px 0", textAlign: "center" }}>
                 Create a new healthcare provider account
               </p>
 
@@ -544,7 +544,7 @@ export const AdminDashboard = () => {
               <form onSubmit={handleCreateProvider}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
-                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Name *</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Name *</label>
                     <input
                       type="text"
                       placeholder="First Name"
@@ -554,7 +554,7 @@ export const AdminDashboard = () => {
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Last Name *</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Last Name *</label>
                     <input
                       type="text"
                       placeholder="Last Name"
@@ -566,7 +566,7 @@ export const AdminDashboard = () => {
                 </div>
 
                 <div style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email *</label>
+                  <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email *</label>
                   <input
                     type="email"
                     placeholder="provider@hospital.com"
@@ -578,7 +578,7 @@ export const AdminDashboard = () => {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
-                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Password *</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Password *</label>
                     <input
                       type="password"
                       placeholder="Min 8 chars"
@@ -588,7 +588,7 @@ export const AdminDashboard = () => {
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Gender</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Gender</label>
                     <select
                       value={providerForm.gender}
                       onChange={(e) => setProviderForm(f => ({ ...f, gender: e.target.value }))}
@@ -606,7 +606,7 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={() => setShowCreateProvider(false)}
-                    style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#94a3b8", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                    style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
                   >
                     Cancel
                   </button>
@@ -629,7 +629,7 @@ export const AdminDashboard = () => {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "#0f172a",
+                background: "var(--bg-3)",
                 border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: "20px",
                 padding: "32px",
@@ -638,11 +638,11 @@ export const AdminDashboard = () => {
               }}
             >
               <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
-              <h2 style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", margin: "0 0 12px 0" }}>
+              <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 12px 0" }}>
                 Revoke Provider Access
               </h2>
-              <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 24px 0", lineHeight: 1.6 }}>
-                Are you sure you want to revoke Healthcare Provider privileges from <strong style={{ color: "#f1f5f9" }}>{showRevokeModal.name}</strong>?
+              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 24px 0", lineHeight: 1.6 }}>
+                Are you sure you want to revoke Healthcare Provider privileges from <strong style={{ color: "var(--text)" }}>{showRevokeModal.name}</strong>?
               </p>
               <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
                 <button
@@ -652,7 +652,7 @@ export const AdminDashboard = () => {
                     borderRadius: "10px",
                     border: "1px solid rgba(255,255,255,0.1)",
                     background: "transparent",
-                    color: "#94a3b8",
+                    color: "var(--text-muted)",
                     fontWeight: "600",
                     fontSize: "14px",
                     cursor: "pointer",

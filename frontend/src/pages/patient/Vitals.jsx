@@ -138,7 +138,7 @@ export const PatientVitals = () => {
       textAlign: "center",
     }}>
       <div style={{
-        color: "#64748b",
+        color: "var(--text-subtle)",
         fontSize: "11px",
         fontWeight: "600",
         textTransform: "uppercase",
@@ -149,14 +149,14 @@ export const PatientVitals = () => {
       </div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: "4px" }}>
         <span style={{
-          color: "#f1f5f9",
+          color: "var(--text)",
           fontSize: "28px",
           fontWeight: "800",
           letterSpacing: "-1px",
         }}>
           {value}
         </span>
-        <span style={{ color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
+        <span style={{ color: "var(--text-subtle)", fontSize: "14px", fontWeight: "600" }}>
           {unit}
         </span>
       </div>
@@ -166,7 +166,7 @@ export const PatientVitals = () => {
   const LineChart = ({ data, color, label, showArea = true }) => {
     if (!data || data.length < 2) {
       return (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "var(--text-faint)", fontSize: "14px", fontWeight: "600" }}>
           No chart data available
         </div>
       );
@@ -348,7 +348,7 @@ export const PatientVitals = () => {
                 boxShadow: `0 0 20px ${color}44`,
                 animation: `fadeUp 0.6s ease ${i * 0.05}s both`,
               }} />
-              <div style={{ color: "#64748b", fontSize: "9px", fontWeight: "600", textAlign: "center" }}>
+              <div style={{ color: "var(--text-subtle)", fontSize: "9px", fontWeight: "600", textAlign: "center" }}>
                 {item.hour || item.label}
               </div>
             </div>
@@ -377,9 +377,15 @@ export const PatientVitals = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+        [data-theme="light"] .gradient-text {
+          background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
         
         .vital-card {
-          background: linear-gradient(135deg, #0f172a, #1e293b);
+          background: linear-gradient(135deg, var(--bg-3), var(--border-solid));
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 24px;
           padding: 32px;
@@ -420,7 +426,7 @@ export const PatientVitals = () => {
       `}</style>
 
       <div style={{
-        background: "#060d1a",
+        background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
         fontFamily: "'DM Sans', sans-serif",
@@ -477,7 +483,7 @@ export const PatientVitals = () => {
                 Vital Signs
               </h1>
               <p style={{
-                color: "#64748b",
+                color: "var(--text-subtle)",
                 fontSize: "15px",
                 margin: "8px 0 0 0",
               }}>
@@ -520,7 +526,7 @@ export const PatientVitals = () => {
                 </div>
                 <div>
                   <h2 style={{
-                    color: "#f1f5f9",
+                    color: "var(--text)",
                     fontSize: "20px",
                     fontWeight: "700",
                     margin: 0,
@@ -528,7 +534,7 @@ export const PatientVitals = () => {
                   }}>
                     Heart Rate
                   </h2>
-                  <p style={{ color: "#64748b", fontSize: "13px", margin: "2px 0 0 0" }}>
+                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
                     Detailed heart rate monitoring and trends
                   </p>
                 </div>
@@ -544,7 +550,7 @@ export const PatientVitals = () => {
                   textShadow: "0 0 30px rgba(239,68,68,0.5)",
                 }}>
                   {hasHrData ? hrStats.current : "—"}
-                  <span style={{ fontSize: "16px", color: "#64748b", fontWeight: "600", marginLeft: "4px" }}>BPM</span>
+                  <span style={{ fontSize: "16px", color: "var(--text-subtle)", fontWeight: "600", marginLeft: "4px" }}>BPM</span>
                 </div>
                 <div className="status-badge" style={{
                   background: hrWarning ? "rgba(239,68,68,0.15)" : "rgba(16,185,129,0.15)",
@@ -600,7 +606,7 @@ export const PatientVitals = () => {
                 </div>
                 <div>
                   <h2 style={{
-                    color: "#f1f5f9",
+                    color: "var(--text)",
                     fontSize: "20px",
                     fontWeight: "700",
                     margin: 0,
@@ -608,7 +614,7 @@ export const PatientVitals = () => {
                   }}>
                     Blood Oxygen (SpO₂)
                   </h2>
-                  <p style={{ color: "#64748b", fontSize: "13px", margin: "2px 0 0 0" }}>
+                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
                     Oxygen saturation levels throughout the day
                   </p>
                 </div>
@@ -624,7 +630,7 @@ export const PatientVitals = () => {
                   textShadow: "0 0 30px rgba(59,130,246,0.5)",
                 }}>
                   {hasSpo2Data ? spo2Stats.current : "—"}
-                  <span style={{ fontSize: "16px", color: "#64748b", fontWeight: "600", marginLeft: "4px" }}>%</span>
+                  <span style={{ fontSize: "16px", color: "var(--text-subtle)", fontWeight: "600", marginLeft: "4px" }}>%</span>
                 </div>
                 <div className="status-badge" style={{
                   background: spo2Warning ? "rgba(239,68,68,0.15)" : "rgba(16,185,129,0.15)",
@@ -666,7 +672,7 @@ export const PatientVitals = () => {
               gap: "12px",
             }}>
               <span style={{ fontSize: "18px" }}>📊</span>
-              <p style={{ color: "#64748b", fontSize: "13px", margin: 0, lineHeight: 1.6 }}>
+              <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: 0, lineHeight: 1.6 }}>
                 Your oxygen levels are excellent and consistently within the healthy range (92-100%).
               </p>
             </div>
@@ -695,10 +701,10 @@ export const PatientVitals = () => {
                   👟
                 </div>
                 <div>
-                  <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: 0 }}>
+                  <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: 0 }}>
                     Steps & Activity
                   </h2>
-                  <p style={{ color: "#64748b", fontSize: "13px", margin: "2px 0 0 0" }}>
+                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
                     Daily movement and activity tracking
                   </p>
                 </div>
@@ -713,7 +719,7 @@ export const PatientVitals = () => {
                 }}>
                   {hasStepsData ? stepsData.today.toLocaleString() : "—"}
                 </div>
-                <p style={{ color: "#64748b", fontSize: "13px", margin: "4px 0 0 0" }}>
+                <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "4px 0 0 0" }}>
                   {hasStepsData ? `of ${stepsData.goal.toLocaleString()} goal` : "No data yet"}
                 </p>
               </div>
@@ -721,7 +727,7 @@ export const PatientVitals = () => {
 
             <div style={{ marginBottom: "24px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ color: "#94a3b8", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
                   Daily Goal Progress
                 </span>
                 <span style={{ color: "#10b981", fontSize: "14px", fontWeight: "800" }}>
@@ -749,36 +755,36 @@ export const PatientVitals = () => {
               <div className="stat-box">
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                   <span style={{ fontSize: "16px" }}>📍</span>
-                  <span style={{ color: "#94a3b8", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  <span style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
                     Distance
                   </span>
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
-                  {stepsData.distance} <span style={{ fontSize: "14px", color: "#64748b", fontWeight: "600" }}>km</span>
+                <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  {stepsData.distance} <span style={{ fontSize: "14px", color: "var(--text-subtle)", fontWeight: "600" }}>km</span>
                 </div>
               </div>
 
               <div className="stat-box">
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                   <span style={{ fontSize: "16px" }}>⏱️</span>
-                  <span style={{ color: "#94a3b8", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  <span style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
                     Active Time
                   </span>
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
-                  {stepsData.activeTime} <span style={{ fontSize: "14px", color: "#64748b", fontWeight: "600" }}>hrs</span>
+                <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  {stepsData.activeTime} <span style={{ fontSize: "14px", color: "var(--text-subtle)", fontWeight: "600" }}>hrs</span>
                 </div>
               </div>
 
               <div className="stat-box">
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                   <span style={{ fontSize: "16px" }}>🔥</span>
-                  <span style={{ color: "#94a3b8", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  <span style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
                     Streak
                   </span>
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
-                  {stepsData.streak} <span style={{ fontSize: "14px", color: "#64748b", fontWeight: "600" }}>days</span>
+                <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  {stepsData.streak} <span style={{ fontSize: "14px", color: "var(--text-subtle)", fontWeight: "600" }}>days</span>
                 </div>
               </div>
             </div>
@@ -809,10 +815,10 @@ export const PatientVitals = () => {
                   🔥
                 </div>
                 <div>
-                  <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: 0 }}>
+                  <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: 0 }}>
                     Calories Burned
                   </h2>
-                  <p style={{ color: "#64748b", fontSize: "13px", margin: "2px 0 0 0" }}>
+                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
                     Daily energy expenditure tracking
                   </p>
                 </div>
@@ -827,7 +833,7 @@ export const PatientVitals = () => {
                 }}>
                   {hasCaloriesData ? caloriesData.today.toLocaleString() : "—"}
                 </div>
-                <p style={{ color: "#64748b", fontSize: "13px", margin: "4px 0 0 0" }}>
+                <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "4px 0 0 0" }}>
                   {hasCaloriesData ? "calories today" : "No data yet"}
                 </p>
               </div>
@@ -835,28 +841,28 @@ export const PatientVitals = () => {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "28px" }}>
               <div className="stat-box">
-                <div style={{ color: "#94a3b8", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
                   Total Burned
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
+                <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {caloriesData.totalBurned.toLocaleString()}
                 </div>
               </div>
 
               <div className="stat-box">
-                <div style={{ color: "#94a3b8", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
                   Active
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
+                <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {caloriesData.active.toLocaleString()}
                 </div>
               </div>
 
               <div className="stat-box">
-                <div style={{ color: "#94a3b8", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
                   Resting
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
+                <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {caloriesData.resting.toLocaleString()}
                 </div>
               </div>

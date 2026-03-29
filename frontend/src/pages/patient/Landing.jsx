@@ -151,8 +151,8 @@ export const Landing = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <span style={{ fontSize: "28px" }}>👋</span>
             <div>
-              <div style={{ color: "#f1f5f9", fontSize: "15px", fontWeight: "700" }}>Complete your profile</div>
-              <div style={{ color: "#94a3b8", fontSize: "13px" }}>You'll be redirected to set up your health profile in a moment...</div>
+              <div style={{ color: "var(--text)", fontSize: "15px", fontWeight: "700" }}>Complete your profile</div>
+              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>You'll be redirected to set up your health profile in a moment...</div>
             </div>
           </div>
           <button
@@ -211,12 +211,12 @@ export const Landing = () => {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
-                      <span style={{ color: "#f1f5f9", fontSize: "14px", fontWeight: "700" }}>{n.title}</span>
+                      <span style={{ color: "var(--text)", fontSize: "14px", fontWeight: "700" }}>{n.title}</span>
                       {!n.read && <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: color, flexShrink: 0 }} />}
                     </div>
-                    <p style={{ color: "#94a3b8", fontSize: "13px", margin: 0, lineHeight: 1.4 }}>{n.message}</p>
+                    <p style={{ color: "var(--text-muted)", fontSize: "13px", margin: 0, lineHeight: 1.4 }}>{n.message}</p>
                   </div>
-                  <span style={{ color: "#475569", fontSize: "12px", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  <span style={{ color: "var(--text-faint)", fontSize: "12px", whiteSpace: "nowrap", flexShrink: 0 }}>
                     {formatTime(n.created_at)}
                   </span>
                 </div>
@@ -238,8 +238,8 @@ export const Landing = () => {
               style={styles.quickCard}
             >
               <div style={styles.quickIcon}>{link.icon}</div>
-              <div style={{ fontWeight: "700", color: "#f1f5f9", fontSize: "15px", marginBottom: "4px" }}>{link.label}</div>
-              <div style={{ color: "#64748b", fontSize: "12px" }}>{link.desc}</div>
+              <div style={{ fontWeight: "700", color: "var(--text)", fontSize: "15px", marginBottom: "4px" }}>{link.label}</div>
+              <div style={{ color: "var(--text-subtle)", fontSize: "12px" }}>{link.desc}</div>
             </div>
           ))}
         </div>
@@ -250,7 +250,7 @@ export const Landing = () => {
 
 const styles = {
   page: {
-    background: "#060d1a",
+    background: "var(--bg)",
     minHeight: "100vh",
     padding: "40px 48px",
     fontFamily: "'DM Sans', sans-serif",
@@ -261,13 +261,13 @@ const styles = {
     alignItems: "flex-start",
   },
   greetingSmall: {
-    color: "#64748b",
+    color: "var(--text-subtle)",
     fontSize: "16px",
     margin: "0 0 4px 0",
     fontWeight: "500",
   },
   greetingName: {
-    color: "#f1f5f9",
+    color: "var(--text)",
     fontSize: "40px",
     fontWeight: "800",
     margin: 0,
@@ -281,12 +281,12 @@ const styles = {
     borderRadius: "10px",
     background: "rgba(255,255,255,0.05)",
     border: "1px solid rgba(255,255,255,0.08)",
-    color: "#94a3b8",
+    color: "var(--text-muted)",
     fontSize: "13px",
     fontWeight: "600",
   },
   welcomeMsg: {
-    color: "#64748b",
+    color: "var(--text-subtle)",
     fontSize: "15px",
     margin: "12px 0 0 0",
     maxWidth: "600px",
@@ -299,7 +299,7 @@ const styles = {
     marginBottom: "14px",
   },
   sectionTitle: {
-    color: "#f1f5f9",
+    color: "var(--text)",
     fontSize: "20px",
     fontWeight: "800",
     margin: 0,
@@ -324,7 +324,7 @@ const styles = {
     fontFamily: "'DM Sans', sans-serif",
   },
   notifCard: {
-    background: "#0f172a",
+    background: "var(--bg-3)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: "16px",
     overflow: "hidden",
@@ -332,7 +332,7 @@ const styles = {
   notifEmpty: {
     padding: "40px 20px",
     textAlign: "center",
-    color: "#64748b",
+    color: "var(--text-subtle)",
     fontSize: "14px",
   },
   quickGrid: {
@@ -341,7 +341,7 @@ const styles = {
     gap: "14px",
   },
   quickCard: {
-    background: "#0f172a",
+    background: "var(--bg-3)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: "16px",
     padding: "20px",

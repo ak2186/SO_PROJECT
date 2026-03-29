@@ -68,7 +68,7 @@ export const ProfileSetup = () => {
   return (
     <div style={styles.page}>
       <style>{`
-        .ps-input { width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:#0f172a; color:#f1f5f9; padding:12px 14px; font-size:14px; outline:none; box-sizing:border-box; font-family:'DM Sans',sans-serif; transition:border-color .2s,box-shadow .2s; }
+        .ps-input { width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:var(--bg-3); color:var(--text); padding:12px 14px; font-size:14px; outline:none; box-sizing:border-box; font-family:'DM Sans',sans-serif; transition:border-color .2s,box-shadow .2s; }
         .ps-input:focus { border-color:rgba(59,130,246,0.6); box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
         .ps-select { appearance:none; cursor:pointer; }
         @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
@@ -187,14 +187,14 @@ const styles = {
     marginBottom: "20px",
   },
   title: {
-    color: "#f1f5f9",
+    color: "var(--text)",
     fontSize: "28px",
     fontWeight: "800",
     margin: "0 0 8px 0",
     letterSpacing: "-0.5px",
   },
   subtitle: {
-    color: "#64748b",
+    color: "var(--text-subtle)",
     fontSize: "15px",
     margin: "0 0 28px 0",
     lineHeight: 1.5,
@@ -212,7 +212,7 @@ const styles = {
     marginBottom: "24px",
   },
   sectionLabel: {
-    color: "#94a3b8",
+    color: "var(--text-muted)",
     fontSize: "12px",
     fontWeight: "700",
     textTransform: "uppercase",
@@ -221,7 +221,7 @@ const styles = {
   },
   label: {
     display: "block",
-    color: "#94a3b8",
+    color: "var(--text-muted)",
     fontSize: "12px",
     fontWeight: "600",
     marginBottom: "6px",
@@ -247,7 +247,7 @@ const styles = {
     borderRadius: "10px",
     border: "1px solid rgba(255,255,255,0.1)",
     background: "transparent",
-    color: "#94a3b8",
+    color: "var(--text-muted)",
     fontWeight: "600",
     fontSize: "14px",
     cursor: "pointer",

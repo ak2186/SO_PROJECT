@@ -169,15 +169,15 @@ export const Settings = () => {
     { id: "integrations", label: "Integrations", icon: "🔗" },
   ];
 
-  const labelStyle = { display: "block", color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" };
+  const labelStyle = { display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" };
 
   const inputStyle = (err) => ({
     width: "100%",
     padding: "12px 14px",
-    border: `1px solid ${err ? "#ef4444" : "#1e293b"}`,
+    border: `1px solid ${err ? "#ef4444" : "var(--border-solid)"}`,
     borderRadius: "10px",
-    background: "#060d1a",
-    color: "#f1f5f9",
+    background: "var(--bg)",
+    color: "var(--text)",
     fontSize: "14px",
     outline: "none",
     boxSizing: "border-box",
@@ -196,8 +196,8 @@ export const Settings = () => {
 
   const sectionDivider = (title) => (
     <div style={{ gridColumn: "1/-1", marginTop: "12px", marginBottom: "4px", display: "flex", alignItems: "center", gap: "12px" }}>
-      <span style={{ color: "#94a3b8", fontSize: "13px", fontWeight: "700", whiteSpace: "nowrap" }}>{title}</span>
-      <div style={{ flex: 1, height: "1px", background: "#1e293b" }} />
+      <span style={{ color: "var(--text-muted)", fontSize: "13px", fontWeight: "700", whiteSpace: "nowrap" }}>{title}</span>
+      <div style={{ flex: 1, height: "1px", background: "var(--border-solid)" }} />
     </div>
   );
 
@@ -212,14 +212,14 @@ export const Settings = () => {
         @keyframes toastIn { from { opacity:0; transform:translateY(20px);} to { opacity:1; transform:translateY(0);} }
         @keyframes checkIn { from { transform:scale(0);} to { transform:scale(1);} }
         .settings-input:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-        .settings-input::placeholder { color: #334155; }
+        .settings-input::placeholder { color: var(--border-mid); }
         .nav-item { transition: all 0.15s ease; cursor: pointer; }
-        .nav-item:hover { background: #0f172a; }
+        .nav-item:hover { background: var(--bg-3); }
         .save-btn { transition: all 0.2s ease; cursor: pointer; }
         .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
       `}</style>
 
-      <div style={{ background: "#060d1a", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ background: "var(--bg)", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -233,42 +233,42 @@ export const Settings = () => {
           {/* Header */}
           <div style={{ marginBottom: "40px", animation: "fadeUp 0.5s ease both" }}>
             <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Account</p>
-            <h1 style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Settings</h1>
+            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Settings</h1>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "28px", animation: "fadeUp 0.5s ease 0.1s both" }}>
 
             {/* Sidebar Nav */}
-            <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "12px", height: "fit-content" }}>
+            <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "12px", height: "fit-content" }}>
               {sections.map(s => (
                 <div key={s.id} className="nav-item" onClick={() => { setActiveSection(s.id); setErrors({}); }}
-                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", marginBottom: "4px", background: activeSection === s.id ? "#1e293b" : "transparent" }}>
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", marginBottom: "4px", background: activeSection === s.id ? "var(--border-solid)" : "transparent" }}>
                   <span style={{ fontSize: "18px" }}>{s.icon}</span>
-                  <span style={{ color: activeSection === s.id ? "#f1f5f9" : "#64748b", fontWeight: "600", fontSize: "14px" }}>{s.label}</span>
+                  <span style={{ color: activeSection === s.id ? "var(--text)" : "var(--text-subtle)", fontWeight: "600", fontSize: "14px" }}>{s.label}</span>
                   {activeSection === s.id && <div style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }} />}
                 </div>
               ))}
             </div>
 
             {/* Content Panel */}
-            <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "32px" }}>
+            <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "32px" }}>
 
               {/* ── Personal Details ── */}
               {activeSection === "personal" && (
                 <div>
                   <div style={{ marginBottom: "28px" }}>
-                    <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Personal Details</h2>
-                    <p style={{ color: "#475569", fontSize: "14px", margin: 0 }}>Update your profile information, health details, and emergency contacts.</p>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Personal Details</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Update your profile information, health details, and emergency contacts.</p>
                   </div>
 
                   {/* Avatar */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "32px", padding: "20px", background: "#060d1a", borderRadius: "12px", border: "1px solid #1e293b" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "32px", padding: "20px", background: "var(--bg)", borderRadius: "12px", border: "1px solid var(--border-solid)" }}>
                     <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "linear-gradient(135deg,#3b82f6,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "22px", color: "#fff", flexShrink: 0 }}>
                       {initials}
                     </div>
                     <div>
-                      <div style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "16px" }}>{displayName || "Your Name"}</div>
-                      <div style={{ color: "#475569", fontSize: "13px" }}>Patient Account</div>
+                      <div style={{ color: "var(--text)", fontWeight: "700", fontSize: "16px" }}>{displayName || "Your Name"}</div>
+                      <div style={{ color: "var(--text-faint)", fontSize: "13px" }}>Patient Account</div>
                     </div>
                   </div>
 
@@ -424,8 +424,8 @@ export const Settings = () => {
               {/* ── Integrations ── */}
               {activeSection === "integrations" && (
                 <div>
-                  <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Integrations</h2>
-                  <p style={{ color: "#64748b", fontSize: "13px", margin: "0 0 28px 0" }}>Connect external services to sync your health data automatically.</p>
+                  <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Integrations</h2>
+                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "0 0 28px 0" }}>Connect external services to sync your health data automatically.</p>
 
                   {/* Google Fit Card */}
                   <div style={{
@@ -444,8 +444,8 @@ export const Settings = () => {
                         ❤️
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "16px" }}>Google Fit</div>
-                        <div style={{ color: "#64748b", fontSize: "13px", marginTop: "2px" }}>
+                        <div style={{ color: "var(--text)", fontWeight: "700", fontSize: "16px" }}>Google Fit</div>
+                        <div style={{ color: "var(--text-subtle)", fontSize: "13px", marginTop: "2px" }}>
                           Sync heart rate, SpO₂, steps, and calories from Google Fit
                         </div>
                       </div>
@@ -460,7 +460,7 @@ export const Settings = () => {
                     </div>
 
                     {gfitLastSync && (
-                      <p style={{ color: "#64748b", fontSize: "12px", margin: "0 0 16px 0" }}>
+                      <p style={{ color: "var(--text-subtle)", fontSize: "12px", margin: "0 0 16px 0" }}>
                         Last synced: {gfitLastSync}
                       </p>
                     )}
@@ -479,7 +479,7 @@ export const Settings = () => {
                       <button onClick={handleGfitSync} disabled={gfitSyncing} style={{
                         padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)",
                         background: gfitSyncing ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.03)",
-                        color: "#f1f5f9", fontWeight: "700", fontSize: "13px",
+                        color: "var(--text)", fontWeight: "700", fontSize: "13px",
                         fontFamily: "'DM Sans',sans-serif",
                         cursor: gfitSyncing ? "not-allowed" : "pointer",
                         opacity: gfitSyncing ? 0.6 : 1,
@@ -503,8 +503,8 @@ export const Settings = () => {
                       marginTop: "20px", padding: "16px", borderRadius: "10px",
                       background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)",
                     }}>
-                      <p style={{ color: "#94a3b8", fontSize: "12px", margin: 0, lineHeight: "1.6" }}>
-                        <strong style={{ color: "#f1f5f9" }}>How it works:</strong> Click "Connect Google Fit" to authorize access to your health data.
+                      <p style={{ color: "var(--text-muted)", fontSize: "12px", margin: 0, lineHeight: "1.6" }}>
+                        <strong style={{ color: "var(--text)" }}>How it works:</strong> Click "Connect Google Fit" to authorize access to your health data.
                         Once connected, your data will automatically sync each time you log in. You can also manually sync anytime.
                       </p>
                     </div>
@@ -516,8 +516,8 @@ export const Settings = () => {
               {activeSection === "password" && (
                 <div>
                   <div style={{ marginBottom: "28px" }}>
-                    <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Change Password</h2>
-                    <p style={{ color: "#475569", fontSize: "14px", margin: 0 }}>Choose a strong password with at least 8 characters.</p>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Change Password</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Choose a strong password with at least 8 characters.</p>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -539,7 +539,7 @@ export const Settings = () => {
                       {/* Strength bar */}
                       {passwords.newPass.length > 0 && (
                         <div style={{ marginTop: "10px" }}>
-                          <div style={{ height: "4px", background: "#1e293b", borderRadius: "99px", overflow: "hidden" }}>
+                          <div style={{ height: "4px", background: "var(--border-solid)", borderRadius: "99px", overflow: "hidden" }}>
                             <div style={{
                               height: "100%", borderRadius: "99px", transition: "all 0.3s ease",
                               width: passwords.newPass.length < 6 ? "25%" : passwords.newPass.length < 10 ? "55%" : "100%",

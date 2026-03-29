@@ -51,10 +51,10 @@ export const Settings = () => {
   const inputStyle = (err) => ({
     width: "100%",
     padding: "12px 14px",
-    border: `1px solid ${err ? "#ef4444" : "#1e293b"}`,
+    border: `1px solid ${err ? "#ef4444" : "var(--border-solid)"}`,
     borderRadius: "10px",
-    background: "#060d1a",
-    color: "#f1f5f9",
+    background: "var(--bg)",
+    color: "var(--text)",
     fontSize: "14px",
     outline: "none",
     boxSizing: "border-box",
@@ -70,14 +70,14 @@ export const Settings = () => {
         @keyframes toastIn { from { opacity:0; transform:translateY(20px);} to { opacity:1; transform:translateY(0);} }
         @keyframes checkIn { from { transform:scale(0);} to { transform:scale(1);} }
         .settings-input:focus { border-color: #8b5cf6 !important; box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
-        .settings-input::placeholder { color: #334155; }
+        .settings-input::placeholder { color: var(--border-mid); }
         .nav-item { transition: all 0.15s ease; cursor: pointer; }
-        .nav-item:hover { background: #0f172a; }
+        .nav-item:hover { background: var(--bg-3); }
         .save-btn { transition: all 0.2s ease; cursor: pointer; }
         .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,92,246,0.35); }
       `}</style>
 
-      <div style={{ background:"#060d1a", minHeight:"100vh", fontFamily:"'DM Sans', sans-serif" }}>
+      <div style={{ background:"var(--bg)", minHeight:"100vh", fontFamily:"'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -91,41 +91,41 @@ export const Settings = () => {
           {/* Header */}
           <div style={{ marginBottom:"40px", animation:"fadeUp 0.5s ease both" }}>
             <p style={{ color:"#8b5cf6", fontSize:"12px", fontWeight:"600", letterSpacing:"2px", textTransform:"uppercase", margin:"0 0 6px 0" }}>Admin Portal</p>
-            <h1 style={{ color:"#f1f5f9", fontSize:"32px", fontWeight:"700", margin:0, fontFamily:"'Playfair Display', serif", letterSpacing:"-0.5px" }}>Settings</h1>
+            <h1 style={{ color:"var(--text)", fontSize:"32px", fontWeight:"700", margin:0, fontFamily:"'Playfair Display', serif", letterSpacing:"-0.5px" }}>Settings</h1>
           </div>
 
           <div style={{ display:"grid", gridTemplateColumns:"220px 1fr", gap:"28px", animation:"fadeUp 0.5s ease 0.1s both" }}>
 
             {/* Sidebar Nav */}
-            <div style={{ background:"#0f172a", border:"1px solid #1e293b", borderRadius:"14px", padding:"12px", height:"fit-content" }}>
+            <div style={{ background:"var(--bg-3)", border:"1px solid var(--border-solid)", borderRadius:"14px", padding:"12px", height:"fit-content" }}>
               {sections.map(s => (
                 <div key={s.id} className="nav-item" onClick={() => { setActiveSection(s.id); setErrors({}); }}
-                  style={{ display:"flex", alignItems:"center", gap:"12px", padding:"12px 14px", borderRadius:"10px", marginBottom:"4px", background: activeSection===s.id ? "#1e293b" : "transparent" }}>
+                  style={{ display:"flex", alignItems:"center", gap:"12px", padding:"12px 14px", borderRadius:"10px", marginBottom:"4px", background: activeSection===s.id ? "var(--border-solid)" : "transparent" }}>
                   <span style={{ fontSize:"18px" }}>{s.icon}</span>
-                  <span style={{ color: activeSection===s.id ? "#f1f5f9" : "#64748b", fontWeight:"600", fontSize:"14px" }}>{s.label}</span>
+                  <span style={{ color: activeSection===s.id ? "var(--text)" : "var(--text-subtle)", fontWeight:"600", fontSize:"14px" }}>{s.label}</span>
                   {activeSection===s.id && <div style={{ marginLeft:"auto", width:"6px", height:"6px", borderRadius:"50%", background:"#8b5cf6" }} />}
                 </div>
               ))}
             </div>
 
             {/* Content Panel */}
-            <div style={{ background:"#0f172a", border:"1px solid #1e293b", borderRadius:"14px", padding:"32px" }}>
+            <div style={{ background:"var(--bg-3)", border:"1px solid var(--border-solid)", borderRadius:"14px", padding:"32px" }}>
 
               {/* ── Admin Profile ── */}
               {activeSection === "personal" && (
                 <div>
                   <div style={{ marginBottom:"28px" }}>
-                    <h2 style={{ color:"#f1f5f9", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>Admin Profile</h2>
-                    <p style={{ color:"#475569", fontSize:"14px", margin:0 }}>Manage your administrator account details.</p>
+                    <h2 style={{ color:"var(--text)", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>Admin Profile</h2>
+                    <p style={{ color:"var(--text-faint)", fontSize:"14px", margin:0 }}>Manage your administrator account details.</p>
                   </div>
 
                   {/* Avatar */}
-                  <div style={{ display:"flex", alignItems:"center", gap:"20px", marginBottom:"32px", padding:"20px", background:"#060d1a", borderRadius:"12px", border:"1px solid #1e293b" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:"20px", marginBottom:"32px", padding:"20px", background:"var(--bg)", borderRadius:"12px", border:"1px solid var(--border-solid)" }}>
                     <div style={{ width:"64px", height:"64px", borderRadius:"16px", background:"linear-gradient(135deg,#8b5cf6,#a78bfa)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:"700", fontSize:"22px", color:"#fff", flexShrink:0 }}>
                       {personal.name.split(" ").map(n=>n[0]).join("").slice(0,2)}
                     </div>
                     <div>
-                      <div style={{ color:"#f1f5f9", fontWeight:"700", fontSize:"16px" }}>{personal.name || "Your Name"}</div>
+                      <div style={{ color:"var(--text)", fontWeight:"700", fontSize:"16px" }}>{personal.name || "Your Name"}</div>
                       <div style={{ color:"#8b5cf6", fontSize:"13px", fontWeight:"600" }}>{personal.role}</div>
                     </div>
                   </div>
@@ -134,7 +134,7 @@ export const Settings = () => {
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px" }}>
                     {/* Full Name */}
                     <div style={{ gridColumn:"1/-1" }}>
-                      <label style={{ display:"block", color:"#64748b", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Full Name</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Full Name</label>
                       <input type="text" className="settings-input" style={inputStyle(errors.name)} value={personal.name}
                         onChange={e => setPersonal(p=>({...p,name:e.target.value}))} placeholder="Your full name" />
                       {errors.name && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.name}</p>}
@@ -142,14 +142,14 @@ export const Settings = () => {
 
                     {/* Role */}
                     <div>
-                      <label style={{ display:"block", color:"#64748b", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Role</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Role</label>
                       <input type="text" className="settings-input" style={inputStyle(false)} value={personal.role}
                         onChange={e => setPersonal(p=>({...p,role:e.target.value}))} placeholder="e.g. System Administrator" />
                     </div>
 
                     {/* Email */}
                     <div>
-                      <label style={{ display:"block", color:"#64748b", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Email Address</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Email Address</label>
                       <input type="email" className="settings-input" style={inputStyle(errors.email)} value={personal.email}
                         onChange={e => setPersonal(p=>({...p,email:e.target.value}))} placeholder="admin@healix.com" />
                       {errors.email && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.email}</p>}
@@ -157,7 +157,7 @@ export const Settings = () => {
 
                     {/* Phone */}
                     <div style={{ gridColumn:"1/-1" }}>
-                      <label style={{ display:"block", color:"#64748b", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Phone Number</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Phone Number</label>
                       <input type="tel" className="settings-input" style={inputStyle(errors.phone)} value={personal.phone}
                         onChange={e => setPersonal(p=>({...p,phone:e.target.value}))} placeholder="+44 7911 000000" />
                       {errors.phone && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.phone}</p>}
@@ -177,14 +177,14 @@ export const Settings = () => {
               {activeSection === "password" && (
                 <div>
                   <div style={{ marginBottom:"28px" }}>
-                    <h2 style={{ color:"#f1f5f9", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>Change Password</h2>
-                    <p style={{ color:"#475569", fontSize:"14px", margin:0 }}>Choose a strong password with at least 8 characters.</p>
+                    <h2 style={{ color:"var(--text)", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>Change Password</h2>
+                    <p style={{ color:"var(--text-faint)", fontSize:"14px", margin:0 }}>Choose a strong password with at least 8 characters.</p>
                   </div>
 
                   <div style={{ display:"flex", flexDirection:"column", gap:"20px" }}>
                     {/* Current */}
                     <div>
-                      <label style={{ display:"block", color:"#64748b", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Current Password</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Current Password</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.current)} value={passwords.current}
                         onChange={e => setPasswords(p=>({...p,current:e.target.value}))} placeholder="••••••••" />
                       {errors.current && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.current}</p>}
@@ -192,7 +192,7 @@ export const Settings = () => {
 
                     {/* New */}
                     <div>
-                      <label style={{ display:"block", color:"#64748b", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>New Password</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>New Password</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.newPass)} value={passwords.newPass}
                         onChange={e => setPasswords(p=>({...p,newPass:e.target.value}))} placeholder="At least 8 characters" />
                       {errors.newPass && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.newPass}</p>}
@@ -200,7 +200,7 @@ export const Settings = () => {
                       {/* Strength bar */}
                       {passwords.newPass.length > 0 && (
                         <div style={{ marginTop:"10px" }}>
-                          <div style={{ height:"4px", background:"#1e293b", borderRadius:"99px", overflow:"hidden" }}>
+                          <div style={{ height:"4px", background:"var(--border-solid)", borderRadius:"99px", overflow:"hidden" }}>
                             <div style={{ height:"100%", borderRadius:"99px", transition:"all 0.3s ease",
                               width: passwords.newPass.length < 6 ? "25%" : passwords.newPass.length < 10 ? "55%" : "100%",
                               background: passwords.newPass.length < 6 ? "#ef4444" : passwords.newPass.length < 10 ? "#f59e0b" : "#10b981"
@@ -215,7 +215,7 @@ export const Settings = () => {
 
                     {/* Confirm */}
                     <div>
-                      <label style={{ display:"block", color:"#64748b", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Confirm New Password</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Confirm New Password</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.confirm)} value={passwords.confirm}
                         onChange={e => setPasswords(p=>({...p,confirm:e.target.value}))} placeholder="Repeat new password" />
                       {errors.confirm && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.confirm}</p>}

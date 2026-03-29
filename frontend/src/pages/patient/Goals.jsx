@@ -164,7 +164,7 @@ const GoalCard = ({
           <div
             className="progress-circle"
             style={{
-              background: `conic-gradient(${color} ${percentage}%, #1e293b ${percentage}%)`,
+              background: `conic-gradient(${color} ${percentage}%, var(--border-solid) ${percentage}%)`,
             }}
           >
             <div className="inner-circle">
@@ -261,7 +261,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
     return (
       <div
         className="trackable-card"
-        style={{ borderColor: achieved ? color : "#1e293b" }}
+        style={{ borderColor: achieved ? color : "var(--border-solid)" }}
       >
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
@@ -328,7 +328,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
     return (
       <div
         className="trackable-card"
-        style={{ borderColor: achieved ? color : "#1e293b" }}
+        style={{ borderColor: achieved ? color : "var(--border-solid)" }}
       >
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
@@ -379,7 +379,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
         {hours !== null && (
           <div
             className="sleep-result"
-            style={{ color: achieved ? color : "#94a3b8" }}
+            style={{ color: achieved ? color : "var(--text-muted)" }}
           >
             {achieved
               ? `🌙 ${hours} hrs — great sleep!`
@@ -421,7 +421,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
     return (
       <div
         className="trackable-card"
-        style={{ borderColor: achieved ? color : "#1e293b" }}
+        style={{ borderColor: achieved ? color : "var(--border-solid)" }}
       >
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
@@ -458,9 +458,9 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
                 flex: 1,
                 padding: "8px 12px",
                 borderRadius: "8px",
-                border: "1px solid #1e293b",
-                background: "#111827",
-                color: "#f1f5f9",
+                border: "1px solid var(--border-solid)",
+                background: "var(--bg-3)",
+                color: "var(--text)",
                 fontSize: "14px",
                 outline: "none",
               }}
@@ -532,7 +532,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
     return (
       <div
         className="trackable-card"
-        style={{ borderColor: achieved ? color : "#1e293b" }}
+        style={{ borderColor: achieved ? color : "var(--border-solid)" }}
       >
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
@@ -564,7 +564,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
                   ? {
                       borderColor: color,
                       background: `${color}18`,
-                      color: "#f1f5f9",
+                      color: "var(--text)",
                     }
                   : {}
               }
@@ -573,7 +573,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
               <span
                 style={{
                   fontSize: "11px",
-                  color: selected === m.value ? "#f1f5f9" : "#64748b",
+                  color: selected === m.value ? "var(--text)" : "var(--text-subtle)",
                 }}
               >
                 {m.label}
@@ -605,7 +605,7 @@ const QuickLogItem = ({ item }) => {
       className={`quicklog-item ${checked ? "checked" : ""}`}
       onClick={toggle}
       style={{
-        borderColor: checked ? item.color : "#1e293b",
+        borderColor: checked ? item.color : "var(--border-solid)",
         backgroundColor: checked ? `${item.color}18` : undefined,
       }}
     >
@@ -613,7 +613,7 @@ const QuickLogItem = ({ item }) => {
       <span className="quicklog-label">{item.label}</span>
       <span
         className="quicklog-check"
-        style={{ background: checked ? item.color : "#1e293b" }}
+        style={{ background: checked ? item.color : "var(--border-solid)" }}
       >
         {checked ? "✓" : ""}
       </span>

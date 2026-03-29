@@ -93,7 +93,7 @@ export const PatientList = () => {
           cursor: pointer;
         }
         .patient-row:hover {
-          background: #1e293b;
+          background: var(--border-solid);
         }
         .action-btn {
           transition: all 0.15s ease;
@@ -121,7 +121,7 @@ export const PatientList = () => {
       `}</style>
 
       <div style={{
-        background: "#060d1a",
+        background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
         fontFamily: "'DM Sans', sans-serif",
@@ -130,7 +130,7 @@ export const PatientList = () => {
         {/* Header */}
         <div style={{ marginBottom: "32px", animation: "fadeUp 0.6s ease both" }}>
           <h1 style={{
-            color: "#f1f5f9",
+            color: "var(--text)",
             fontSize: "32px",
             fontWeight: "800",
             margin: "0 0 6px 0",
@@ -138,7 +138,7 @@ export const PatientList = () => {
           }}>
             Patient List
           </h1>
-          <p style={{ color: "#64748b", fontSize: "15px", margin: 0 }}>
+          <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: 0 }}>
             Manage and monitor your patients
           </p>
         </div>
@@ -152,7 +152,7 @@ export const PatientList = () => {
           animation: "fadeUp 0.6s ease 0.1s both",
         }}>
           <div style={{
-            background: "#0f172a",
+            background: "var(--bg-3)",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: "16px",
             padding: "20px",
@@ -173,7 +173,7 @@ export const PatientList = () => {
               👥
             </div>
             <div>
-              <div style={{ color: "#64748b", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+              <div style={{ color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                 Total Patients
               </div>
               <div style={{ color: "#3b82f6", fontSize: "28px", fontWeight: "800", letterSpacing: "-1px" }}>
@@ -208,10 +208,10 @@ export const PatientList = () => {
               style={{
                 width: "100%",
                 padding: "12px 16px 12px 42px",
-                background: "#0f172a",
+                background: "var(--bg-3)",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: "12px",
-                color: "#f1f5f9",
+                color: "var(--text)",
                 fontSize: "14px",
                 outline: "none",
                 fontFamily: "'DM Sans', sans-serif",
@@ -237,7 +237,7 @@ export const PatientList = () => {
 
         {/* Patient Table */}
         <div style={{
-          background: "#0f172a",
+          background: "var(--bg-3)",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: "16px",
           overflow: "hidden",
@@ -248,13 +248,13 @@ export const PatientList = () => {
             display: "grid",
             gridTemplateColumns: "2fr 1fr 2fr 1.5fr 1.5fr 0.8fr",
             padding: "16px 24px",
-            background: "#060d1a",
+            background: "var(--bg)",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}>
             {["Patient", "Age/Gender", "Reason", "Last Visit", "Next Appointment", "Actions"].map(
               (header) => (
                 <div key={header} style={{
-                  color: "#64748b",
+                  color: "var(--text-subtle)",
                   fontSize: "11px",
                   fontWeight: "700",
                   textTransform: "uppercase",
@@ -268,10 +268,10 @@ export const PatientList = () => {
 
           {/* Table Rows */}
           {loading && (
-            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "16px" }}>Loading patients...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading patients...</div>
           )}
           {!loading && filteredPatients.length === 0 && (
-            <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No patients found. Patients appear here once they book an appointment with you.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No patients found. Patients appear here once they book an appointment with you.</div>
           )}
           {filteredPatients.map((patient, idx) => (
             <div
@@ -302,33 +302,33 @@ export const PatientList = () => {
                   {patient.avatar}
                 </div>
                 <div>
-                  <div style={{ color: "#f1f5f9", fontSize: "14px", fontWeight: "700" }}>
+                  <div style={{ color: "var(--text)", fontSize: "14px", fontWeight: "700" }}>
                     {patient.name}
                   </div>
-                  <div style={{ color: "#64748b", fontSize: "12px" }}>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "12px" }}>
                     {patient.patientId}
                   </div>
                 </div>
               </div>
 
               {/* Age/Gender */}
-              <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+              <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>
                 {patient.age ? `${patient.age} yrs` : "-"}<br />
-                <span style={{ fontSize: "12px", color: "#64748b" }}>{patient.gender === "M" ? "Male" : patient.gender === "F" ? "Female" : patient.gender || "-"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>{patient.gender === "M" ? "Male" : patient.gender === "F" ? "Female" : patient.gender || "-"}</span>
               </div>
 
               {/* Reason */}
-              <div style={{ color: "#94a3b8", fontSize: "13px" }}>
+              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                 {patient.condition || "-"}
               </div>
 
               {/* Last Visit */}
-              <div style={{ color: "#94a3b8", fontSize: "13px" }}>
+              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                 {patient.lastVisit || "-"}
               </div>
 
               {/* Next Appointment */}
-              <div style={{ color: "#94a3b8", fontSize: "13px" }}>
+              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                 {patient.nextAppointment || "-"}
               </div>
 
@@ -342,7 +342,7 @@ export const PatientList = () => {
                     background: "transparent",
                     border: "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "8px",
-                    color: "#94a3b8",
+                    color: "var(--text-muted)",
                     fontSize: "12px",
                     fontWeight: "600",
                     fontFamily: "'DM Sans', sans-serif",
@@ -361,7 +361,7 @@ export const PatientList = () => {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "#0f172a",
+                background: "var(--bg-3)",
                 border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: "20px",
                 padding: "32px",
@@ -388,10 +388,10 @@ export const PatientList = () => {
                     {selectedPatient.avatar}
                   </div>
                   <div>
-                    <h2 style={{ color: "#f1f5f9", fontSize: "24px", fontWeight: "800", margin: "0 0 4px 0" }}>
+                    <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 4px 0" }}>
                       {selectedPatient.name}
                     </h2>
-                    <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
+                    <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: 0 }}>
                       {selectedPatient.patientId} • {selectedPatient.age ? `${selectedPatient.age} years old` : ""} {selectedPatient.gender ? `• ${selectedPatient.gender === "M" ? "Male" : selectedPatient.gender === "F" ? "Female" : selectedPatient.gender}` : ""}
                     </p>
                   </div>
@@ -401,7 +401,7 @@ export const PatientList = () => {
                   style={{
                     background: "transparent",
                     border: "none",
-                    color: "#64748b",
+                    color: "var(--text-subtle)",
                     fontSize: "24px",
                     cursor: "pointer",
                     padding: "0",
@@ -413,10 +413,10 @@ export const PatientList = () => {
 
               {/* Reason */}
               <div style={{ marginBottom: "24px" }}>
-                <div style={{ color: "#94a3b8", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", marginBottom: "8px" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", marginBottom: "8px" }}>
                   Reason
                 </div>
-                <div style={{ color: "#f1f5f9", fontSize: "15px" }}>
+                <div style={{ color: "var(--text)", fontSize: "15px" }}>
                   {selectedPatient.condition || "Not specified"}
                 </div>
               </div>
@@ -424,12 +424,12 @@ export const PatientList = () => {
               {/* Visit Info */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }}>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px" }}>
-                  <div style={{ color: "#64748b", fontSize: "11px", marginBottom: "4px" }}>Last Visit</div>
-                  <div style={{ color: "#f1f5f9", fontSize: "16px", fontWeight: "800" }}>{selectedPatient.lastVisit || "-"}</div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "11px", marginBottom: "4px" }}>Last Visit</div>
+                  <div style={{ color: "var(--text)", fontSize: "16px", fontWeight: "800" }}>{selectedPatient.lastVisit || "-"}</div>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px" }}>
-                  <div style={{ color: "#64748b", fontSize: "11px", marginBottom: "4px" }}>Next Appointment</div>
-                  <div style={{ color: "#f1f5f9", fontSize: "16px", fontWeight: "800" }}>{selectedPatient.nextAppointment || "-"}</div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "11px", marginBottom: "4px" }}>Next Appointment</div>
+                  <div style={{ color: "var(--text)", fontSize: "16px", fontWeight: "800" }}>{selectedPatient.nextAppointment || "-"}</div>
                 </div>
               </div>
             </div>

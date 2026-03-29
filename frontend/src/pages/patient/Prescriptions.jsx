@@ -115,13 +115,13 @@ export const Prescriptions = () => {
         .rx-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.35) !important; }
         .rx-btn { transition: all 0.15s ease; cursor: pointer; }
         .rx-btn:hover { opacity: 0.85; transform: translateY(-1px); }
-        .search-input { background: #0f172a; border: 1px solid #1e293b; color: #f1f5f9; padding: 11px 16px 11px 42px; border-radius: 10px; font-size: 14px; outline: none; font-family: 'DM Sans', sans-serif; width: 280px; box-sizing: border-box; transition: border-color 0.2s; }
+        .search-input { background: var(--bg-3); border: 1px solid var(--border-solid); color: var(--text); padding: 11px 16px 11px 42px; border-radius: 10px; font-size: 14px; outline: none; font-family: 'DM Sans', sans-serif; width: 280px; box-sizing: border-box; transition: border-color 0.2s; }
         .search-input:focus { border-color: #3b82f6; }
-        .search-input::placeholder { color: #334155; }
+        .search-input::placeholder { color: var(--border-mid); }
         .filter-btn { padding: 8px 18px; border-radius: 8px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s ease; font-family: 'DM Sans', sans-serif; }
       `}</style>
 
-      <div style={{ background: "#060d1a", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -133,7 +133,7 @@ export const Prescriptions = () => {
         {/* Header */}
         <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
           <p style={{ color: "#10b981", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Healthcare</p>
-          <h1 style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Prescriptions</h1>
+          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Prescriptions</h1>
         </div>
 
         {/* Stats Row */}
@@ -143,9 +143,9 @@ export const Prescriptions = () => {
             { label: "Refills Needed", value: prescriptions.filter(r => r.refillsLeft === 0 && r.active).length, color: "#f59e0b" },
             { label: "Total Prescriptions", value: prescriptions.length, color: "#10b981" },
           ].map((s, i) => (
-            <div key={i} style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "20px 24px" }}>
+            <div key={i} style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px 24px" }}>
               <div style={{ color: s.color, fontSize: "28px", fontWeight: "700", marginBottom: "4px" }}>{s.value}</div>
-              <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "500" }}>{s.label}</div>
+              <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "500" }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -159,7 +159,7 @@ export const Prescriptions = () => {
           <div style={{ display: "flex", gap: "6px" }}>
             {[["all", "All"], ["active", "Active"], ["inactive", "Inactive"], ["refill", "Needs Refill"]].map(([val, label]) => (
               <button key={val} className="filter-btn" onClick={() => setFilter(val)}
-                style={{ background: filter === val ? "#3b82f6" : "#0f172a", color: filter === val ? "#fff" : "#64748b", border: filter === val ? "none" : "1px solid #1e293b" }}>
+                style={{ background: filter === val ? "#3b82f6" : "var(--bg-3)", color: filter === val ? "#fff" : "var(--text-subtle)", border: filter === val ? "none" : "1px solid var(--border-solid)" }}>
                 {label}
               </button>
             ))}
@@ -174,9 +174,9 @@ export const Prescriptions = () => {
         {showAddModal && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center" }}
             onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}>
-            <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "16px", padding: "32px", width: "460px", maxWidth: "90vw", animation: "fadeUp 0.3s ease" }}>
-              <h2 style={{ color: "#f1f5f9", fontSize: "20px", fontWeight: "700", margin: "0 0 6px 0" }}>Add Your Medication</h2>
-              <p style={{ color: "#64748b", fontSize: "13px", margin: "0 0 24px 0" }}>Add a medication you're already taking</p>
+            <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "32px", width: "460px", maxWidth: "90vw", animation: "fadeUp 0.3s ease" }}>
+              <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 6px 0" }}>Add Your Medication</h2>
+              <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "0 0 24px 0" }}>Add a medication you're already taking</p>
 
               {[
                 { key: "medication_name", label: "Medication Name", placeholder: "e.g. Metformin", required: true },
@@ -186,7 +186,7 @@ export const Prescriptions = () => {
                 { key: "notes", label: "Notes (optional)", placeholder: "Any additional notes" },
               ].map(({ key, label, placeholder, required }) => (
                 <div key={key} style={{ marginBottom: "16px" }}>
-                  <label style={{ display: "block", color: "#94a3b8", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                  <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
                     {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
                   </label>
                   <input
@@ -194,18 +194,18 @@ export const Prescriptions = () => {
                     placeholder={placeholder}
                     value={addForm[key]}
                     onChange={(e) => setAddForm(f => ({ ...f, [key]: e.target.value }))}
-                    style={{ width: "100%", padding: "10px 14px", background: "#060d1a", border: "1px solid #1e293b", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", fontFamily: "'DM Sans',sans-serif", boxSizing: "border-box" }}
+                    style={{ width: "100%", padding: "10px 14px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", fontFamily: "'DM Sans',sans-serif", boxSizing: "border-box" }}
                   />
                 </div>
               ))}
 
               <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
                 <button className="rx-btn" onClick={() => setShowAddModal(false)}
-                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid #1e293b", background: "transparent", color: "#94a3b8", fontWeight: "600", fontSize: "14px", fontFamily: "'DM Sans',sans-serif" }}>
+                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", fontFamily: "'DM Sans',sans-serif" }}>
                   Cancel
                 </button>
                 <button className="rx-btn" onClick={handleAddMedication} disabled={addSaving}
-                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: addSaving ? "#1e293b" : "#10b981", color: addSaving ? "#64748b" : "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif" }}>
+                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: addSaving ? "var(--border-solid)" : "#10b981", color: addSaving ? "var(--text-subtle)" : "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif" }}>
                   {addSaving ? "Adding..." : "Add Medication"}
                 </button>
               </div>
@@ -216,45 +216,45 @@ export const Prescriptions = () => {
         {/* Prescription Cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {filtered.length === 0 && !loading && (
-            <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No prescriptions found.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No prescriptions found.</div>
           )}
           {loading && (
-            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "16px" }}>Loading prescriptions...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading prescriptions...</div>
           )}
           {filtered.map((rx, i) => {
             const cat = categoryColors[rx.category] || categoryColors.Antibiotic;
             const qtyColor = getQuantityColor(rx.quantityLeft, rx.totalQuantity);
             const qtyPct = Math.round((rx.quantityLeft / rx.totalQuantity) * 100);
             return (
-              <div key={rx.id} className="rx-card" style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "24px", animation: `fadeUp 0.4s ease ${i * 0.06}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)", opacity: rx.active ? 1 : 0.6 }}>
+              <div key={rx.id} className="rx-card" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "24px", animation: `fadeUp 0.4s ease ${i * 0.06}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)", opacity: rx.active ? 1 : 0.6 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
                   {/* Left */}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px", flexWrap: "wrap" }}>
-                      <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "18px" }}>{rx.name}</span>
-                      <span style={{ color: "#94a3b8", fontSize: "14px", fontWeight: "500" }}>{rx.dosage}</span>
+                      <span style={{ color: "var(--text)", fontWeight: "700", fontSize: "18px" }}>{rx.name}</span>
+                      <span style={{ color: "var(--text-muted)", fontSize: "14px", fontWeight: "500" }}>{rx.dosage}</span>
                       <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: cat.bg, color: cat.text, border: `1px solid ${cat.border}`, letterSpacing: "0.3px" }}>{rx.category}</span>
                       {rx.source === "self" && <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(139,92,246,0.12)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>Self-added</span>}
-                      {!rx.active && <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(71,85,105,0.2)", color: "#64748b", border: "1px solid #1e293b" }}>Inactive</span>}
+                      {!rx.active && <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(71,85,105,0.2)", color: "var(--text-subtle)", border: "1px solid var(--border-solid)" }}>Inactive</span>}
                     </div>
-                    <div style={{ color: "#64748b", fontSize: "13px", marginBottom: "16px" }}>
+                    <div style={{ color: "var(--text-subtle)", fontSize: "13px", marginBottom: "16px" }}>
                       {rx.frequency} · Prescribed by {rx.doctor} on {rx.prescribed}
                     </div>
 
                     {/* Quantity bar */}
                     <div style={{ marginBottom: "8px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                        <span style={{ color: "#64748b", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Quantity Left</span>
+                        <span style={{ color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Quantity Left</span>
                         <span style={{ color: qtyColor, fontSize: "12px", fontWeight: "700" }}>{rx.quantityLeft} / {rx.totalQuantity} tablets</span>
                       </div>
-                      <div style={{ height: "6px", background: "#1e293b", borderRadius: "99px", overflow: "hidden" }}>
+                      <div style={{ height: "6px", background: "var(--border-solid)", borderRadius: "99px", overflow: "hidden" }}>
                         <div style={{ height: "100%", width: `${qtyPct}%`, background: qtyColor, borderRadius: "99px", transition: "width 0.5s ease" }} />
                       </div>
                     </div>
 
                     {/* Refills */}
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
-                      <span style={{ color: "#64748b", fontSize: "13px" }}>Refills remaining:</span>
+                      <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>Refills remaining:</span>
                       <span style={{ color: rx.refillsLeft === 0 ? "#ef4444" : "#10b981", fontWeight: "700", fontSize: "14px" }}>
                         {rx.refillsLeft === 0 ? "None — Refill needed" : rx.refillsLeft}
                       </span>
@@ -266,11 +266,11 @@ export const Prescriptions = () => {
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0 }}>
                       <button className="rx-btn" onClick={() => handleRefill(rx.id)}
                         disabled={refillRequested[rx.id]}
-                        style={{ padding: "9px 18px", borderRadius: "8px", border: "none", background: refillRequested[rx.id] ? "#1e293b" : "#3b82f6", color: refillRequested[rx.id] ? "#64748b" : "#fff", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
+                        style={{ padding: "9px 18px", borderRadius: "8px", border: "none", background: refillRequested[rx.id] ? "var(--border-solid)" : "#3b82f6", color: refillRequested[rx.id] ? "var(--text-subtle)" : "#fff", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
                         {refillRequested[rx.id] ? "✓ Requested" : "Request Refill"}
                       </button>
                       <button className="rx-btn" onClick={() => handleDownload(rx)}
-                        style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid #1e293b", background: "transparent", color: "#94a3b8", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
+                        style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
                         ↓ Download
                       </button>
                     </div>

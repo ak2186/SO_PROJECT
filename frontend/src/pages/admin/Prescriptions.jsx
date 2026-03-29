@@ -45,18 +45,18 @@ export const Prescriptions = () => {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap');
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px);} to { opacity:1; transform:translateY(0);} }
         .rx-row { transition: background 0.15s ease; }
-        .rx-row:hover { background: #0f172a; }
-        .search-input { background: #0f172a; border: 1px solid #1e293b; color: #f1f5f9; padding: 11px 16px 11px 42px; border-radius: 10px; font-size: 14px; outline: none; font-family: 'DM Sans', sans-serif; width: 280px; box-sizing: border-box; transition: border-color 0.2s; }
+        .rx-row:hover { background: var(--bg-3); }
+        .search-input { background: var(--bg-3); border: 1px solid var(--border-solid); color: var(--text); padding: 11px 16px 11px 42px; border-radius: 10px; font-size: 14px; outline: none; font-family: 'DM Sans', sans-serif; width: 280px; box-sizing: border-box; transition: border-color 0.2s; }
         .search-input:focus { border-color: #8b5cf6; }
-        .search-input::placeholder { color: #334155; }
+        .search-input::placeholder { color: var(--border-mid); }
       `}</style>
 
-      <div style={{ background: "#060d1a", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
           <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Admin Portal</p>
-          <h1 style={{ color: "#f1f5f9", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>All Prescriptions</h1>
+          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>All Prescriptions</h1>
         </div>
 
         {/* Stats */}
@@ -67,9 +67,9 @@ export const Prescriptions = () => {
             { label: "Expired", value: stats.expired, color: "#f59e0b" },
             { label: "Completed", value: stats.completed, color: "#64748b" },
           ].map((s, i) => (
-            <div key={i} style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", padding: "20px 24px" }}>
+            <div key={i} style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px 24px" }}>
               <div style={{ color: s.color, fontSize: "28px", fontWeight: "700", marginBottom: "4px" }}>{s.value}</div>
-              <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "500" }}>{s.label}</div>
+              <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "500" }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -83,7 +83,7 @@ export const Prescriptions = () => {
           <div style={{ display: "flex", gap: "6px" }}>
             {[["all", "All"], ["active", "Active"], ["expired", "Expired"], ["completed", "Completed"]].map(([val, label]) => (
               <button key={val} onClick={() => setFilter(val)}
-                style={{ padding: "8px 18px", borderRadius: "8px", border: filter === val ? "none" : "1px solid #1e293b", fontWeight: "600", fontSize: "13px", cursor: "pointer", transition: "all 0.15s ease", fontFamily: "'DM Sans',sans-serif", background: filter === val ? "#8b5cf6" : "#0f172a", color: filter === val ? "#fff" : "#64748b" }}>
+                style={{ padding: "8px 18px", borderRadius: "8px", border: filter === val ? "none" : "1px solid var(--border-solid)", fontWeight: "600", fontSize: "13px", cursor: "pointer", transition: "all 0.15s ease", fontFamily: "'DM Sans',sans-serif", background: filter === val ? "#8b5cf6" : "var(--bg-3)", color: filter === val ? "#fff" : "var(--text-subtle)" }}>
                 {label}
               </button>
             ))}
@@ -91,27 +91,27 @@ export const Prescriptions = () => {
         </div>
 
         {/* Table */}
-        <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "14px", overflow: "hidden", animation: "fadeUp 0.5s ease 0.16s both" }}>
+        <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", overflow: "hidden", animation: "fadeUp 0.5s ease 0.16s both" }}>
           {/* Header */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.4fr 1fr 0.8fr 0.6fr 0.7fr", padding: "16px 24px", background: "#060d1a", borderBottom: "1px solid #1e293b" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.4fr 1fr 0.8fr 0.6fr 0.7fr", padding: "16px 24px", background: "var(--bg)", borderBottom: "1px solid var(--border-solid)" }}>
             {["Patient", "Medication", "Provider", "Issued", "Refills", "Status"].map(h => (
-              <div key={h} style={{ color: "#64748b", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</div>
+              <div key={h} style={{ color: "var(--text-subtle)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</div>
             ))}
           </div>
 
           {/* Rows */}
           {loading && (
-            <div style={{ textAlign: "center", color: "#64748b", padding: "60px", fontSize: "15px" }}>Loading prescriptions...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "15px" }}>Loading prescriptions...</div>
           )}
           {!loading && filtered.length === 0 && (
-            <div style={{ textAlign: "center", color: "#334155", padding: "60px", fontSize: "16px" }}>No prescriptions found.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No prescriptions found.</div>
           )}
           {filtered.map(rx => (
-            <div key={rx.id} className="rx-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1.4fr 1fr 0.8fr 0.6fr 0.7fr", padding: "18px 24px", borderBottom: "1px solid #1e293b" }}>
-              <div style={{ color: "#f1f5f9", fontSize: "14px", fontWeight: "600" }}>{rx.patient}</div>
+            <div key={rx.id} className="rx-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1.4fr 1fr 0.8fr 0.6fr 0.7fr", padding: "18px 24px", borderBottom: "1px solid var(--border-solid)" }}>
+              <div style={{ color: "var(--text)", fontSize: "14px", fontWeight: "600" }}>{rx.patient}</div>
               <div style={{ color: "#8b5cf6", fontSize: "14px", fontWeight: "600" }}>{rx.medication}</div>
-              <div style={{ color: "#64748b", fontSize: "14px" }}>{rx.provider}</div>
-              <div style={{ color: "#64748b", fontSize: "14px" }}>{rx.issued}</div>
+              <div style={{ color: "var(--text-subtle)", fontSize: "14px" }}>{rx.provider}</div>
+              <div style={{ color: "var(--text-subtle)", fontSize: "14px" }}>{rx.issued}</div>
               <div style={{ color: rx.refills === 0 ? "#f59e0b" : "#10b981", fontSize: "14px", fontWeight: "700" }}>{rx.refills}</div>
               <div>
                 {rx.status === "active" && (
