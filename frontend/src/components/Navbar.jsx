@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { notificationsAPI } from "../utils/api";
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -124,7 +126,7 @@ export const Navbar = () => {
           50%       { transform: scale(1.18); box-shadow: 0 0 0 5px rgba(239,68,68,0);   }
         }
         .nav-link {
-          color: #94a3b8;
+          color: var(--text-muted);
           text-decoration: none;
           font-size: 14px;
           font-weight: 500;
@@ -134,12 +136,12 @@ export const Navbar = () => {
           position: relative;
         }
         .nav-link:hover {
-          color: #f1f5f9;
-          background: rgba(255,255,255,0.07);
+          color: var(--text);
+          background: var(--surface-2);
         }
         .nav-link.active {
-          color: #f1f5f9;
-          background: rgba(255,255,255,0.09);
+          color: var(--text);
+          background: var(--surface-3);
           font-weight: 600;
         }
         .nav-link.active::after {
@@ -168,8 +170,8 @@ export const Navbar = () => {
         }
         .logout-btn {
           background: transparent;
-          border: 1px solid #334155;
-          color: #94a3b8;
+          border: 1px solid var(--border-mid);
+          color: var(--text-muted);
           padding: 6px 16px;
           border-radius: 7px;
           font-size: 14px;
@@ -179,14 +181,14 @@ export const Navbar = () => {
           transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
         }
         .logout-btn:hover {
-          border-color: #ef4444;
-          color: #ef4444;
+          border-color: var(--danger);
+          color: var(--danger);
           background: rgba(239,68,68,0.06);
         }
         .bell-btn {
           background: transparent;
-          border: 1px solid #334155;
-          color: #94a3b8;
+          border: 1px solid var(--border-mid);
+          color: var(--text-muted);
           padding: 6px 10px;
           border-radius: 7px;
           font-size: 18px;
@@ -196,8 +198,8 @@ export const Navbar = () => {
           transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
         }
         .bell-btn:hover, .bell-btn.open {
-          border-color: #3b82f6;
-          color: #f1f5f9;
+          border-color: var(--primary);
+          color: var(--text);
           background: rgba(59,130,246,0.08);
         }
         .notif-row:hover {
@@ -207,8 +209,8 @@ export const Navbar = () => {
 
       <nav
         style={{
-          background: "rgba(6, 13, 26, 0.82)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "var(--nav-bg)",
+          borderBottom: "1px solid var(--border)",
           padding: "0 24px",
           position: "sticky",
           top: 0,
@@ -296,8 +298,8 @@ export const Navbar = () => {
                 <div style={{
                   position: "absolute", top: "calc(100% + 10px)", right: 0,
                   width: "360px", maxHeight: "440px",
-                  background: "rgba(10,18,35,0.97)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "var(--bg-3)",
+                  border: "1px solid var(--border-2)",
                   borderRadius: "14px",
                   boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
                   overflow: "hidden", zIndex: 200,
@@ -308,7 +310,7 @@ export const Navbar = () => {
                   <div style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                     padding: "14px 16px",
-                    borderBottom: "1px solid rgba(255,255,255,0.07)",
+                    borderBottom: "1px solid var(--border)",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "14px" }}>Notifications</span>
@@ -397,6 +399,33 @@ export const Navbar = () => {
                 </div>
               )}
             </div>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              style={{
+                background: "transparent",
+                border: "1px solid var(--border-mid)",
+                color: "var(--text-muted)",
+                padding: "6px 10px",
+                borderRadius: "7px",
+                fontSize: "16px",
+                cursor: "pointer",
+                lineHeight: 1,
+                transition: "border-color 0.15s ease, background 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--primary)";
+                e.currentTarget.style.background = "rgba(59,130,246,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-mid)";
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
 
             {/* Logout Button */}
             <button onClick={handleLogout} className="logout-btn">

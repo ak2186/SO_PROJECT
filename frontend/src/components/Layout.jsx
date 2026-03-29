@@ -9,8 +9,8 @@ export const Layout = () => {
         style={{
           padding: "24px",
           fontFamily: "'DM Sans', sans-serif",
-          color: "#f1f5f9",
-          background: "#0f172a",
+          color: "var(--text)",
+          background: "var(--bg-3)",
           minHeight: "calc(100vh - 64px)",
         }}
       >
