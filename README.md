@@ -45,14 +45,6 @@ cd SO_PROJECT
 
 ### 2. Backend Setup
 
-```bash
-# Create a virtual environment
-python3 -m venv .venv
-
-# Activate it
-source .venv/bin/activate        # macOS / Linux
-# .venv\Scripts\activate          # Windows
-
 # Install all Python dependencies
 pip install -r requirements.txt
 ```
@@ -118,7 +110,6 @@ GOOGLE_FIT_REDIRECT_URI=http://localhost:8000/api/googlefit/callback
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-> **Note:** The MongoDB Atlas URL above connects to our shared cloud database. All team members use the same database — no local MongoDB installation required. The admin account and seed doctors are already in the database.
 
 ---
 
@@ -155,7 +146,6 @@ You need **two terminals** running simultaneously:
 
 ```bash
 cd SO_PROJECT
-source .venv/bin/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -172,11 +162,6 @@ npm run dev
 |---|---|
 | **Frontend App** | http://localhost:5173 |
 | **Backend API** | http://localhost:8000 |
-| **Swagger API Docs** | http://localhost:8000/api/docs |
-| **ReDoc API Docs** | http://localhost:8000/api/redoc |
-| **Health Check** | http://localhost:8000/health |
-
-> The Vite dev server automatically proxies all `/api` requests to the backend on port 8000.
 
 ---
 
@@ -447,46 +432,6 @@ SO_PROJECT/
 
 7. **`frontend/vite.config.js`** — The Vite proxy config ensures that all `/api` requests from the frontend (port 5173) are forwarded to the backend (port 8000), avoiding CORS issues in development.
 
----
-
-## Google Fit Setup
-
-To enable Google Fit health data syncing:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a new project (or use existing)
-3. Enable the **Fitness API**
-4. Go to **APIs & Services > Credentials > Create OAuth 2.0 Client ID**
-   - Application type: Web application
-   - Authorized redirect URI: `http://localhost:8000/api/googlefit/callback`
-5. Go to **OAuth consent screen > Test Users** and add your Google email
-6. Copy the **Client ID** and **Client Secret** into your `.env`:
-   ```
-   GOOGLE_FIT_CLIENT_ID=your_client_id
-   GOOGLE_FIT_CLIENT_SECRET=your_client_secret
-   ```
-
-Once configured, patients can connect Google Fit from their Settings page. Data syncs automatically on every login.
-
-**Supported metrics:** Heart Rate, Blood Oxygen (SpO2), Steps, Calories
-
----
-
-## Gemini AI Setup
-
-To enable the AI health assistant:
-
-1. Go to [Google AI Studio](https://aistudio.google.com)
-2. Click **Get API Key > Create API Key**
-3. Copy the key into your `.env`:
-   ```
-   GEMINI_API_KEY=your_api_key
-   ```
-
-The assistant has access to the patient's health data and can answer questions about their readings, prescriptions, and general health.
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -504,31 +449,5 @@ The assistant has access to the patient's health data and can answer questions a
 ---
 
 ## Troubleshooting
-
-**MongoDB not connecting:**
-- Make sure the `MONGODB_URL` in your `.env` is the Atlas connection string (starts with `mongodb+srv://`)
-- Check your internet connection — Atlas requires network access
-- If you get a DNS error, install dnspython: `pip install dnspython`
-
-**Frontend shows blank page or API errors:**
-- Make sure BOTH terminals are running (backend on 8000, frontend on 5173)
-- Check the browser console for errors
-
-**"CORS error" in browser:**
-- Make sure `ALLOWED_ORIGINS` in `.env` includes `http://localhost:5173`
-
-**Google Fit not syncing:**
-- Verify your OAuth credentials in `.env`
-- Make sure your Google email is added as a test user in the OAuth consent screen
-- The redirect URI must exactly match: `http://localhost:8000/api/googlefit/callback`
-
-**AI chat not responding:**
-- Check that `GEMINI_API_KEY` is set in `.env`
-- Make sure the key is valid at [Google AI Studio](https://aistudio.google.com)
-
-**`seed_doctors.py` fails:**
-- Make sure `.env` is configured and MongoDB is running
-- Activate your virtual environment first: `source .venv/bin/activate`
-
 **Password validation errors on registration:**
 - Password must be 8-72 characters, contain at least 1 uppercase letter, 1 lowercase letter, and 1 number
