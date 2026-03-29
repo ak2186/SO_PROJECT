@@ -1,24 +1,68 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap");
 
-/* ── Design tokens ─────────────────────────────────────── */
-:root {
-  --bg:          #060d1a;
-  --surface:     rgba(255, 255, 255, 0.04);
-  --surface-2:   rgba(255, 255, 255, 0.07);
-  --border:      rgba(255, 255, 255, 0.08);
-  --border-2:    rgba(255, 255, 255, 0.14);
-  --text:        #f1f5f9;
-  --text-muted:  #94a3b8;
-  --text-subtle: #64748b;
-  --primary:     #3b82f6;
-  --primary-2:   #8b5cf6;
-  --success:     #10b981;
-  --danger:      #ef4444;
-  --warning:     #f59e0b;
-  --radius-sm:   8px;
-  --radius:      12px;
-  --radius-lg:   16px;
-  --radius-xl:   20px;
+/* ── Design tokens — Dark theme (default) ──────────────── */
+:root,
+[data-theme="dark"] {
+  --bg:           #060d1a;
+  --bg-2:         #0b1220;
+  --bg-3:         #0f172a;
+  --surface:      rgba(255, 255, 255, 0.04);
+  --surface-2:    rgba(255, 255, 255, 0.07);
+  --surface-3:    rgba(255, 255, 255, 0.10);
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-2:     rgba(255, 255, 255, 0.14);
+  --border-solid: #1e293b;
+  --border-mid:   #334155;
+  --text:         #f1f5f9;
+  --text-muted:   #94a3b8;
+  --text-subtle:  #64748b;
+  --text-faint:   #475569;
+  --card-bg:      rgba(255, 255, 255, 0.04);
+  --card-border:  rgba(255, 255, 255, 0.08);
+  --input-bg:     rgba(255, 255, 255, 0.05);
+  --input-border: #334155;
+  --nav-bg:       rgba(6, 13, 26, 0.88);
+  --shadow:       rgba(0, 0, 0, 0.4);
+  --shadow-lg:    rgba(0, 0, 0, 0.6);
+  --primary:      #3b82f6;
+  --primary-2:    #8b5cf6;
+  --success:      #10b981;
+  --danger:       #ef4444;
+  --warning:      #f59e0b;
+  --radius-sm:    8px;
+  --radius:       12px;
+  --radius-lg:    16px;
+  --radius-xl:    20px;
+}
+
+/* ── Design tokens — Light theme ───────────────────────── */
+[data-theme="light"] {
+  --bg:           #dbeafe;
+  --bg-2:         #e8f0fe;
+  --bg-3:         #ffffff;
+  --surface:      rgba(0, 0, 0, 0.03);
+  --surface-2:    rgba(0, 0, 0, 0.05);
+  --surface-3:    rgba(0, 0, 0, 0.08);
+  --border:       rgba(0, 0, 0, 0.08);
+  --border-2:     rgba(0, 0, 0, 0.14);
+  --border-solid: #e2e8f0;
+  --border-mid:   #cbd5e1;
+  --text:         #0f172a;
+  --text-muted:   #475569;
+  --text-subtle:  #64748b;
+  --text-faint:   #94a3b8;
+  --card-bg:      #ffffff;
+  --card-border:  #e2e8f0;
+  --input-bg:     #ffffff;
+  --input-border: #cbd5e1;
+  --nav-bg:       rgba(243, 247, 255, 0.92);
+  --shadow:       rgba(0, 0, 0, 0.08);
+  --shadow-lg:    rgba(0, 0, 0, 0.15);
+  --primary:      #2563eb;
+  --primary-2:    #7c3aed;
+  --success:      #059669;
+  --danger:       #dc2626;
+  --warning:      #d97706;
 }
 
 /* ── Base ───────────────────────────────────────────────── */
@@ -27,6 +71,11 @@ body {
   background: var(--bg);
   color: var(--text);
   margin: 0;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+* {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease;
 }
 
 h1 {
