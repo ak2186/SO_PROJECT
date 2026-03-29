@@ -196,6 +196,12 @@ export const PatientDashboard = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+        [data-theme="light"] .gradient-text {
+          background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
         
         .weekly-card {
           transition: all 0.4s ease;
@@ -208,7 +214,7 @@ export const PatientDashboard = () => {
       `}</style>
 
       <div style={{
-        background: "#060d1a",
+        background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
         fontFamily: "'DM Sans', sans-serif",
@@ -264,7 +270,7 @@ export const PatientDashboard = () => {
             Welcome Back
           </h1>
           <p style={{
-            color: "#64748b",
+            color: "var(--text-subtle)",
             fontSize: "18px",
             margin: 0,
             fontWeight: "500",
@@ -302,7 +308,7 @@ export const PatientDashboard = () => {
 
               {/* Title */}
               <div style={{
-                color: "#94a3b8",
+                color: "var(--text-muted)",
                 fontSize: "13px",
                 fontWeight: "700",
                 textTransform: "uppercase",
@@ -325,7 +331,7 @@ export const PatientDashboard = () => {
                   {card.value}
                 </span>
                 <span style={{
-                  color: "#64748b",
+                  color: "var(--text-subtle)",
                   fontSize: "20px",
                   fontWeight: "700",
                 }}>
@@ -335,7 +341,7 @@ export const PatientDashboard = () => {
 
               {/* Subtitle */}
               <div style={{
-                color: "#64748b",
+                color: "var(--text-subtle)",
                 fontSize: "15px",
                 fontWeight: "500",
                 marginBottom: "16px",
