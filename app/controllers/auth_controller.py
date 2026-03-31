@@ -36,6 +36,16 @@ def _user_response(user: dict) -> UserResponse:
         emergency_contact_name=user.get("emergency_contact_name"),
         emergency_contact_phone=user.get("emergency_contact_phone"),
         emergency_contact_relationship=user.get("emergency_contact_relationship"),
+        allergies=user.get("allergies"),
+        family_history=user.get("family_history"),
+        medications=user.get("medications"),
+        supplements=user.get("supplements"),
+        smoking_status=user.get("smoking_status"),
+        alcohol_frequency=user.get("alcohol_frequency"),
+        exercise_frequency=user.get("exercise_frequency"),
+        sleep_habit=user.get("sleep_habit"),
+        dietary_preference=user.get("dietary_preference"),
+        occupation=user.get("occupation"),
         profile_completed=user.get("profile_completed", False),
         created_at=user["created_at"],
         updated_at=user.get("updated_at"),
@@ -191,6 +201,32 @@ async def get_current_user(user_id: str) -> UserResponse:
         )
 
     return _user_response(user)
+
+
+async def change_password(user_id: str, current_password: str, new_password: str) -> dict:
+    """Change user password after verifying the current one."""
+    db = Database.get_db()
+
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if not verify_password(current_password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    new_hashed = hash_password(new_password)
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"hashed_password": new_hashed, "updated_at": datetime.utcnow()}}
+    )
+
+    return {"message": "Password changed successfully"}
 
 
 async def update_user_profile(user_id: str, update_data: UserUpdate) -> UserResponse:

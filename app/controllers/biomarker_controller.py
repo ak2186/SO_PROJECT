@@ -72,7 +72,7 @@ async def get_current_readings(user_id: str):
     db = Database.get_db()
 
     latest = {}
-    fields = ["heart_rate", "spo2", "steps", "calories", "systolic_bp", "diastolic_bp"]
+    fields = ["heart_rate", "spo2", "steps", "calories", "sleep_hours", "systolic_bp", "diastolic_bp"]
 
     for field in fields:
         doc = await db.biomarkers.find_one(
@@ -137,3 +137,18 @@ async def get_alerts(user_id: str):
         a["_id"] = str(a["_id"])
 
     return {"alerts": alerts, "total": len(alerts)}
+
+
+async def get_patient_data_for_provider(provider_id: str, patient_id: str):
+    """Provider fetches a patient's current readings + recent history. Requires granted permission."""
+    from app.controllers.permission_controller import check_provider_has_permission
+    from fastapi import HTTPException
+    has_perm = await check_provider_has_permission(provider_id, patient_id)
+    if not has_perm:
+        raise HTTPException(status_code=403, detail="You do not have permission to view this patient's data")
+    current = await get_current_readings(patient_id)
+    history = await get_biomarker_history(patient_id, page=1, limit=20)
+    return {
+        "current_readings": current["current_readings"],
+        "history": history["readings"],
+    }
