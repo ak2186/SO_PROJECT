@@ -28,6 +28,7 @@ export const PatientVitals = () => {
     resting: 0,
     breakdown: [],
   });
+  const [sleepHours, setSleepHours] = useState(null);
 
   // Apply timeseries data from the sync/today response to state
   const applyTimeseries = (data) => {
@@ -63,6 +64,9 @@ export const PatientVitals = () => {
         breakdown: ts?.calories || [],
       }));
     }
+    if (d?.sleep_hours != null) {
+      setSleepHours(d.sleep_hours);
+    }
   };
 
   // Fetch stored biomarker data from DB (fast, cached)
@@ -88,6 +92,10 @@ export const PatientVitals = () => {
       .catch(() => { });
   };
 
+  const [weekSteps, setWeekSteps] = useState([]);
+  const [weekCalories, setWeekCalories] = useState([]);
+  const [weekSleep, setWeekSleep] = useState([]);
+
   useEffect(() => {
     // 1. Show cached timeseries immediately
     fetchBiomarkerData();
@@ -98,6 +106,23 @@ export const PatientVitals = () => {
         .then(applyTimeseries)
         .catch(() => { });
     }
+
+    // 3. Fetch weekly summary for "This Week" view
+    googleFitAPI.week()
+      .then((data) => {
+        if (data?.heart_rate) {
+          const hrFiltered = data.heart_rate.filter(d => d.avg != null);
+          setVitalsWeek(prev => ({ ...prev, heartRate: hrFiltered.length > 0 ? data.heart_rate : prev.heartRate }));
+        }
+        if (data?.spo2) {
+          const spo2Filtered = data.spo2.filter(d => d.avg != null);
+          setVitalsWeek(prev => ({ ...prev, spo2: spo2Filtered.length > 0 ? data.spo2 : prev.spo2 }));
+        }
+        if (data?.steps) setWeekSteps(data.steps);
+        if (data?.calories) setWeekCalories(data.calories);
+        if (data?.sleep) setWeekSleep(data.sleep);
+      })
+      .catch(() => { });
   }, []);
 
   const hrStats =
@@ -127,7 +152,8 @@ export const PatientVitals = () => {
   const hasSpo2Data = vitalsToday.spo2.length > 0 || vitalsWeek.spo2.length > 0;
   const hasStepsData = stepsData.today > 0;
   const hasCaloriesData = caloriesData.today > 0;
-  const hasAnyData = hasHrData || hasSpo2Data || hasStepsData || hasCaloriesData;
+  const hasSleepData = sleepHours != null && sleepHours > 0;
+  const hasAnyData = hasHrData || hasSpo2Data || hasStepsData || hasCaloriesData || hasSleepData;
 
   const StatBox = ({ label, value, unit }) => (
     <div style={{
@@ -656,7 +682,7 @@ export const PatientVitals = () => {
             </div>
 
             <LineChart
-              data={vitalsToday.spo2}
+              data={timeRange === "today" ? vitalsToday.spo2 : vitalsWeek.spo2}
               color="#3b82f6"
               label="spo2"
             />
@@ -789,7 +815,11 @@ export const PatientVitals = () => {
               </div>
             </div>
 
-            <BarChart data={stepsData.hourlySteps} maxValue={1000} color="#10b981" />
+            <BarChart
+              data={timeRange === "today" ? stepsData.hourlySteps : weekSteps.map(d => ({ label: d.day, value: d.value }))}
+              maxValue={timeRange === "today" ? 1000 : Math.max(...weekSteps.map(d => d.value), 1000)}
+              color="#10b981"
+            />
           </div>
         </div>
 
@@ -868,7 +898,101 @@ export const PatientVitals = () => {
               </div>
             </div>
 
-            <BarChart data={caloriesData.breakdown} maxValue={1600} color="#f59e0b" />
+            <BarChart
+              data={timeRange === "today" ? caloriesData.breakdown : weekCalories.map(d => ({ label: d.day, value: d.value }))}
+              maxValue={timeRange === "today" ? 1600 : Math.max(...weekCalories.map(d => d.value), 500)}
+              color="#f59e0b"
+            />
+          </div>
+        </div>
+
+        {/* Sleep Section */}
+        <div style={{
+          animation: "fadeUp 0.8s ease 0.55s both",
+          position: "relative",
+          zIndex: 1,
+        }}>
+          <div className="vital-card" style={{ "--accent-color": "#8b5cf6" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "14px",
+                  background: "rgba(139,92,246,0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                }}>
+                  😴
+                </div>
+                <div>
+                  <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: 0 }}>
+                    Sleep
+                  </h2>
+                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
+                    Sleep duration tracking from Google Fit
+                  </p>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{
+                  color: "#8b5cf6",
+                  fontSize: "36px",
+                  fontWeight: "900",
+                  letterSpacing: "-1.5px",
+                  lineHeight: 1,
+                }}>
+                  {hasSleepData ? sleepHours : "—"}
+                  <span style={{ fontSize: "16px", color: "var(--text-subtle)", fontWeight: "600", marginLeft: "4px" }}>hrs</span>
+                </div>
+                <div className="status-badge" style={{
+                  background: hasSleepData && sleepHours >= 7 ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
+                  border: hasSleepData && sleepHours >= 7 ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(245,158,11,0.3)",
+                  color: hasSleepData && sleepHours >= 7 ? "#10b981" : "#f59e0b",
+                  marginTop: "8px",
+                }}>
+                  {!hasSleepData ? "No data" : sleepHours >= 7 ? "✓ Good" : "⚠️ Below 7h"}
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "16px",
+              marginBottom: "28px",
+            }}>
+              <StatBox label="Last Night" value={hasSleepData ? sleepHours : "—"} unit="hrs" />
+              <StatBox label="Goal" value="8" unit="hrs" />
+              <StatBox label="Deficit" value={hasSleepData ? Math.max(0, (8 - sleepHours)).toFixed(1) : "—"} unit="hrs" />
+            </div>
+
+            {timeRange === "week" && weekSleep.length > 0 ? (
+              <BarChart
+                data={weekSleep.map(d => ({ label: d.day, value: d.value }))}
+                maxValue={12}
+                color="#8b5cf6"
+              />
+            ) : (
+              <div style={{
+                padding: "20px",
+                background: "rgba(139,92,246,0.08)",
+                border: "1px solid rgba(139,92,246,0.2)",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}>
+                <span style={{ fontSize: "18px" }}>💡</span>
+                <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: 0, lineHeight: 1.6 }}>
+                  {hasSleepData
+                    ? `You slept ${sleepHours}h last night. ${sleepHours >= 7 ? "Great job meeting your sleep goal!" : "Try to aim for 7-8 hours for optimal health."}`
+                    : "Sleep data syncs from Google Fit. Make sure your device tracks sleep."}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

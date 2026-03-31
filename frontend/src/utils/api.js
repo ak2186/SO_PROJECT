@@ -77,6 +77,12 @@ export const authAPI = {
             method: "PUT",
             body: JSON.stringify(data),
         }),
+
+    changePassword: (currentPassword, newPassword) =>
+        request("/auth/change-password", {
+            method: "POST",
+            body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+        }),
 };
 
 // ─── Appointments ───────────────────────────────────────
@@ -185,6 +191,26 @@ export const biomarkersAPI = {
             method: "POST",
             body: JSON.stringify(data),
         }),
+
+    getPatientData: (patientId) => request(`/biomarkers/patient/${patientId}`),
+
+    getReportPdf: async () => {
+        const token = getToken();
+        const res = await fetch(`${API_BASE}/biomarkers/report/pdf`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to generate report");
+        return res.blob();
+    },
+
+    getPatientReportPdf: async (patientId) => {
+        const token = getToken();
+        const res = await fetch(`${API_BASE}/biomarkers/report/pdf/${patientId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to generate report");
+        return res.blob();
+    },
 };
 
 // ─── Google Fit ─────────────────────────────────────────
@@ -199,6 +225,11 @@ export const googleFitAPI = {
     today: () => {
         const tzMin = new Date().getTimezoneOffset();
         return request(`/googlefit/today?tz_offset=${tzMin}`);
+    },
+
+    week: () => {
+        const tzMin = new Date().getTimezoneOffset();
+        return request(`/googlefit/week?tz_offset=${tzMin}`);
     },
 };
 
@@ -251,4 +282,12 @@ export const notificationsAPI = {
 
     markAllRead: () =>
         request("/notifications/read-all", { method: "PATCH" }),
+};
+
+// ─── Permissions ─────────────────────────────────────────
+export const permissionsAPI = {
+    getMyRequests: () => request("/permissions/my"),
+    respond: (permissionId, action) =>
+        request(`/permissions/${permissionId}?action=${encodeURIComponent(action)}`, { method: "PATCH" }),
+    getProviderPatients: () => request("/permissions/patients"),
 };

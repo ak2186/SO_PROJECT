@@ -58,7 +58,8 @@ export const Navbar = () => {
   };
 
   const timeAgo = (dateStr) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const utc = dateStr && !dateStr.endsWith("Z") ? dateStr + "Z" : dateStr;
+    const diff = Date.now() - new Date(utc).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "just now";
     if (mins < 60) return `${mins}m ago`;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI, setToken, removeToken, getToken, googleFitAPI } from "../utils/api";
+import { authAPI, setToken, removeToken, getToken, googleFitAPI, chatAPI } from "../utils/api";
 
 const AuthContext = createContext();
 
@@ -40,6 +40,16 @@ export const AuthProvider = ({ children }) => {
     emergency_contact_name: userData.emergency_contact_name,
     emergency_contact_phone: userData.emergency_contact_phone,
     emergency_contact_relationship: userData.emergency_contact_relationship,
+    allergies: userData.allergies,
+    family_history: userData.family_history,
+    medications: userData.medications,
+    supplements: userData.supplements,
+    smoking_status: userData.smoking_status,
+    alcohol_frequency: userData.alcohol_frequency,
+    exercise_frequency: userData.exercise_frequency,
+    sleep_habit: userData.sleep_habit,
+    dietary_preference: userData.dietary_preference,
+    occupation: userData.occupation,
     profile_completed: userData.profile_completed,
   });
 
@@ -80,8 +90,9 @@ export const AuthProvider = ({ children }) => {
     const userObj = buildUserObj(userData);
     setUser(userObj);
 
-    // Auto-sync Google Fit for patients on login
+    // For patients: clear old chat history and sync Google Fit on login
     if (userObj.role === "patient") {
+      chatAPI.clearHistory().catch(() => {});
       syncGoogleFitSilently(userObj.id);
     }
 

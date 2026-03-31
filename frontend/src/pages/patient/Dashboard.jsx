@@ -1,16 +1,20 @@
-
 import { useState, useEffect } from "react";
-import { biomarkersAPI, googleFitAPI } from "../../utils/api";
-import { useAuth } from "../../context/AuthContext";
+import { biomarkersAPI, googleFitAPI, permissionsAPI, appointmentsAPI } from "../../utils/api";
+import { HealthReportModal } from "../../components/HealthReportModal";
 
 export const PatientDashboard = () => {
-  const { user } = useAuth();
   const [hrValue, setHrValue] = useState(null);
   const [spo2Value, setSpo2Value] = useState(null);
   const [stepsVal, setStepsVal] = useState(null);
   const [caloriesVal, setCaloriesVal] = useState(null);
+  const [sleepVal, setSleepVal] = useState(null);
   const [stepsProgress, setStepsProgress] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [permRequests, setPermRequests] = useState([]);
+  const [permLoading, setPermLoading] = useState({});
+  const [showReport, setShowReport] = useState(false);
+  const [weekData, setWeekData] = useState(null);
+  const [nextAppt, setNextAppt] = useState(null);
 
   const fetchCurrentReadings = () => {
     biomarkersAPI.getCurrent()
@@ -25,52 +29,164 @@ export const PatientDashboard = () => {
           setStepsProgress(Math.min(Math.round((steps / 10000) * 100), 100));
         }
         if (r.calories) setCaloriesVal(Math.round(r.calories.value));
+        if (r.sleep_hours) setSleepVal(r.sleep_hours.value);
       })
       .catch(() => { })
       .finally(() => setLoading(false));
   };
 
-  // Apply synced data directly from sync/today response (freshest values)
-  // If a metric is missing from today's data, reset it to null (no stale data)
   const applyGfitData = (data) => {
     const d = data?.synced_data;
-    if (!d || Object.keys(d).length === 0) {
-      // No synced data at all — clear everything, show "no data"
-      setHrValue(null);
-      setSpo2Value(null);
-      setStepsVal(null);
-      setCaloriesVal(null);
-      setStepsProgress(0);
-      setLoading(false);
-      return;
-    }
-    // Set or clear each metric based on whether it exists in today's data
-    setHrValue(d.heart_rate != null ? Math.round(d.heart_rate) : null);
-    setSpo2Value(d.spo2 != null ? Math.round(d.spo2) : null);
+    if (!d) return;
+    if (d.heart_rate != null) setHrValue(Math.round(d.heart_rate));
+    if (d.spo2 != null) setSpo2Value(Math.round(d.spo2));
     if (d.steps != null) {
       setStepsVal(d.steps);
       setStepsProgress(Math.min(Math.round((d.steps / 10000) * 100), 100));
-    } else {
-      setStepsVal(null);
-      setStepsProgress(0);
     }
-    setCaloriesVal(d.calories != null ? Math.round(d.calories) : null);
+    if (d.calories != null) setCaloriesVal(Math.round(d.calories));
+    if (d.sleep_hours != null) setSleepVal(d.sleep_hours);
     setLoading(false);
   };
 
   useEffect(() => {
-    const gfitConnected = user?.id && localStorage.getItem(`healix_gfit_connected_${user.id}`) === "true";
-
-    if (gfitConnected) {
-      // Google Fit is connected — ONLY use today's synced data (no stale DB readings)
+    fetchCurrentReadings();
+    if (localStorage.getItem("healix_gfit_connected") === "true") {
       googleFitAPI.today()
         .then(applyGfitData)
-        .catch(() => setLoading(false));
-    } else {
-      // No Google Fit — fall back to latest DB readings
-      fetchCurrentReadings();
+        .catch(() => { });
     }
+    permissionsAPI.getMyRequests()
+      .then((data) => setPermRequests(Array.isArray(data) ? data : []))
+      .catch(() => {});
+
+    googleFitAPI.week()
+      .then((data) => setWeekData(data))
+      .catch(() => {});
+
+    appointmentsAPI.getMyAppointments({ limit: 5, status: "confirmed" })
+      .then((data) => {
+        if (data?.appointments?.length) {
+          const upcoming = data.appointments.find(a => new Date(a.appointment_date + "Z") > new Date());
+          if (upcoming) setNextAppt(upcoming);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const handlePermission = (permissionId, action) => {
+    setPermLoading((prev) => ({ ...prev, [permissionId]: true }));
+    permissionsAPI.respond(permissionId, action)
+      .then(() => setPermRequests((prev) => prev.filter((r) => r.id !== permissionId)))
+      .catch(() => {})
+      .finally(() => setPermLoading((prev) => ({ ...prev, [permissionId]: false })));
+  };
+
+  // Compute weekly avg heart rate from weekData
+  const weeklyHrReadings = weekData?.heart_rate?.filter(d => d.avg != null) ?? [];
+  const weeklyAvgHr = weeklyHrReadings.length > 0
+    ? Math.round(weeklyHrReadings.reduce((s, d) => s + d.avg, 0) / weeklyHrReadings.length)
+    : null;
+
+  // Compute total weekly steps
+  const weeklySteps = weekData?.steps
+    ? weekData.steps.reduce((s, d) => s + (d.value || 0), 0)
+    : null;
+
+  // Build dynamic health insights
+  const buildInsights = () => {
+    const insights = [];
+    const hasAnyData = hrValue != null || stepsVal != null || sleepVal != null || spo2Value != null || nextAppt != null;
+
+    if (!hasAnyData) {
+      insights.push({
+        icon: "💡",
+        type: "info",
+        color: "#3b82f6",
+        title: "No data yet",
+        body: "Connect Google Fit in Settings to see your health insights",
+      });
+      return insights;
+    }
+
+    if (hrValue != null && hrValue > 100) {
+      insights.push({
+        icon: "⚠️",
+        type: "warning",
+        color: "#f59e0b",
+        title: "Elevated Heart Rate",
+        body: `Your heart rate is elevated at ${hrValue} BPM`,
+      });
+    }
+
+    if (stepsVal != null && stepsVal >= 10000) {
+      insights.push({
+        icon: "🏆",
+        type: "success",
+        color: "#10b981",
+        title: "Step Goal Achieved!",
+        body: `You've walked ${stepsVal.toLocaleString()} steps today`,
+      });
+    } else if (stepsVal != null && stepsVal > 0) {
+      insights.push({
+        icon: "👟",
+        type: "info",
+        color: "#3b82f6",
+        title: "Keep Moving",
+        body: `You're at ${stepsProgress}% of your step goal. Keep moving!`,
+      });
+    }
+
+    if (sleepVal != null && sleepVal < 7) {
+      insights.push({
+        icon: "😴",
+        type: "warning",
+        color: "#f59e0b",
+        title: "Low Sleep",
+        body: `You only slept ${sleepVal}h. Try to get 7-8 hours tonight.`,
+      });
+    } else if (sleepVal != null && sleepVal >= 7) {
+      insights.push({
+        icon: "🌙",
+        type: "success",
+        color: "#10b981",
+        title: "Great Sleep",
+        body: `Great sleep last night — ${sleepVal} hours!`,
+      });
+    }
+
+    if (spo2Value != null && spo2Value < 95) {
+      insights.push({
+        icon: "💧",
+        type: "warning",
+        color: "#ef4444",
+        title: "Low Blood Oxygen",
+        body: `Blood oxygen is low at ${spo2Value}%`,
+      });
+    }
+
+    if (nextAppt) {
+      const apptDate = new Date(nextAppt.appointment_date + "Z");
+      const formatted = apptDate.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+      insights.push({
+        icon: "📅",
+        type: "info",
+        color: "#3b82f6",
+        title: "Upcoming Appointment",
+        body: `Upcoming: ${nextAppt.provider_name || "Your provider"} on ${formatted}`,
+      });
+    }
+
+    return insights;
+  };
+
+  const insights = buildInsights();
 
   const healthCards = [
     {
@@ -118,6 +234,17 @@ export const PatientDashboard = () => {
       glow: "0 0 60px rgba(245,158,11,0.4)",
       iconGlow: "drop-shadow(0 0 20px rgba(245,158,11,0.6))",
     },
+    {
+      title: "Sleep",
+      value: sleepVal != null ? sleepVal : "—",
+      unit: "hrs",
+      subtitle: sleepVal != null ? (sleepVal >= 7 ? "Good rest" : "Below recommended") : "No data yet",
+      icon: "😴",
+      color: "#8b5cf6",
+      gradient: "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(109,40,217,0.05) 100%)",
+      glow: "0 0 60px rgba(139,92,246,0.4)",
+      iconGlow: "drop-shadow(0 0 20px rgba(139,92,246,0.6))",
+    },
   ];
 
   return (
@@ -127,30 +254,30 @@ export const PatientDashboard = () => {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
+
         @keyframes float {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-12px); }
         }
-        
+
         @keyframes glow {
           0%, 100% { filter: brightness(1); }
           50% { filter: brightness(1.4); }
         }
-        
+
         @keyframes shimmer {
           0% { background-position: -200% center; }
           100% { background-position: 200% center; }
         }
-        
+
         @keyframes pulse {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.08); opacity: 0.9; }
         }
-        
+
         .health-card {
           position: relative;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--border-solid);
           border-radius: 28px;
           padding: 32px;
           backdrop-filter: blur(20px);
@@ -158,7 +285,7 @@ export const PatientDashboard = () => {
           cursor: pointer;
           overflow: hidden;
         }
-        
+
         .health-card::before {
           content: '';
           position: absolute;
@@ -172,44 +299,71 @@ export const PatientDashboard = () => {
           opacity: 0;
           transition: opacity 0.5s ease;
         }
-        
+
         .health-card:hover::before {
           opacity: 1;
         }
-        
+
         .health-card:hover {
           transform: translateY(-12px) scale(1.02);
           box-shadow: 0 30px 80px rgba(0,0,0,0.5);
         }
-        
+
         .icon-float {
           animation: float 4s ease-in-out infinite;
         }
-        
+
         .value-glow {
           animation: glow 3s ease-in-out infinite;
         }
-        
+
         .gradient-text {
           background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+
         [data-theme="light"] .gradient-text {
-          background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+          background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
-        
+
         .weekly-card {
-          transition: all 0.4s ease;
+          background: var(--bg-3);
+          border: 1px solid var(--border-solid);
+          border-radius: 20px;
+          padding: 24px;
+          transition: all 0.3s ease;
         }
-        
+
         .weekly-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        .activity-card {
+          background: var(--bg-3);
+          border: 1px solid var(--border-solid);
+          border-radius: 20px;
+          padding: 32px;
+        }
+
+        .insight-card {
+          border: 1px solid;
+          border-radius: 16px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         }
       `}</style>
 
@@ -279,6 +433,98 @@ export const PatientDashboard = () => {
           </p>
         </div>
 
+        {/* Health Report Button */}
+        <div style={{ marginBottom: "24px", position: "relative", zIndex: 1 }}>
+          <button
+            onClick={() => setShowReport(true)}
+            style={{
+              padding: "12px 24px",
+              borderRadius: "12px",
+              border: "1px solid rgba(139,92,246,0.3)",
+              background: "rgba(139,92,246,0.1)",
+              color: "#8b5cf6",
+              fontSize: "14px",
+              fontWeight: "700",
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            📋 Generate Health Report
+          </button>
+        </div>
+
+        {showReport && <HealthReportModal onClose={() => setShowReport(false)} />}
+
+        {/* Permission Requests */}
+        {permRequests.length > 0 && (
+          <div style={{ marginBottom: "32px", position: "relative", zIndex: 1 }}>
+            {permRequests.map((req) => (
+              <div key={req.id} style={{
+                background: "var(--bg-3)",
+                border: "1px solid #f59e0b44",
+                borderRadius: "16px",
+                padding: "20px 24px",
+                marginBottom: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "16px",
+                flexWrap: "wrap",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <div style={{
+                    width: "44px", height: "44px", borderRadius: "12px",
+                    background: "#f59e0b22", display: "flex", alignItems: "center",
+                    justifyContent: "center", fontSize: "22px", flexShrink: 0,
+                  }}>
+                    🩺
+                  </div>
+                  <div>
+                    <div style={{ color: "var(--text)", fontSize: "15px", fontWeight: "700", marginBottom: "2px" }}>
+                      {req.provider_name || "A doctor"} is requesting access to your health data
+                    </div>
+                    <div style={{ color: "var(--text-subtle)", fontSize: "13px" }}>
+                      {req.provider_specialty ? `${req.provider_specialty} · ` : ""}
+                      Granting access lets this doctor view your biomarker history and readings.
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
+                  <button
+                    disabled={!!permLoading[req.id]}
+                    onClick={() => handlePermission(req.id, "denied")}
+                    style={{
+                      padding: "8px 18px", background: "transparent",
+                      border: "1px solid #ef444466", borderRadius: "10px",
+                      color: "#ef4444", fontSize: "13px", fontWeight: "700",
+                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                      opacity: permLoading[req.id] ? 0.5 : 1,
+                    }}
+                  >
+                    Deny
+                  </button>
+                  <button
+                    disabled={!!permLoading[req.id]}
+                    onClick={() => handlePermission(req.id, "granted")}
+                    style={{
+                      padding: "8px 18px", background: "#10b981",
+                      border: "none", borderRadius: "10px",
+                      color: "#fff", fontSize: "13px", fontWeight: "700",
+                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                      opacity: permLoading[req.id] ? 0.5 : 1,
+                    }}
+                  >
+                    {permLoading[req.id] ? "Saving…" : "Grant Access"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Health Cards */}
         <div style={{
           display: "grid",
@@ -297,7 +543,6 @@ export const PatientDashboard = () => {
                 animation: `fadeUp 0.8s ease ${i * 0.12}s both`,
               }}
             >
-              {/* Glowing icon */}
               <div className="icon-float" style={{
                 fontSize: "48px",
                 marginBottom: "20px",
@@ -306,7 +551,6 @@ export const PatientDashboard = () => {
                 {card.icon}
               </div>
 
-              {/* Title */}
               <div style={{
                 color: "var(--text-muted)",
                 fontSize: "13px",
@@ -318,7 +562,6 @@ export const PatientDashboard = () => {
                 {card.title}
               </div>
 
-              {/* Value */}
               <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "8px" }}>
                 <span className="value-glow" style={{
                   color: card.color,
@@ -339,7 +582,6 @@ export const PatientDashboard = () => {
                 </span>
               </div>
 
-              {/* Subtitle */}
               <div style={{
                 color: "var(--text-subtle)",
                 fontSize: "15px",
@@ -349,15 +591,14 @@ export const PatientDashboard = () => {
                 {card.subtitle}
               </div>
 
-              {/* Progress bar for Steps */}
-              {card.progress && (
+              {card.progress != null && (
                 <div style={{
                   marginTop: "20px",
                   position: "relative",
                 }}>
                   <div style={{
                     height: "8px",
-                    background: "rgba(255,255,255,0.08)",
+                    background: "var(--border-solid)",
                     borderRadius: "999px",
                     overflow: "hidden",
                   }}>
@@ -376,6 +617,192 @@ export const PatientDashboard = () => {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Weekly Summary */}
+        <div style={{ marginBottom: "48px", position: "relative", zIndex: 1 }}>
+          <h2 style={{
+            color: "var(--text)",
+            fontSize: "24px",
+            fontWeight: "700",
+            margin: "0 0 24px 0",
+          }}>
+            Weekly Summary
+          </h2>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "20px",
+          }}>
+            {/* Avg Heart Rate */}
+            <div className="weekly-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
+                    Avg Heart Rate
+                  </div>
+                  <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
+                    {weeklyAvgHr != null ? weeklyAvgHr : "—"}{" "}
+                    <span style={{ fontSize: "16px", color: "var(--text-subtle)", fontWeight: "600" }}>BPM</span>
+                  </div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
+                    Last 7 days
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px" }}>📈</div>
+              </div>
+              <div style={{ color: weeklyAvgHr != null ? "#10b981" : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
+                {weeklyAvgHr != null ? `${weeklyAvgHr} BPM avg this week` : "No data this week"}
+              </div>
+            </div>
+
+            {/* Steps This Week */}
+            <div className="weekly-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
+                    Steps This Week
+                  </div>
+                  <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
+                    {weeklySteps != null ? weeklySteps.toLocaleString() : "—"}
+                  </div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
+                    Total steps
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px" }}>⚡</div>
+              </div>
+              <div style={{ color: weeklySteps != null ? "#10b981" : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
+                {weeklySteps != null ? `${weeklySteps.toLocaleString()} steps this week` : "No data this week"}
+              </div>
+            </div>
+
+            {/* Sleep */}
+            <div className="weekly-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
+                    Sleep
+                  </div>
+                  <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
+                    {sleepVal != null ? <>{sleepVal}<span style={{ fontSize: "20px" }}>h</span></> : "—"}
+                  </div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
+                    Last night
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px" }}>🌙</div>
+              </div>
+              <div style={{ color: sleepVal != null ? (sleepVal >= 7 ? "#10b981" : "#f59e0b") : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
+                {sleepVal != null ? (sleepVal >= 7 ? "Good quality" : "Below recommended") : "No data yet"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Today's Activity */}
+        <div style={{ marginBottom: "48px", position: "relative", zIndex: 1 }}>
+          <h2 style={{
+            color: "var(--text)",
+            fontSize: "24px",
+            fontWeight: "700",
+            margin: "0 0 24px 0",
+          }}>
+            Today's Activity
+          </h2>
+          <div className="activity-card">
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: "32px",
+            }}>
+              <div>
+                <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Steps
+                </div>
+                <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  {stepsVal != null ? stepsVal.toLocaleString() : "—"}{" "}
+                  {stepsVal != null && <span style={{ fontSize: "16px", color: "var(--text-subtle)" }}>steps</span>}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Calories
+                </div>
+                <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  {caloriesVal != null ? caloriesVal.toLocaleString() : "—"}{" "}
+                  {caloriesVal != null && <span style={{ fontSize: "16px", color: "var(--text-subtle)" }}>kcal</span>}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Heart Rate
+                </div>
+                <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  {hrValue != null ? hrValue : "—"}{" "}
+                  {hrValue != null && <span style={{ fontSize: "16px", color: "var(--text-subtle)" }}>bpm</span>}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
+                  Sleep
+                </div>
+                <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
+                  {sleepVal != null ? sleepVal : "—"}{" "}
+                  {sleepVal != null && <span style={{ fontSize: "20px", color: "var(--text-subtle)" }}>h</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Health Insights */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <h2 style={{
+            color: "var(--text)",
+            fontSize: "24px",
+            fontWeight: "700",
+            margin: "0 0 24px 0",
+          }}>
+            Health Insights
+          </h2>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
+            gap: "20px",
+          }}>
+            {insights.map((insight, i) => (
+              <div key={i} className="insight-card" style={{
+                background: `${insight.color}14`,
+                borderColor: `${insight.color}4d`,
+              }}>
+                <div style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "12px",
+                  background: `${insight.color}26`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                  flexShrink: 0,
+                }}>
+                  {insight.icon}
+                </div>
+                <div>
+                  <div style={{ color: "var(--text)", fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
+                    {insight.title}
+                  </div>
+                  <div style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: "1.5" }}>
+                    {insight.body}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
       </div>
