@@ -90,6 +90,9 @@ class Database:
             await cls.db.permissions.create_index("provider_id")
             await cls.db.permissions.create_index("patient_id")
 
+            # Gamification collection indexes
+            await cls.db.gamification.create_index("user_id", unique=True)
+
             logger.info("📊 Database indexes created successfully")
             
         except Exception as e:
