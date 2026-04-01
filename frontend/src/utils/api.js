@@ -44,7 +44,17 @@ async function request(endpoint, options = {}) {
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
-        const error = new Error(data?.detail || data?.message || `Request failed (${res.status})`);
+        let message = `Request failed (${res.status})`;
+        const detail = data?.detail;
+        if (typeof detail === "string") {
+            message = detail;
+        } else if (Array.isArray(detail) && detail.length > 0) {
+            // Pydantic validation errors: [{loc: [...], msg: "..."}, ...]
+            message = detail.map((e) => e.msg || String(e)).join(". ");
+        } else if (data?.message) {
+            message = data.message;
+        }
+        const error = new Error(message);
         error.status = res.status;
         error.data = data;
         throw error;
@@ -290,4 +300,18 @@ export const permissionsAPI = {
     respond: (permissionId, action) =>
         request(`/permissions/${permissionId}?action=${encodeURIComponent(action)}`, { method: "PATCH" }),
     getProviderPatients: () => request("/permissions/patients"),
+};
+
+// ─── Gamification ─────────────────────────────────────
+export const gamificationAPI = {
+    getMe: () => request("/gamification/me"),
+
+    awardXP: (action) =>
+        request("/gamification/xp", {
+            method: "POST",
+            body: JSON.stringify({ action }),
+        }),
+
+    completeChallenge: () =>
+        request("/gamification/challenge/complete", { method: "POST" }),
 };

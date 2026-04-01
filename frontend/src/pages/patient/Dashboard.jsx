@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { biomarkersAPI, googleFitAPI, permissionsAPI, appointmentsAPI } from "../../utils/api";
-import { HealthReportModal } from "../../components/HealthReportModal";
+import { biomarkersAPI, googleFitAPI, permissionsAPI, appointmentsAPI, gamificationAPI } from "../../utils/api";
+import { useAuth } from "../../context/AuthContext";
 
 export const PatientDashboard = () => {
+  const { user } = useAuth();
   const [hrValue, setHrValue] = useState(null);
   const [spo2Value, setSpo2Value] = useState(null);
   const [stepsVal, setStepsVal] = useState(null);
@@ -12,24 +13,33 @@ export const PatientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [permRequests, setPermRequests] = useState([]);
   const [permLoading, setPermLoading] = useState({});
-  const [showReport, setShowReport] = useState(false);
+
   const [weekData, setWeekData] = useState(null);
   const [nextAppt, setNextAppt] = useState(null);
+  const [gamification, setGamification] = useState(null);
+  const [xpToast, setXpToast] = useState(null);
 
   const fetchCurrentReadings = () => {
+    const todayStr = new Date().toISOString().split("T")[0];
     biomarkersAPI.getCurrent()
       .then((data) => {
         const r = data?.current_readings;
         if (!r) return;
-        if (r.heart_rate) setHrValue(Math.round(r.heart_rate.value));
-        if (r.spo2) setSpo2Value(Math.round(r.spo2.value));
-        if (r.steps) {
+        // Only show readings from today to avoid stale data
+        const isToday = (reading) => {
+          if (!reading?.recorded_at) return false;
+          const dateStr = reading.recorded_at.endsWith("Z") ? reading.recorded_at : reading.recorded_at + "Z";
+          return new Date(dateStr).toISOString().split("T")[0] === todayStr;
+        };
+        if (r.heart_rate && isToday(r.heart_rate)) setHrValue(Math.round(r.heart_rate.value));
+        if (r.spo2 && isToday(r.spo2)) setSpo2Value(Math.round(r.spo2.value));
+        if (r.steps && isToday(r.steps)) {
           const steps = Number(r.steps.value);
           setStepsVal(steps);
           setStepsProgress(Math.min(Math.round((steps / 10000) * 100), 100));
         }
-        if (r.calories) setCaloriesVal(Math.round(r.calories.value));
-        if (r.sleep_hours) setSleepVal(r.sleep_hours.value);
+        if (r.calories && isToday(r.calories)) setCaloriesVal(Math.round(r.calories.value));
+        if (r.sleep_hours && isToday(r.sleep_hours)) setSleepVal(r.sleep_hours.value);
       })
       .catch(() => { })
       .finally(() => setLoading(false));
@@ -72,6 +82,10 @@ export const PatientDashboard = () => {
         }
       })
       .catch(() => {});
+
+    gamificationAPI.getMe()
+      .then((data) => setGamification(data))
+      .catch(() => {});
   }, []);
 
   const handlePermission = (permissionId, action) => {
@@ -80,6 +94,11 @@ export const PatientDashboard = () => {
       .then(() => setPermRequests((prev) => prev.filter((r) => r.id !== permissionId)))
       .catch(() => {})
       .finally(() => setPermLoading((prev) => ({ ...prev, [permissionId]: false })));
+  };
+
+  const showXpToast = (msg) => {
+    setXpToast(msg);
+    setTimeout(() => setXpToast(null), 3000);
   };
 
   // Compute weekly avg heart rate from weekData
@@ -433,31 +452,6 @@ export const PatientDashboard = () => {
           </p>
         </div>
 
-        {/* Health Report Button */}
-        <div style={{ marginBottom: "24px", position: "relative", zIndex: 1 }}>
-          <button
-            onClick={() => setShowReport(true)}
-            style={{
-              padding: "12px 24px",
-              borderRadius: "12px",
-              border: "1px solid rgba(139,92,246,0.3)",
-              background: "rgba(139,92,246,0.1)",
-              color: "#8b5cf6",
-              fontSize: "14px",
-              fontWeight: "700",
-              cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            📋 Generate Health Report
-          </button>
-        </div>
-
-        {showReport && <HealthReportModal onClose={() => setShowReport(false)} />}
-
         {/* Permission Requests */}
         {permRequests.length > 0 && (
           <div style={{ marginBottom: "32px", position: "relative", zIndex: 1 }}>
@@ -522,6 +516,151 @@ export const PatientDashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Gamification Hub */}
+        {gamification && (
+          <div style={{
+            marginBottom: "32px",
+            position: "relative",
+            zIndex: 1,
+            background: "var(--bg-3)",
+            border: "1px solid var(--border-solid)",
+            borderRadius: "24px",
+            padding: "28px",
+            animation: "fadeUp 0.8s ease 0.1s both",
+          }}>
+            <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
+              {/* Level Ring */}
+              <div style={{ textAlign: "center", flexShrink: 0 }}>
+                <div style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  background: `conic-gradient(#6366f1 ${Math.min((gamification.xp / gamification.xp_for_next_level) * 100, 100)}%, var(--border-solid) 0%)`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <div style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "50%",
+                    background: "var(--bg-3)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <span style={{ fontWeight: "800", fontSize: "22px", color: "var(--text)", lineHeight: 1 }}>
+                      {gamification.level}
+                    </span>
+                    <span style={{ fontSize: "9px", fontWeight: "700", color: "var(--text-subtle)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      {gamification.level_name}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--text-subtle)", marginTop: "6px" }}>
+                  {gamification.xp} / {gamification.xp_for_next_level} XP
+                </div>
+              </div>
+
+              {/* Info Column */}
+              <div style={{ flex: 1, minWidth: "200px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)" }}>
+                    🔥 {Math.max(
+                      gamification.streak_count,
+                      Number(localStorage.getItem(`healix_goal_steps_${user?.id}_streak`) || 0),
+                      Number(localStorage.getItem(`healix_goal_calories_${user?.id}_streak`) || 0)
+                    )} day streak
+                  </span>
+                </div>
+
+                {/* Daily Challenge */}
+                {gamification.challenge && (
+                  <div style={{
+                    padding: "12px 16px",
+                    borderRadius: "12px",
+                    background: gamification.challenge.completed ? "rgba(16,185,129,0.08)" : "rgba(249,115,22,0.08)",
+                    border: `1px dashed ${gamification.challenge.completed ? "rgba(16,185,129,0.3)" : "rgba(249,115,22,0.3)"}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                    flexWrap: "wrap",
+                  }}>
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-subtle)", marginBottom: "2px" }}>
+                        Daily Challenge
+                      </div>
+                      <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>
+                        {gamification.challenge.title}
+                        <span style={{ color: "var(--text-subtle)", fontWeight: "500" }}> — +{gamification.challenge.xp_reward} XP</span>
+                      </div>
+                    </div>
+                    {!gamification.challenge.completed ? (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await gamificationAPI.completeChallenge();
+                            setGamification((prev) => ({
+                              ...prev,
+                              xp: res.total_xp,
+                              level: res.level,
+                              level_name: res.level_name,
+                              xp_for_next_level: res.xp_for_next_level,
+                              streak_count: res.streak_count,
+                              challenge: { ...prev.challenge, completed: true },
+                              badges: [...prev.badges, ...res.new_badges],
+                            }));
+                            showXpToast(res.level_up ? `Level Up! You're now ${res.level_name}` : `+${res.xp_gained} XP`);
+                          } catch {}
+                        }}
+                        style={{
+                          padding: "8px 18px",
+                          borderRadius: "10px",
+                          border: "none",
+                          background: "linear-gradient(135deg, #f97316, #f59e0b)",
+                          color: "#fff",
+                          fontSize: "12px",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          fontFamily: "'DM Sans', sans-serif",
+                          flexShrink: 0,
+                        }}
+                      >
+                        Complete
+                      </button>
+                    ) : (
+                      <span style={{ color: "#10b981", fontWeight: "700", fontSize: "13px", flexShrink: 0 }}>
+                        ✓ Done
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Badges Row */}
+                <div style={{ display: "flex", gap: "8px", marginTop: "14px", alignItems: "center", flexWrap: "wrap" }}>
+                  {gamification.badges.slice(0, 5).map((b) => (
+                    <span key={b.id} title={b.name} style={{ fontSize: "22px", cursor: "default" }}>
+                      {b.emoji}
+                    </span>
+                  ))}
+                  {gamification.badges.length > 5 && (
+                    <span style={{ fontSize: "12px", color: "var(--text-subtle)", fontWeight: "600" }}>
+                      +{gamification.badges.length - 5} more
+                    </span>
+                  )}
+                  {gamification.badges.length === 0 && (
+                    <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>
+                      No badges yet — keep going!
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -806,6 +945,27 @@ export const PatientDashboard = () => {
         </div>
 
       </div>
+
+        {/* XP Toast */}
+        {xpToast && (
+          <div style={{
+            position: "fixed",
+            bottom: "32px",
+            right: "32px",
+            background: "linear-gradient(135deg, #6366f1, #06b6d4)",
+            color: "#fff",
+            padding: "14px 24px",
+            borderRadius: "14px",
+            fontSize: "15px",
+            fontWeight: "700",
+            fontFamily: "'DM Sans', sans-serif",
+            boxShadow: "0 12px 40px rgba(99,102,241,0.4)",
+            zIndex: 9999,
+            animation: "fadeUp 0.4s ease both",
+          }}>
+            {xpToast}
+          </div>
+        )}
     </>
   );
 };

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI, setToken, removeToken, getToken, googleFitAPI, chatAPI } from "../utils/api";
+import { authAPI, setToken, removeToken, getToken, googleFitAPI, chatAPI, gamificationAPI } from "../utils/api";
 
 const AuthContext = createContext();
 
@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
         await googleFitAPI.sync();
         localStorage.setItem(`healix_gfit_last_sync_${userId}`, new Date().toLocaleString());
         console.log("[HEALIX] Google Fit data synced on login");
+        gamificationAPI.awardXP("sync_gfit").catch(() => {});
       } catch {
         console.log("[HEALIX] Google Fit sync skipped (not connected or error)");
       }

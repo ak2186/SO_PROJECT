@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { authAPI } from "../../utils/api";
+import { authAPI, gamificationAPI } from "../../utils/api";
 
 const TOTAL_STEPS = 5;
 
@@ -141,6 +141,7 @@ export const ProfileSetup = () => {
         emergency_contact_relationship: s5.emergency_contact_relationship || null,
         profile_completed: true,
       });
+      gamificationAPI.awardXP("profile_complete").catch(() => {});
       await refreshUser();
       navigate("/patient");
     } catch (err) {

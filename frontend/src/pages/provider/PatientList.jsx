@@ -439,8 +439,6 @@ export const PatientList = () => {
                     {[
                       { key: "heart_rate", label: "Heart Rate", unit: "bpm", icon: "❤️", color: "#ef4444" },
                       { key: "spo2", label: "SpO₂", unit: "%", icon: "🫁", color: "#3b82f6" },
-                      { key: "systolic_bp", label: "Systolic BP", unit: "mmHg", icon: "🩺", color: "#8b5cf6" },
-                      { key: "diastolic_bp", label: "Diastolic BP", unit: "mmHg", icon: "💉", color: "#06b6d4" },
                       { key: "steps", label: "Steps", unit: "steps", icon: "👟", color: "#10b981" },
                       { key: "calories", label: "Calories", unit: "kcal", icon: "🔥", color: "#f59e0b" },
                     ].map(({ key, label, unit, icon, color }) => {
