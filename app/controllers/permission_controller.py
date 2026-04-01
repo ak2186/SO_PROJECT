@@ -74,19 +74,54 @@ async def get_patient_permissions(patient_id: str):
 
 
 async def get_provider_patients(provider_id: str):
-    """Returns all patients who have GRANTED access to a provider."""
+    """Returns all patients who have GRANTED access to a provider, enriched with age, last visit, next appointment."""
     db = Database.get_db()
     cursor = db.permissions.find({"provider_id": provider_id, "status": "granted"}).sort("updated_at", -1)
     perms = await cursor.to_list(length=200)
+    now = datetime.utcnow()
     result = []
     for p in perms:
+        patient_id = p["patient_id"]
         patient = await db.users.find_one(
-            {"_id": ObjectId(p["patient_id"])},
+            {"_id": ObjectId(patient_id)},
             {"hashed_password": 0},
         )
         if patient:
             patient["_id"] = str(patient["_id"])
             patient["permission_id"] = str(p["_id"])
+
+            # Calculate age from date_of_birth
+            dob = patient.get("date_of_birth")
+            if dob:
+                if isinstance(dob, str):
+                    try:
+                        dob = datetime.fromisoformat(dob.replace("Z", "+00:00"))
+                    except Exception:
+                        dob = None
+                if dob:
+                    age = now.year - dob.year - ((now.month, now.day) < (dob.month, dob.day))
+                    patient["age"] = age
+
+            # Last visit: most recent past appointment with this provider
+            last_appt = await db.appointments.find_one(
+                {"patient_id": patient_id, "provider_id": provider_id, "appointment_date": {"$lt": now}},
+                sort=[("appointment_date", -1)],
+            )
+            if last_appt:
+                patient["last_visit"] = last_appt["appointment_date"].isoformat()
+
+            # Next appointment: earliest future appointment with this provider
+            next_appt = await db.appointments.find_one(
+                {"patient_id": patient_id, "provider_id": provider_id, "appointment_date": {"$gte": now}, "status": {"$nin": ["cancelled"]}},
+                sort=[("appointment_date", 1)],
+            )
+            if next_appt:
+                patient["next_appointment"] = next_appt["appointment_date"].isoformat()
+
+            # Health conditions from profile
+            profile = patient.get("profile") or {}
+            patient["health_conditions"] = profile.get("health_conditions") or patient.get("health_conditions") or ""
+
             result.append(patient)
     return {"patients": result}
 

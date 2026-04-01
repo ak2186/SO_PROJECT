@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from app.config.database import Database
 from app.models.gamification import (
     BadgeInfo, ChallengeInfo, GamificationResponse, XPAwardResponse,
+    GamificationDetailsResponse, LevelInfo, XPGuideEntry, AllBadgeInfo, XPLogEntry,
 )
 import hashlib
 
@@ -303,3 +304,86 @@ async def complete_challenge(user_id: str) -> XPAwardResponse:
     )
 
     return await award_xp(user_id, "daily_challenge")
+
+
+# ── labels for XP actions ─────────────────────
+XP_LABELS = {
+    "sync_gfit": "Sync Google Fit",
+    "step_goal": "Hit Step Goal",
+    "calorie_goal": "Hit Calorie Goal",
+    "water_goal": "Hit Water Goal",
+    "sleep_log": "Log Sleep",
+    "exercise_goal": "Log Exercise",
+    "mood_log": "Log Mood",
+    "checklist_item_1": "Checklist Item 1",
+    "checklist_item_2": "Checklist Item 2",
+    "checklist_item_3": "Checklist Item 3",
+    "checklist_item_4": "Checklist Item 4",
+    "daily_challenge": "Daily Challenge",
+    "appointment": "Attend Appointment",
+    "profile_complete": "Complete Profile",
+}
+
+
+async def get_gamification_details(user_id: str) -> GamificationDetailsResponse:
+    """Return full gamification details for the achievements modal."""
+    doc = await _get_or_create_doc(user_id)
+
+    # Refresh challenge if needed (same logic as get_gamification_state)
+    db = Database.get_db()
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    if doc.get("challenge_date") != today_str:
+        challenge = get_todays_challenge()
+        await db.gamification.update_one(
+            {"_id": doc["_id"]},
+            {"$set": {
+                "challenge_date": today_str,
+                "challenge_id": challenge["id"],
+                "challenge_completed": False,
+                "updated_at": datetime.utcnow(),
+            }},
+        )
+        doc["challenge_date"] = today_str
+        doc["challenge_id"] = challenge["id"]
+        doc["challenge_completed"] = False
+
+    level, level_name, next_xp = calc_level(doc["xp"])
+
+    # All badges with earned status
+    earned_map = {b["id"]: b for b in doc.get("badges", [])}
+    all_badges = []
+    for b in ALL_BADGES:
+        earned = b["id"] in earned_map
+        all_badges.append(AllBadgeInfo(
+            id=b["id"], name=b["name"], emoji=b["emoji"],
+            earned=earned,
+            earned_at=earned_map[b["id"]].get("earned_at") if earned else None,
+        ))
+
+    # All levels
+    all_levels = [LevelInfo(level=i + 1, name=name, xp_required=xp_req) for i, (xp_req, name) in enumerate(LEVELS)]
+
+    # XP guide
+    xp_guide = [XPGuideEntry(action=k, label=XP_LABELS.get(k, k), xp=v) for k, v in XP_TABLE.items()]
+
+    # Recent activity (last 15 entries, newest first)
+    xp_log = doc.get("xp_log", [])
+    recent = sorted(xp_log, key=lambda e: e["date"], reverse=True)[:15]
+    recent_activity = [XPLogEntry(action=e["action"], xp=e["xp"], date=e["date"]) for e in recent]
+
+    # All challenges
+    challenges = [ChallengeInfo(id=c["id"], title=c["title"], description=c["description"], xp_reward=30) for c in CHALLENGES]
+
+    return GamificationDetailsResponse(
+        xp=doc["xp"],
+        level=level,
+        level_name=level_name,
+        xp_for_next_level=next_xp,
+        streak_count=doc.get("streak_count", 0),
+        badges=all_badges,
+        challenge=_build_challenge_info(doc),
+        all_levels=all_levels,
+        xp_guide=xp_guide,
+        recent_activity=recent_activity,
+        challenges=challenges,
+    )

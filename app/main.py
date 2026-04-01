@@ -119,14 +119,13 @@ async def root():
     }
 
 
-# Register API routes (will add these later)
+# Register API routes 
 app.include_router(auth_routes.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(admin_routes.router)
 app.include_router(biomarker_routes.router)
 app.include_router(googlefit_routes.router)
 app.include_router(appointment_routes.router)
 app.include_router(prescription_routes.router)
-# app.include_router(export_routes.router, prefix="/api/export", tags=["Export"])
 app.include_router(chat_routes.router)
 app.include_router(notification_routes.router)
 app.include_router(permission_routes.router)
