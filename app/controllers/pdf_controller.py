@@ -303,8 +303,6 @@ def _build_current_readings(readings: dict, styles) -> list:
         "steps": "Steps",
         "calories": "Calories (kcal)",
         "sleep_hours": "Sleep (hours)",
-        "systolic_bp": "Systolic BP (mmHg)",
-        "diastolic_bp": "Diastolic BP (mmHg)",
     }
 
     rows = [["Metric", "Value", "Recorded At", "Status"]]
