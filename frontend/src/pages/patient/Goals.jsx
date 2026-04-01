@@ -4,7 +4,6 @@ import {
   Pencil,
   Flame,
   Footprints,
-  TrendingUp,
   Pill,
   Wind,
   Dumbbell,
@@ -13,7 +12,7 @@ import {
   Moon,
   Smile,
 } from "lucide-react";
-import { biomarkersAPI } from "../../utils/api";
+import { biomarkersAPI, gamificationAPI } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
 const GoalCard = ({
@@ -40,7 +39,6 @@ const GoalCard = ({
   const [editTarget, setEditTarget] = useState(loadTarget);
   const [isEditing, setIsEditing] = useState(false);
   const [percentage, setPercentage] = useState(0);
-  const [showWeekly, setShowWeekly] = useState(false);
 
   // Calculate progress
   const calculatedPercentage = Math.min(
@@ -97,16 +95,14 @@ const GoalCard = ({
         setStreak(newStreak);
         localStorage.setItem(streakKey, String(newStreak));
         localStorage.setItem(streakDateKey, todayStr);
+        // Award XP for goal achievement
+        const xpAction = title.toLowerCase().includes("step") ? "step_goal" : "calorie_goal";
+        gamificationAPI.awardXP(xpAction).catch(() => {});
       }
     }
   }, [current, remaining]);
 
   const personalBest = Number(localStorage.getItem(pbKey) || 0);
-
-  // Random Weekly Data
-  const weeklyData = Array.from({ length: 7 }, () =>
-    Math.floor(Math.random() * target)
-  );
 
   return (
     <div className="goal-card">
@@ -185,50 +181,6 @@ const GoalCard = ({
             )}
           </div>
 
-          {/* Weekly box */}
-          <div
-            className="week-box"
-            onClick={() => setShowWeekly(!showWeekly)}
-            style={{
-              borderColor: color,
-              backgroundColor: backgroundColor,
-              cursor: "pointer",
-            }}
-          >
-            {!showWeekly ? (
-              <>
-                {/* Week summary */}
-                <div className="week-header">
-                  <p style={{ color: daysColor }}>This Week</p>
-                  <TrendingUp size={18} color={color} />
-                </div>
-
-                <h2 style={{ color: daysColor }}>0/7</h2>
-                <span style={{ color: color }}>days goal achieved</span>
-              </>
-            ) : (
-              /* Weekly graph */
-              <div className="weekly-graph">
-                {weeklyData.map((value, index) => {
-                  const height = Math.min((value / target) * 100, 100);
-                  return (
-                    <div key={index} className="bar-wrapper">
-                      <div
-                        className="bar"
-                        style={{
-                          height: `${height}%`,
-                          backgroundColor: color,
-                        }}
-                      />
-                      <span className="day-label">
-                        {["M", "T", "W", "T", "F", "S", "S"][index]}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </>
       )}
     </div>
@@ -254,6 +206,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
       const next = Math.max(0, count + delta);
       setCount(next);
       localStorage.setItem(countKey, String(next));
+      if (next >= target) gamificationAPI.awardXP("water_goal").catch(() => {});
     };
 
     // Check if goal achieved
@@ -372,6 +325,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
               onChange={(e) => {
                 setWake(e.target.value);
                 localStorage.setItem(wakeKey, e.target.value);
+                gamificationAPI.awardXP("sleep_log").catch(() => {});
               }}
             />
           </div>
@@ -408,6 +362,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
       const next = Math.max(0, done + delta);
       setDone(next);
       localStorage.setItem(doneKey, String(next));
+      if (next >= target) gamificationAPI.awardXP("exercise_goal").catch(() => {});
     };
 
     // Save new target
@@ -524,6 +479,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
     const pick = (val) => {
       setSelected(val);
       localStorage.setItem(moodKey, String(val));
+      gamificationAPI.awardXP("mood_log").catch(() => {});
     };
 
     const achieved = selected > 0;
@@ -599,6 +555,10 @@ const QuickLogItem = ({ item }) => {
     const next = !checked;
     setChecked(next);
     localStorage.setItem(todayKey, next ? "1" : "0");
+    if (next) {
+      const idx = ["mindful", "stretch", "outside", "meds"].findIndex(k => item.key.includes(k)) + 1;
+      gamificationAPI.awardXP(`checklist_item_${idx}`).catch(() => {});
+    }
   };
   return (
     <div

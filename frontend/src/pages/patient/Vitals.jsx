@@ -6,6 +6,7 @@ import {
   calcStatsFromWeek,
 } from "../../data/vitalsMock";
 import { biomarkersAPI, googleFitAPI } from "../../utils/api";
+import { HealthReportModal } from "../../components/HealthReportModal";
 import { useAuth } from "../../context/AuthContext";
 
 export const PatientVitals = () => {
@@ -95,6 +96,7 @@ export const PatientVitals = () => {
   const [weekSteps, setWeekSteps] = useState([]);
   const [weekCalories, setWeekCalories] = useState([]);
   const [weekSleep, setWeekSleep] = useState([]);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     // 1. Show cached timeseries immediately
@@ -527,6 +529,31 @@ export const PatientVitals = () => {
             />
           </div>
         </div>
+
+        {/* Health Report Button */}
+        <div style={{ marginBottom: "24px", position: "relative", zIndex: 1 }}>
+          <button
+            onClick={() => setShowReport(true)}
+            style={{
+              padding: "12px 24px",
+              borderRadius: "12px",
+              border: "1px solid rgba(139,92,246,0.3)",
+              background: "rgba(139,92,246,0.1)",
+              color: "#8b5cf6",
+              fontSize: "14px",
+              fontWeight: "700",
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            📋 Generate Health Report
+          </button>
+        </div>
+
+        {showReport && <HealthReportModal onClose={() => setShowReport(false)} />}
 
         {/* Heart Rate Section */}
         <div style={{
