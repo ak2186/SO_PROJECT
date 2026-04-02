@@ -16,6 +16,22 @@ export const Signup = () => {
       setError("Please fill all fields.");
       return;
     }
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(form.password)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(form.password)) {
+      setError("Password must contain at least one lowercase letter.");
+      return;
+    }
+    if (!/\d/.test(form.password)) {
+      setError("Password must contain at least one number.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {

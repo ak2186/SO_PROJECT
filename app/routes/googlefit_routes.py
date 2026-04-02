@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse, HTMLResponse
 from app.middleware.auth_middleware import get_current_user_token
 from app.controllers.googlefit_controller import (
-    get_auth_url, handle_callback, sync_googlefit_data, get_today_timeseries
+    get_auth_url, handle_callback, sync_googlefit_data, get_today_timeseries, get_week_summary
 )
 
 router = APIRouter(prefix="/api/googlefit", tags=["Google Fit"])
@@ -63,3 +63,12 @@ async def today_data(
 ):
     """Get today's full timeseries data (from last sync)"""
     return await get_today_timeseries(current_user.user_id, tz_offset)
+
+
+@router.get("/week")
+async def week_data(
+    tz_offset: int = Query(0, description="Browser timezone offset in minutes"),
+    current_user=Depends(get_current_user_token),
+):
+    """Get past 7 days summary (daily averages/totals)"""
+    return await get_week_summary(current_user.user_id, tz_offset)

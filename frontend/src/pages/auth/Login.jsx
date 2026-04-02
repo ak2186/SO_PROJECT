@@ -26,7 +26,11 @@ export const Login = () => {
     setLoginLoading(true);
     try {
       const user = await login(loginForm.email, loginForm.password);
-      if (user.role === "patient" && !user.profile_completed) {
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else if (user.role === "provider") {
+        navigate("/provider");
+      } else if (!user.profile_completed) {
         navigate("/landing", { state: { newUser: true } });
       } else {
         navigate("/landing");
@@ -42,6 +46,22 @@ export const Login = () => {
     e.preventDefault();
     if (!signupForm.first_name || !signupForm.last_name || !signupForm.email || !signupForm.password || !signupForm.date_of_birth || !signupForm.gender) {
       setSignupError("Please fill all fields.");
+      return;
+    }
+    if (signupForm.password.length < 8) {
+      setSignupError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(signupForm.password)) {
+      setSignupError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(signupForm.password)) {
+      setSignupError("Password must contain at least one lowercase letter.");
+      return;
+    }
+    if (!/\d/.test(signupForm.password)) {
+      setSignupError("Password must contain at least one number.");
       return;
     }
     setSignupError("");

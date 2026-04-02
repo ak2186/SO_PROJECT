@@ -45,6 +45,17 @@ class UserBase(BaseModel):
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relationship: Optional[str] = None
+    # Extended health profile
+    allergies: Optional[str] = None
+    family_history: Optional[str] = None
+    medications: Optional[List[dict]] = None  # [{name, dosage, frequency}]
+    supplements: Optional[List[dict]] = None  # [{name, dosage, frequency}]
+    smoking_status: Optional[str] = None  # never, former, current
+    alcohol_frequency: Optional[str] = None  # never, occasional, moderate, heavy
+    exercise_frequency: Optional[str] = None  # sedentary, light, moderate, active, very_active
+    sleep_habit: Optional[str] = None  # less_than_5, 5_to_6, 6_to_7, 7_to_8, more_than_8
+    dietary_preference: Optional[str] = None  # none, vegetarian, vegan, halal, kosher, gluten_free, other
+    occupation: Optional[str] = None
     profile_completed: bool = False
     # Provider-specific fields
     specialty: Optional[str] = None
@@ -89,6 +100,16 @@ class UserUpdate(BaseModel):
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relationship: Optional[str] = None
+    allergies: Optional[str] = None
+    family_history: Optional[str] = None
+    medications: Optional[List[dict]] = None
+    supplements: Optional[List[dict]] = None
+    smoking_status: Optional[str] = None
+    alcohol_frequency: Optional[str] = None
+    exercise_frequency: Optional[str] = None
+    sleep_habit: Optional[str] = None
+    dietary_preference: Optional[str] = None
+    occupation: Optional[str] = None
     profile_completed: Optional[bool] = None
     specialty: Optional[str] = None
     available_hours: Optional[str] = None

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { prescriptionsAPI } from "../../utils/api";
+import { prescriptionsAPI, permissionsAPI } from "../../utils/api";
 
 const defaultAvatarColors = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"];
 
@@ -10,6 +10,28 @@ export const Prescriptions = () => {
   const [filter, setFilter] = useState("pending");
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Add Prescription modal state
+  const [showAddRx, setShowAddRx] = useState(false);
+  const [patientList, setPatientList] = useState([]);
+  const [rxForm, setRxForm] = useState({ patient_id: "", medication_name: "", dosage: "", frequency: "", duration: "", notes: "", refills_allowed: 0 });
+  const [rxError, setRxError] = useState("");
+  const [rxLoading, setRxLoading] = useState(false);
+  const [medications, setMedications] = useState([]);
+
+  // Fetch provider's patients for dropdown
+  useEffect(() => {
+    permissionsAPI.getProviderPatients()
+      .then((data) => {
+        if (data?.patients) {
+          setPatientList(data.patients.map(p => ({
+            id: p._id,
+            name: `${p.first_name || ""} ${p.last_name || ""}`.trim() || p.email,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch provider prescriptions from backend
   useEffect(() => {
@@ -89,6 +111,63 @@ export const Prescriptions = () => {
     }
   };
 
+  const addMedication = () => {
+    if (!rxForm.medication_name || !rxForm.dosage || !rxForm.frequency) return;
+    setMedications(prev => [...prev, {
+      medication_name: rxForm.medication_name,
+      dosage: rxForm.dosage,
+      frequency: rxForm.frequency,
+      duration: rxForm.duration,
+      notes: rxForm.notes,
+      refills_allowed: rxForm.refills_allowed,
+    }]);
+    setRxForm(f => ({ ...f, medication_name: "", dosage: "", frequency: "", duration: "", notes: "", refills_allowed: 0 }));
+  };
+
+  const removeMedication = (idx) => {
+    setMedications(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleAddPrescription = async () => {
+    if (!rxForm.patient_id) { setRxError("Please select a patient."); return; }
+    if (medications.length === 0) { setRxError("Please add at least one medication."); return; }
+    setRxError("");
+    setRxLoading(true);
+    try {
+      for (const med of medications) {
+        await prescriptionsAPI.create({ patient_id: rxForm.patient_id, ...med });
+      }
+      showToast(`${medications.length} prescription(s) created!`);
+      setShowAddRx(false);
+      setMedications([]);
+      setRxForm({ patient_id: "", medication_name: "", dosage: "", frequency: "", duration: "", notes: "", refills_allowed: 0 });
+      // Refresh prescriptions
+      const data = await prescriptionsAPI.getProviderPrescriptions({ limit: 100 });
+      if (data?.prescriptions) {
+        const refillReqs = [];
+        const active = [];
+        data.prescriptions.forEach((rx, idx) => {
+          const avatar = (rx.patient_name || "PT").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+          const color = defaultAvatarColors[idx % defaultAvatarColors.length];
+          if (rx.refill_requests?.length > 0) {
+            rx.refill_requests.forEach((rr) => {
+              refillReqs.push({ id: rr.id, prescriptionId: rx._id || rx.id, patient: rx.patient_name || "Patient", medication: `${rx.medication_name || "Medication"} ${rx.dosage || ""}`.trim(), currentRefills: (rx.refills_allowed ?? 0) - (rx.refills_used ?? 0), requestedDate: rr.requested_at ? new Date(rr.requested_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "", status: rr.status || "pending", avatar, _color: color });
+            });
+          }
+          if (rx.status === "active") {
+            active.push({ id: rx._id || rx.id, patient: rx.patient_name || "Patient", medication: `${rx.medication_name || "Medication"} ${rx.dosage || ""}`.trim(), dosage: rx.frequency || "", refills: (rx.refills_allowed ?? 0) - (rx.refills_used ?? 0), issued: rx.created_at ? new Date(rx.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "", avatar, _color: color });
+          }
+        });
+        setRequests(refillReqs);
+        setActivePrescriptions(active);
+      }
+    } catch (err) {
+      setRxError(err.message || "Failed to create prescription.");
+    } finally {
+      setRxLoading(false);
+    }
+  };
+
   const filtered = requests.filter(r => {
     const matchSearch = r.patient.toLowerCase().includes(search.toLowerCase()) || r.medication.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "all" || r.status === filter;
@@ -108,6 +187,12 @@ export const Prescriptions = () => {
         .search-input { background: var(--bg-3); border: 1px solid var(--border-solid); color: var(--text); padding: 11px 16px 11px 42px; border-radius: 10px; font-size: 14px; outline: none; font-family: 'DM Sans', sans-serif; width: 280px; box-sizing: border-box; transition: border-color 0.2s; }
         .search-input:focus { border-color: #10b981; }
         .search-input::placeholder { color: var(--border-mid); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .rx-input { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border-solid); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; box-sizing: border-box; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; }
+        .rx-input:focus { border-color: #10b981; }
+        .rx-input::placeholder { color: var(--border-mid); }
+        .rx-label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
       `}</style>
 
       <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
@@ -120,9 +205,18 @@ export const Prescriptions = () => {
         )}
 
         {/* Header */}
-        <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
-          <p style={{ color: "#10b981", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Provider Portal</p>
-          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Prescription Management</h1>
+        <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div>
+            <p style={{ color: "#10b981", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Provider Portal</p>
+            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Prescription Management</h1>
+          </div>
+          <button
+            onClick={() => { setShowAddRx(true); setRxError(""); setMedications([]); setRxForm({ patient_id: "", medication_name: "", dosage: "", frequency: "", duration: "", notes: "", refills_allowed: 0 }); }}
+            className="action-btn"
+            style={{ padding: "10px 22px", borderRadius: "10px", border: "none", background: "#10b981", color: "#fff", fontSize: "14px", fontWeight: "700", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            + Add Prescription
+          </button>
         </div>
 
         {/* Stats */}
@@ -223,6 +317,140 @@ export const Prescriptions = () => {
             </div>
           ))}
         </div>
+
+        {/* Add Prescription Modal */}
+        {showAddRx && (
+          <div className="modal-overlay" onClick={() => setShowAddRx(false)}>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "var(--bg-3)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "20px",
+                padding: "32px",
+                width: "560px",
+                maxWidth: "92vw",
+                maxHeight: "85vh",
+                overflow: "auto",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                <h2 style={{ color: "var(--text)", fontSize: "22px", fontWeight: "800", margin: 0 }}>Add Prescription</h2>
+                <button onClick={() => setShowAddRx(false)} style={{ background: "var(--bg)", border: "none", color: "var(--text-muted)", width: "32px", height: "32px", borderRadius: "8px", fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+
+              {rxError && (
+                <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", marginBottom: "16px" }}>
+                  {rxError}
+                </div>
+              )}
+
+              {/* Patient Select */}
+              <div style={{ marginBottom: "20px" }}>
+                <label className="rx-label">Patient *</label>
+                <select
+                  className="rx-input"
+                  value={rxForm.patient_id}
+                  onChange={(e) => setRxForm(f => ({ ...f, patient_id: e.target.value }))}
+                  style={{ appearance: "none" }}
+                >
+                  <option value="">Select a patient...</option>
+                  {patientList.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Added Medications List */}
+              {medications.length > 0 && (
+                <div style={{ marginBottom: "20px" }}>
+                  <label className="rx-label">Medications Added ({medications.length})</label>
+                  {medications.map((med, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", background: "var(--bg)", border: "1px solid var(--border-solid)", marginBottom: "8px" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ color: "#10b981", fontWeight: "700", fontSize: "14px" }}>{med.medication_name} — {med.dosage}</div>
+                        <div style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "2px" }}>{med.frequency}{med.duration ? ` · ${med.duration}` : ""}{med.notes ? ` · ${med.notes}` : ""}</div>
+                      </div>
+                      <button onClick={() => removeMedication(i)} style={{ background: "none", border: "none", color: "#ef4444", fontSize: "16px", cursor: "pointer", padding: "4px" }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Medication Form */}
+              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px", marginBottom: "20px" }}>
+                <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text)", marginBottom: "14px" }}>
+                  {medications.length > 0 ? "Add Another Medication" : "Medication Details"}
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                  <div>
+                    <label className="rx-label">Medication Name *</label>
+                    <input className="rx-input" placeholder="e.g. Amoxicillin" value={rxForm.medication_name} onChange={(e) => setRxForm(f => ({ ...f, medication_name: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="rx-label">Dosage *</label>
+                    <input className="rx-input" placeholder="e.g. 500mg" value={rxForm.dosage} onChange={(e) => setRxForm(f => ({ ...f, dosage: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                  <div>
+                    <label className="rx-label">Frequency *</label>
+                    <input className="rx-input" placeholder="e.g. 3 times/day after food" value={rxForm.frequency} onChange={(e) => setRxForm(f => ({ ...f, frequency: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="rx-label">Duration</label>
+                    <input className="rx-input" placeholder="e.g. 7 days" value={rxForm.duration} onChange={(e) => setRxForm(f => ({ ...f, duration: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "12px" }}>
+                  <label className="rx-label">Instructions / Notes</label>
+                  <textarea
+                    className="rx-input"
+                    placeholder="e.g. Take after food with a full glass of water. Avoid dairy products within 2 hours."
+                    value={rxForm.notes}
+                    onChange={(e) => setRxForm(f => ({ ...f, notes: e.target.value }))}
+                    rows={3}
+                    style={{ resize: "vertical" }}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", alignItems: "end" }}>
+                  <div>
+                    <label className="rx-label">Refills Allowed</label>
+                    <input className="rx-input" type="number" min="0" value={rxForm.refills_allowed} onChange={(e) => setRxForm(f => ({ ...f, refills_allowed: parseInt(e.target.value) || 0 }))} />
+                  </div>
+                  <button
+                    onClick={addMedication}
+                    disabled={!rxForm.medication_name || !rxForm.dosage || !rxForm.frequency}
+                    style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid #10b981", background: "rgba(16,185,129,0.1)", color: "#10b981", fontSize: "13px", fontWeight: "700", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", opacity: (!rxForm.medication_name || !rxForm.dosage || !rxForm.frequency) ? 0.4 : 1, transition: "opacity 0.2s" }}
+                  >
+                    + Add Medication
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => setShowAddRx(false)}
+                  style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddPrescription}
+                  disabled={rxLoading || medications.length === 0}
+                  style={{ padding: "10px 24px", borderRadius: "10px", border: "none", background: "#10b981", color: "#fff", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", opacity: (rxLoading || medications.length === 0) ? 0.5 : 1 }}
+                >
+                  {rxLoading ? "Creating..." : `Create ${medications.length} Prescription${medications.length !== 1 ? "s" : ""}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

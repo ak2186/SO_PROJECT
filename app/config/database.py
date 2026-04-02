@@ -84,7 +84,15 @@ class Database:
             await cls.db.audit_logs.create_index("user_id")
             await cls.db.audit_logs.create_index("timestamp")
             await cls.db.audit_logs.create_index("action")
-            
+
+            # Permissions collection indexes
+            await cls.db.permissions.create_index([("patient_id", 1), ("provider_id", 1)])
+            await cls.db.permissions.create_index("provider_id")
+            await cls.db.permissions.create_index("patient_id")
+
+            # Gamification collection indexes
+            await cls.db.gamification.create_index("user_id", unique=True)
+
             logger.info("📊 Database indexes created successfully")
             
         except Exception as e:

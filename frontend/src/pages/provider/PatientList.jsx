@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { appointmentsAPI } from "../../utils/api";
+import { permissionsAPI, biomarkersAPI } from "../../utils/api";
+import { HealthReportModal } from "../../components/HealthReportModal";
 
 const defaultAvatarColors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899"];
 
@@ -12,61 +13,49 @@ export const PatientList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [biomarkerData, setBiomarkerData] = useState(null);
+  const [biomarkerLoading, setBiomarkerLoading] = useState(false);
+  const [showReport, setShowReport] = useState(null);
 
-  // Derive patient list from provider's appointments
+  const handleViewPatient = (patient) => {
+    setSelectedPatient(patient);
+    setBiomarkerData(null);
+    setBiomarkerLoading(true);
+    biomarkersAPI.getPatientData(patient.id)
+      .then((data) => setBiomarkerData(data))
+      .catch(() => setBiomarkerData(null))
+      .finally(() => setBiomarkerLoading(false));
+  };
+
   useEffect(() => {
-    appointmentsAPI.getProviderAppointments({ limit: 200 })
+    permissionsAPI.getProviderPatients()
       .then((data) => {
-        if (data && Array.isArray(data.appointments)) {
-          // Deduplicate patients by patient_id
-          const patientMap = new Map();
-          data.appointments.forEach((a) => {
-            const pid = a.patient_id;
-            const name = a.patient_name || "Patient";
-            if (!patientMap.has(pid)) {
-              const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-              patientMap.set(pid, {
-                id: pid,
-                name,
-                patientId: `ID: ${(pid || "").slice(-4)}`,
-                age: a.patient_age || "",
-                gender: a.patient_gender || "",
-                avatar: initials,
-                condition: a.reason || a.notes || "",
-                status: "Stable",
-                lastVisit: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-                nextAppointment: "",
-                appointments: [a],
-              });
-            } else {
-              patientMap.get(pid).appointments.push(a);
-              // Update condition with latest reason
-              if (a.reason) patientMap.get(pid).condition = a.reason;
-            }
+        if (data && Array.isArray(data.patients)) {
+          const fmtDate = (iso) => {
+            if (!iso) return "";
+            const d = new Date(iso.endsWith("Z") ? iso : iso + "Z");
+            return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+          };
+          const mapped = data.patients.map((u, idx) => {
+            const name = `${u.first_name || ""} ${u.last_name || ""}`.trim() || u.email;
+            const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+            return {
+              id: u._id,
+              name,
+              patientId: `ID: ${(u._id || "").slice(-4)}`,
+              age: u.age || "",
+              gender: u.gender || "",
+              avatar: initials,
+              condition: u.health_conditions || "",
+              status: "Active",
+              lastVisit: fmtDate(u.last_visit),
+              nextAppointment: fmtDate(u.next_appointment),
+            };
           });
-
-          // Compute next appointment for each patient
-          const now = new Date();
-          patientMap.forEach((p) => {
-            const upcoming = p.appointments
-              .filter(a => a.appointment_date && new Date(a.appointment_date) > now && a.status !== "cancelled")
-              .sort((x, y) => new Date(x.appointment_date) - new Date(y.appointment_date));
-            if (upcoming.length > 0) {
-              p.nextAppointment = new Date(upcoming[0].appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-            }
-            const pastAppts = p.appointments
-              .filter(a => a.appointment_date && new Date(a.appointment_date) <= now)
-              .sort((x, y) => new Date(y.appointment_date) - new Date(x.appointment_date));
-            if (pastAppts.length > 0) {
-              p.lastVisit = new Date(pastAppts[0].appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-            }
-            delete p.appointments;
-          });
-
-          setPatients(Array.from(patientMap.values()));
+          setPatients(mapped);
         }
       })
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -183,14 +172,12 @@ export const PatientList = () => {
           </div>
         </div>
 
-        {/* Search & Filter */}
+        {/* Search */}
         <div style={{
-          display: "flex",
-          gap: "12px",
           marginBottom: "24px",
           animation: "fadeUp 0.6s ease 0.15s both",
         }}>
-          <div style={{ position: "relative", flex: 1 }}>
+          <div style={{ position: "relative" }}>
             <span style={{
               position: "absolute",
               left: "14px",
@@ -215,24 +202,10 @@ export const PatientList = () => {
                 fontSize: "14px",
                 outline: "none",
                 fontFamily: "'DM Sans', sans-serif",
+                boxSizing: "border-box",
               }}
             />
           </div>
-          <button className="action-btn" style={{
-            padding: "12px 24px",
-            background: "#10b981",
-            border: "none",
-            borderRadius: "12px",
-            color: "#fff",
-            fontSize: "14px",
-            fontWeight: "700",
-            fontFamily: "'DM Sans', sans-serif",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}>
-            👤 Add New Patient
-          </button>
         </div>
 
         {/* Patient Table */}
@@ -271,7 +244,9 @@ export const PatientList = () => {
             <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading patients...</div>
           )}
           {!loading && filteredPatients.length === 0 && (
-            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No patients found. Patients appear here once they book an appointment with you.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>
+              No patients yet. Patients appear here after they grant you access to their health data.
+            </div>
           )}
           {filteredPatients.map((patient, idx) => (
             <div
@@ -314,7 +289,7 @@ export const PatientList = () => {
               {/* Age/Gender */}
               <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>
                 {patient.age ? `${patient.age} yrs` : "-"}<br />
-                <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>{patient.gender === "M" ? "Male" : patient.gender === "F" ? "Female" : patient.gender || "-"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>{patient.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : "-"}</span>
               </div>
 
               {/* Reason */}
@@ -335,7 +310,7 @@ export const PatientList = () => {
               {/* Actions */}
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
-                  onClick={() => setSelectedPatient(patient)}
+                  onClick={() => handleViewPatient(patient)}
                   className="action-btn"
                   style={{
                     padding: "6px 14px",
@@ -432,8 +407,90 @@ export const PatientList = () => {
                   <div style={{ color: "var(--text)", fontSize: "16px", fontWeight: "800" }}>{selectedPatient.nextAppointment || "-"}</div>
                 </div>
               </div>
+
+              {/* Biomarker Summary */}
+              <div style={{ marginTop: "24px" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", marginBottom: "12px" }}>
+                  Health Data Summary
+                </div>
+                {biomarkerLoading && (
+                  <div style={{ color: "var(--text-subtle)", fontSize: "14px", textAlign: "center", padding: "20px" }}>
+                    Loading health data...
+                  </div>
+                )}
+                {!biomarkerLoading && !biomarkerData && (
+                  <div style={{ color: "var(--text-subtle)", fontSize: "14px", textAlign: "center", padding: "20px" }}>
+                    No health data recorded yet.
+                  </div>
+                )}
+                {!biomarkerLoading && biomarkerData && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                    {[
+                      { key: "heart_rate", label: "Heart Rate", unit: "bpm", icon: "❤️", color: "#ef4444" },
+                      { key: "spo2", label: "SpO₂", unit: "%", icon: "🫁", color: "#3b82f6" },
+                      { key: "steps", label: "Steps", unit: "steps", icon: "👟", color: "#10b981" },
+                      { key: "calories", label: "Calories", unit: "kcal", icon: "🔥", color: "#f59e0b" },
+                    ].map(({ key, label, unit, icon, color }) => {
+                      const reading = biomarkerData.current_readings?.[key];
+                      return (
+                        <div key={key} style={{
+                          background: "var(--bg-2)",
+                          borderRadius: "12px",
+                          padding: "14px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}>
+                          <div style={{ fontSize: "20px" }}>{icon}</div>
+                          <div>
+                            <div style={{ color: "var(--text-subtle)", fontSize: "11px", fontWeight: "600", marginBottom: "2px" }}>
+                              {label}
+                            </div>
+                            <div style={{ color: reading ? color : "var(--text-faint)", fontSize: "18px", fontWeight: "800" }}>
+                              {reading ? `${Math.round(reading.value)} ${unit}` : "—"}
+                            </div>
+                            {reading?.alerts?.length > 0 && (
+                              <div style={{ color: "#f59e0b", fontSize: "11px", marginTop: "2px" }}>
+                                ⚠️ {reading.alerts[0]}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Generate Report Button */}
+              <div style={{ marginTop: "24px" }}>
+                <button
+                  onClick={() => setShowReport(selectedPatient.id)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "none",
+                    background: "linear-gradient(135deg, #1d4ed8, #0891b2)",
+                    color: "#fff",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  📋 Generate Health Report PDF
+                </button>
+              </div>
             </div>
           </div>
+        )}
+
+        {showReport && (
+          <HealthReportModal
+            patientId={showReport}
+            onClose={() => setShowReport(null)}
+          />
         )}
       </div>
     </>

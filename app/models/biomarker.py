@@ -14,8 +14,7 @@ class BiomarkerCreate(BaseModel):
     spo2: Optional[float] = None              # blood oxygen % 
     steps: Optional[int] = None               # daily steps
     calories: Optional[float] = None          # kcal burned
-    systolic_bp: Optional[float] = None       # blood pressure systolic
-    diastolic_bp: Optional[float] = None      # blood pressure diastolic
+    sleep_hours: Optional[float] = None       # hours of sleep
     notes: Optional[str] = None
 
     @field_validator('heart_rate')

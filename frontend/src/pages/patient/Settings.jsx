@@ -28,6 +28,33 @@ export const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // Medical History state
+  const [medHistory, setMedHistory] = useState({
+    health_conditions: user?.health_conditions || "",
+    allergies: user?.allergies || "",
+    family_history: user?.family_history || "",
+  });
+
+  // Medications & Lifestyle state
+  const [medications, setMedications] = useState(
+    Array.isArray(user?.medications) && user.medications.length > 0
+      ? user.medications
+      : []
+  );
+  const [supplements, setSupplements] = useState(
+    Array.isArray(user?.supplements) && user.supplements.length > 0
+      ? user.supplements
+      : []
+  );
+  const [lifestyle, setLifestyle] = useState({
+    smoking_status: user?.smoking_status || "",
+    alcohol_frequency: user?.alcohol_frequency || "",
+    exercise_frequency: user?.exercise_frequency || "",
+    sleep_habit: user?.sleep_habit || "",
+    dietary_preference: user?.dietary_preference || "",
+    occupation: user?.occupation || "",
+  });
+
   // Google Fit state
   const [gfitConnected, setGfitConnected] = useState(false);
   const [gfitSyncing, setGfitSyncing] = useState(false);
@@ -101,15 +128,69 @@ export const Settings = () => {
     }
   };
 
-  const handlePasswordSave = () => {
+  const handleMedHistorySave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        health_conditions: medHistory.health_conditions.trim(),
+        allergies: medHistory.allergies.trim(),
+        family_history: medHistory.family_history.trim(),
+      };
+      await authAPI.updateProfile(payload);
+      await refreshUser();
+      showToast("Medical history updated!");
+    } catch (err) {
+      showToast(err.message || "Failed to save changes", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLifestyleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        medications,
+        supplements,
+        smoking_status: lifestyle.smoking_status,
+        alcohol_frequency: lifestyle.alcohol_frequency,
+        exercise_frequency: lifestyle.exercise_frequency,
+        sleep_habit: lifestyle.sleep_habit,
+        dietary_preference: lifestyle.dietary_preference,
+        occupation: lifestyle.occupation.trim(),
+      };
+      await authAPI.updateProfile(payload);
+      await refreshUser();
+      showToast("Medications & lifestyle updated!");
+    } catch (err) {
+      showToast(err.message || "Failed to save changes", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addMedication = () => setMedications(prev => [...prev, { name: "", dosage: "", frequency: "" }]);
+  const removeMedication = (i) => setMedications(prev => prev.filter((_, idx) => idx !== i));
+  const updateMedication = (i, field, value) => setMedications(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
+
+  const addSupplement = () => setSupplements(prev => [...prev, { name: "", dosage: "", frequency: "" }]);
+  const removeSupplement = (i) => setSupplements(prev => prev.filter((_, idx) => idx !== i));
+  const updateSupplement = (i, field, value) => setSupplements(prev => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
+
+  const handlePasswordSave = async () => {
     const e = {};
     if (!passwords.current) e.current = "Enter your current password";
     if (passwords.newPass.length < 8) e.newPass = "Password must be at least 8 characters";
     if (passwords.newPass !== passwords.confirm) e.confirm = "Passwords do not match";
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
-    setPasswords({ current: "", newPass: "", confirm: "" });
-    showToast("Password changed successfully!");
+    try {
+      await authAPI.changePassword(passwords.current, passwords.newPass);
+      setPasswords({ current: "", newPass: "", confirm: "" });
+      showToast("Password changed successfully!");
+    } catch (err) {
+      setErrors({ current: err.message || "Failed to change password" });
+    }
   };
 
   const handleGfitConnect = async () => {
@@ -165,6 +246,8 @@ export const Settings = () => {
 
   const sections = [
     { id: "personal", label: "Personal Details", icon: "👤" },
+    { id: "medhistory", label: "Medical History", icon: "🩺" },
+    { id: "lifestyle", label: "Medications & Lifestyle", icon: "💊" },
     { id: "password", label: "Change Password", icon: "🔒" },
     { id: "integrations", label: "Integrations", icon: "🔗" },
   ];
@@ -416,6 +499,231 @@ export const Settings = () => {
                     <button className="save-btn" onClick={handlePersonalSave} disabled={saving}
                       style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: "8px", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
                       {saving ? "Saving..." : saved ? <span style={{ animation: "checkIn 0.3s ease" }}>Saved!</span> : "Save Changes"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Medical History ── */}
+              {activeSection === "medhistory" && (
+                <div>
+                  <div style={{ marginBottom: "28px" }}>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Medical History</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Record your health conditions, allergies, and family medical history.</p>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    {/* Health Conditions */}
+                    <div>
+                      <label style={labelStyle}>Health Conditions</label>
+                      <textarea className="settings-input" rows={3}
+                        style={{ ...inputStyle(false), resize: "vertical", minHeight: "80px" }}
+                        value={medHistory.health_conditions}
+                        onChange={e => setMedHistory(p => ({ ...p, health_conditions: e.target.value }))}
+                        placeholder="e.g. Asthma, Type 2 Diabetes, Hypertension" />
+                    </div>
+
+                    {/* Allergies */}
+                    <div>
+                      <label style={labelStyle}>Allergies</label>
+                      <textarea className="settings-input" rows={3}
+                        style={{ ...inputStyle(false), resize: "vertical", minHeight: "80px" }}
+                        value={medHistory.allergies}
+                        onChange={e => setMedHistory(p => ({ ...p, allergies: e.target.value }))}
+                        placeholder="e.g. Penicillin, Peanuts, Latex" />
+                    </div>
+
+                    {/* Family History */}
+                    <div>
+                      <label style={labelStyle}>Family History</label>
+                      <textarea className="settings-input" rows={3}
+                        style={{ ...inputStyle(false), resize: "vertical", minHeight: "80px" }}
+                        value={medHistory.family_history}
+                        onChange={e => setMedHistory(p => ({ ...p, family_history: e.target.value }))}
+                        placeholder="e.g. Father: heart disease, Mother: breast cancer" />
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
+                    <button className="save-btn" onClick={handleMedHistorySave} disabled={saving}
+                      style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Medications & Lifestyle ── */}
+              {activeSection === "lifestyle" && (
+                <div>
+                  <div style={{ marginBottom: "28px" }}>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Medications & Lifestyle</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Manage your current medications, supplements, and lifestyle habits.</p>
+                  </div>
+
+                  {/* Medications */}
+                  <div style={{ marginBottom: "28px" }}>
+                    {sectionDivider("Medications")}
+                    {medications.map((med, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "12px", marginTop: "12px", alignItems: "end" }}>
+                        <div>
+                          {i === 0 && <label style={labelStyle}>Name</label>}
+                          <input type="text" className="settings-input" style={inputStyle(false)} value={med.name}
+                            onChange={e => updateMedication(i, "name", e.target.value)} placeholder="Medication name" />
+                        </div>
+                        <div>
+                          {i === 0 && <label style={labelStyle}>Dosage</label>}
+                          <input type="text" className="settings-input" style={inputStyle(false)} value={med.dosage}
+                            onChange={e => updateMedication(i, "dosage", e.target.value)} placeholder="e.g. 10mg" />
+                        </div>
+                        <div>
+                          {i === 0 && <label style={labelStyle}>Frequency</label>}
+                          <select className="settings-input" style={selectStyle} value={med.frequency}
+                            onChange={e => updateMedication(i, "frequency", e.target.value)}>
+                            <option value="">Select frequency</option>
+                            <option value="Once daily">Once daily</option>
+                            <option value="Twice daily">Twice daily</option>
+                            <option value="Three times daily">Three times daily</option>
+                            <option value="As needed">As needed</option>
+                            <option value="Weekly">Weekly</option>
+                          </select>
+                        </div>
+                        <button onClick={() => removeMedication(i)}
+                          style={{ padding: "11px 14px", borderRadius: "10px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#ef4444", fontWeight: "700", fontSize: "16px", cursor: "pointer", lineHeight: 1 }}>
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button onClick={addMedication}
+                      style={{ marginTop: "12px", padding: "9px 20px", borderRadius: "10px", border: "1px dashed var(--border-solid)", background: "transparent", color: "var(--text-subtle)", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}>
+                      + Add Medication
+                    </button>
+                  </div>
+
+                  {/* Supplements */}
+                  <div style={{ marginBottom: "28px" }}>
+                    {sectionDivider("Supplements")}
+                    {supplements.map((sup, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "12px", marginTop: "12px", alignItems: "end" }}>
+                        <div>
+                          {i === 0 && <label style={labelStyle}>Name</label>}
+                          <input type="text" className="settings-input" style={inputStyle(false)} value={sup.name}
+                            onChange={e => updateSupplement(i, "name", e.target.value)} placeholder="Supplement name" />
+                        </div>
+                        <div>
+                          {i === 0 && <label style={labelStyle}>Dosage</label>}
+                          <input type="text" className="settings-input" style={inputStyle(false)} value={sup.dosage}
+                            onChange={e => updateSupplement(i, "dosage", e.target.value)} placeholder="e.g. 500mg" />
+                        </div>
+                        <div>
+                          {i === 0 && <label style={labelStyle}>Frequency</label>}
+                          <select className="settings-input" style={selectStyle} value={sup.frequency}
+                            onChange={e => updateSupplement(i, "frequency", e.target.value)}>
+                            <option value="">Select frequency</option>
+                            <option value="Once daily">Once daily</option>
+                            <option value="Twice daily">Twice daily</option>
+                            <option value="Three times daily">Three times daily</option>
+                            <option value="As needed">As needed</option>
+                            <option value="Weekly">Weekly</option>
+                          </select>
+                        </div>
+                        <button onClick={() => removeSupplement(i)}
+                          style={{ padding: "11px 14px", borderRadius: "10px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#ef4444", fontWeight: "700", fontSize: "16px", cursor: "pointer", lineHeight: 1 }}>
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button onClick={addSupplement}
+                      style={{ marginTop: "12px", padding: "9px 20px", borderRadius: "10px", border: "1px dashed var(--border-solid)", background: "transparent", color: "var(--text-subtle)", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}>
+                      + Add Supplement
+                    </button>
+                  </div>
+
+                  {/* Lifestyle Fields */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                    {sectionDivider("Lifestyle")}
+
+                    {/* Smoking */}
+                    <div>
+                      <label style={labelStyle}>Smoking Status</label>
+                      <select className="settings-input" style={selectStyle} value={lifestyle.smoking_status}
+                        onChange={e => setLifestyle(p => ({ ...p, smoking_status: e.target.value }))}>
+                        <option value="">Select status</option>
+                        <option value="Never">Never</option>
+                        <option value="Former smoker">Former smoker</option>
+                        <option value="Current smoker">Current smoker</option>
+                      </select>
+                    </div>
+
+                    {/* Alcohol */}
+                    <div>
+                      <label style={labelStyle}>Alcohol Frequency</label>
+                      <select className="settings-input" style={selectStyle} value={lifestyle.alcohol_frequency}
+                        onChange={e => setLifestyle(p => ({ ...p, alcohol_frequency: e.target.value }))}>
+                        <option value="">Select frequency</option>
+                        <option value="Never">Never</option>
+                        <option value="Occasional">Occasional</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Heavy">Heavy</option>
+                      </select>
+                    </div>
+
+                    {/* Exercise */}
+                    <div>
+                      <label style={labelStyle}>Exercise Frequency</label>
+                      <select className="settings-input" style={selectStyle} value={lifestyle.exercise_frequency}
+                        onChange={e => setLifestyle(p => ({ ...p, exercise_frequency: e.target.value }))}>
+                        <option value="">Select frequency</option>
+                        <option value="Sedentary">Sedentary</option>
+                        <option value="Light">Light</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Active">Active</option>
+                        <option value="Very Active">Very Active</option>
+                      </select>
+                    </div>
+
+                    {/* Sleep */}
+                    <div>
+                      <label style={labelStyle}>Typical Sleep</label>
+                      <select className="settings-input" style={selectStyle} value={lifestyle.sleep_habit}
+                        onChange={e => setLifestyle(p => ({ ...p, sleep_habit: e.target.value }))}>
+                        <option value="">Select sleep duration</option>
+                        <option value="Less than 5h">Less than 5h</option>
+                        <option value="5-6h">5-6h</option>
+                        <option value="6-7h">6-7h</option>
+                        <option value="7-8h">7-8h</option>
+                        <option value="More than 8h">More than 8h</option>
+                      </select>
+                    </div>
+
+                    {/* Dietary */}
+                    <div>
+                      <label style={labelStyle}>Dietary Preference</label>
+                      <select className="settings-input" style={selectStyle} value={lifestyle.dietary_preference}
+                        onChange={e => setLifestyle(p => ({ ...p, dietary_preference: e.target.value }))}>
+                        <option value="">Select preference</option>
+                        <option value="No preference">No preference</option>
+                        <option value="Vegetarian">Vegetarian</option>
+                        <option value="Vegan">Vegan</option>
+                        <option value="Halal">Halal</option>
+                        <option value="Kosher">Kosher</option>
+                        <option value="Gluten-free">Gluten-free</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {/* Occupation */}
+                    <div>
+                      <label style={labelStyle}>Occupation</label>
+                      <input type="text" className="settings-input" style={inputStyle(false)} value={lifestyle.occupation}
+                        onChange={e => setLifestyle(p => ({ ...p, occupation: e.target.value }))} placeholder="e.g. Software Engineer" />
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
+                    <button className="save-btn" onClick={handleLifestyleSave} disabled={saving}
+                      style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
+                      {saving ? "Saving..." : "Save Changes"}
                     </button>
                   </div>
                 </div>

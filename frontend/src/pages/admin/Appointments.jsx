@@ -17,8 +17,8 @@ export const Appointments = () => {
             id: a._id || a.id,
             patient: a.patient_name || "Patient",
             provider: a.provider_name || "Provider",
-            date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-            time: a.appointment_date ? new Date(a.appointment_date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
+            date: a.appointment_date ? new Date(a.appointment_date.endsWith?.("Z") ? a.appointment_date : a.appointment_date + "Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+            time: a.appointment_date ? new Date(a.appointment_date.endsWith?.("Z") ? a.appointment_date : a.appointment_date + "Z").toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
             status: a.status || "pending",
             department: a.department || "",
           }));

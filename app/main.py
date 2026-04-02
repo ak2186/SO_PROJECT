@@ -15,13 +15,15 @@ from app.config.database import Database
 
 # Import routes 
 from app.routes import auth_routes
-from app.routes import admin_routes 
+from app.routes import admin_routes
 from app.routes import biomarker_routes
 from app.routes import googlefit_routes
 from app.routes import appointment_routes
 from app.routes import prescription_routes
 from app.routes import chat_routes
 from app.routes import notification_routes
+from app.routes import permission_routes
+from app.routes import gamification_routes
 
 # Set up logging
 logging.basicConfig(
@@ -117,16 +119,17 @@ async def root():
     }
 
 
-# Register API routes (will add these later)
+# Register API routes 
 app.include_router(auth_routes.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(admin_routes.router)
 app.include_router(biomarker_routes.router)
 app.include_router(googlefit_routes.router)
 app.include_router(appointment_routes.router)
 app.include_router(prescription_routes.router)
-# app.include_router(export_routes.router, prefix="/api/export", tags=["Export"])
 app.include_router(chat_routes.router)
 app.include_router(notification_routes.router)
+app.include_router(permission_routes.router)
+app.include_router(gamification_routes.router)
 
 
 # Global exception handler

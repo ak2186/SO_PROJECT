@@ -241,4 +241,19 @@ async def confirm_appointment(appointment_id: str, provider_id: str):
         notif_type="appointment",
     )
 
+    # Create a health data permission request for this patient-provider pair
+    from app.controllers.permission_controller import create_permission_request
+    await create_permission_request(
+        patient_id=appointment["patient_id"],
+        provider_id=provider_id,
+        appointment_id=appointment_id,
+    )
+    # Notify patient about the permission request
+    await create_notification(
+        user_id=appointment["patient_id"],
+        title="Health Data Access Request",
+        message=f"{provider_name} is requesting access to your health data. You can grant or deny this in your dashboard.",
+        notif_type="general",
+    )
+
     return {"message": "Appointment confirmed successfully"}

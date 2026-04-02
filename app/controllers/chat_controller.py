@@ -72,8 +72,6 @@ PATIENT INFORMATION:
                 context += f"- Steps: {b['steps']} (recorded {recorded})\n"
             if "calories" in b:
                 context += f"- Calories: {b['calories']} kcal (recorded {recorded})\n"
-            if "systolic_bp" in b:
-                context += f"- Blood Pressure: {b['systolic_bp']}/{b.get('diastolic_bp', '?')} mmHg (recorded {recorded})\n"
             if b.get("alerts"):
                 context += f"  ⚠️ Alerts: {', '.join(b['alerts'])}\n"
 

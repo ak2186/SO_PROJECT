@@ -18,19 +18,25 @@ export const Appointments = () => {
     appointmentsAPI.getMyAppointments()
       .then((data) => {
         if (data && Array.isArray(data.appointments)) {
-          const mapped = data.appointments.map((a) => ({
-            id: a._id || a.id,
-            doctor: a.provider_name || "Doctor",
-            specialty: a.specialty || "",
-            date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-            time: a.appointment_date ? new Date(a.appointment_date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
-            location: a.location || "",
-            status: a.status || "pending",
-            reason: a.reason || "",
-            avatar: (a.provider_name || "DR").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-          }));
-          const active = mapped.filter(a => !["completed", "cancelled"].includes(a.status?.toLowerCase()));
-          const done = mapped.filter(a => ["completed", "cancelled"].includes(a.status?.toLowerCase()));
+          const now = new Date();
+          const mapped = data.appointments.map((a) => {
+            const rawDate = a.appointment_date ? new Date(a.appointment_date.endsWith?.("Z") ? a.appointment_date : a.appointment_date + "Z") : null;
+            return {
+              id: a._id || a.id,
+              doctor: a.provider_name || "Doctor",
+              specialty: a.specialty || "",
+              date: rawDate ? rawDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+              time: rawDate ? rawDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
+              rawDate,
+              location: a.location || "",
+              status: a.status || "pending",
+              reason: a.reason || "",
+              avatar: (a.provider_name || "DR").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
+            };
+          });
+          const isPast = (a) => ["completed", "cancelled"].includes(a.status?.toLowerCase()) || (a.rawDate && a.rawDate < now);
+          const active = mapped.filter(a => !isPast(a));
+          const done = mapped.filter(a => isPast(a));
           setAppts(active);
           setPastAppts(done.map(a => ({ ...a, status: a.status.charAt(0).toUpperCase() + a.status.slice(1) })));
         }

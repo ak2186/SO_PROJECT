@@ -5,7 +5,7 @@ const defaultAvatarColors = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d
 
 export const Appointments = () => {
   const [tab, setTab] = useState("today");
-  const [appts, setAppts] = useState({ today: [], upcoming: [] });
+  const [appts, setAppts] = useState({ today: [], upcoming: [], past: [] });
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,23 +14,29 @@ export const Appointments = () => {
     appointmentsAPI.getProviderAppointments({ limit: 100 })
       .then((data) => {
         if (data && Array.isArray(data.appointments)) {
-          const today = new Date().toDateString();
+          const now = new Date();
+          const todayStr = now.toDateString();
           const mapped = data.appointments
             .filter(a => a.status !== "cancelled")
-            .map((a, idx) => ({
-              id: a._id || a.id,
-              patient: a.patient_name || "Patient",
-              age: a.patient_age || "",
-              time: a.appointment_date ? new Date(a.appointment_date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
-              date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-              reason: a.reason || a.notes || "",
-              status: a.status || "pending",
-              avatar: (a.patient_name || "PT").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-              _color: defaultAvatarColors[idx % defaultAvatarColors.length],
-            }));
-          const todayList = mapped.filter(a => a.date && new Date(a.date).toDateString() === today);
-          const upcomingList = mapped.filter(a => !a.date || new Date(a.date).toDateString() !== today);
-          setAppts({ today: todayList, upcoming: upcomingList });
+            .map((a, idx) => {
+              const rawDate = a.appointment_date ? new Date(a.appointment_date.endsWith?.("Z") ? a.appointment_date : a.appointment_date + "Z") : null;
+              return {
+                id: a._id || a.id,
+                patient: a.patient_name || "Patient",
+                age: a.patient_age || "",
+                time: rawDate ? rawDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "",
+                date: rawDate ? rawDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+                rawDate,
+                reason: a.reason || a.notes || "",
+                status: a.status || "pending",
+                avatar: (a.patient_name || "PT").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
+                _color: defaultAvatarColors[idx % defaultAvatarColors.length],
+              };
+            });
+          const todayList = mapped.filter(a => a.rawDate && a.rawDate.toDateString() === todayStr);
+          const upcomingList = mapped.filter(a => a.rawDate && a.rawDate > now && a.rawDate.toDateString() !== todayStr);
+          const pastList = mapped.filter(a => a.rawDate && a.rawDate < now && a.rawDate.toDateString() !== todayStr);
+          setAppts({ today: todayList, upcoming: upcomingList, past: pastList });
         }
       })
       .catch(() => { })
@@ -107,10 +113,10 @@ export const Appointments = () => {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "28px", background: "var(--bg-3)", padding: "4px", borderRadius: "10px", width: "fit-content", animation: "fadeUp 0.5s ease 0.1s both" }}>
-          {["today", "upcoming"].map(t => (
+          {["today", "upcoming", "past"].map(t => (
             <button key={t} onClick={() => setTab(t)}
               style={{ padding: "8px 24px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: tab === t ? "#10b981" : "transparent", color: tab === t ? "#fff" : "var(--text-subtle)", transition: "all 0.18s ease" }}>
-              {t === "today" ? "Today" : "Upcoming"}
+              {t === "today" ? "Today" : t === "upcoming" ? "Upcoming" : "Past"}
             </button>
           ))}
         </div>
@@ -121,7 +127,7 @@ export const Appointments = () => {
             <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
           )}
           {!loading && appts[tab].length === 0 && (
-            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No {tab === "today" ? "today's" : "upcoming"} appointments.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No {tab === "today" ? "today's" : tab === "upcoming" ? "upcoming" : "past"} appointments.</div>
           )}
           {appts[tab].map((a, i) => (
             <div key={a.id} className="appt-card" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${i * 0.08}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
@@ -140,22 +146,24 @@ export const Appointments = () => {
                 </div>
                 <div style={{ color: "#10b981", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>{a.reason}</div>
                 <div style={{ display: "flex", gap: "20px" }}>
-                  {tab === "upcoming" && <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>📅 {a.date}</span>}
+                  {tab !== "today" && <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>📅 {a.date}</span>}
                   <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>🕐 {a.time}</span>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
-                {a.status === "pending" && (
-                  <button onClick={() => handleApprove(a.id)} className="action-btn"
-                    style={{ padding: "8px 18px", borderRadius: "8px", border: "none", background: "#10b981", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
-                    Approve
+              {tab !== "past" && (
+                <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
+                  {a.status === "pending" && (
+                    <button onClick={() => handleApprove(a.id)} className="action-btn"
+                      style={{ padding: "8px 18px", borderRadius: "8px", border: "none", background: "#10b981", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
+                      Approve
+                    </button>
+                  )}
+                  <button onClick={() => handleCancel(a.id)} className="action-btn"
+                    style={{ padding: "8px 18px", borderRadius: "8px", border: "1px solid #ef4444", background: "transparent", color: "#ef4444", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
+                    Cancel
                   </button>
-                )}
-                <button onClick={() => handleCancel(a.id)} className="action-btn"
-                  style={{ padding: "8px 18px", borderRadius: "8px", border: "1px solid #ef4444", background: "transparent", color: "#ef4444", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
-                  Cancel
-                </button>
-              </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

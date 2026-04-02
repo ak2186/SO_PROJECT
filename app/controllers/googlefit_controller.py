@@ -27,6 +27,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/fitness.oxygen_saturation.read",
     "https://www.googleapis.com/auth/fitness.activity.read",
     "https://www.googleapis.com/auth/fitness.body.read",
+    "https://www.googleapis.com/auth/fitness.sleep.read",
 ]
 
 
@@ -237,6 +238,28 @@ async def sync_googlefit_data(user_id: str, tz_offset: int = 0):
             sync_errors.append(f"{field}: {str(e)}")
             continue
 
+    # ── Sleep data (uses Sessions API, not datasets) ──
+    try:
+        sessions_result = service.users().sessions().list(
+            userId="me",
+            startTime=local_midnight_utc.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            endTime=now_utc.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            activityType=72,  # 72 = sleep
+        ).execute()
+        sleep_sessions = sessions_result.get("session", [])
+        total_sleep_ms = 0
+        for s in sleep_sessions:
+            start_ms = int(s.get("startTimeMillis", 0))
+            end_ms = int(s.get("endTimeMillis", 0))
+            total_sleep_ms += (end_ms - start_ms)
+        if total_sleep_ms > 0:
+            sleep_hours = round(total_sleep_ms / (1000 * 60 * 60), 1)
+            biomarker_data["sleep_hours"] = sleep_hours
+            logger.info(f"[GoogleFit] sleep: {sleep_hours}h from {len(sleep_sessions)} sessions")
+    except Exception as e:
+        logger.warning(f"[GoogleFit] Failed to fetch sleep: {e}")
+        sync_errors.append(f"sleep: {str(e)}")
+
     logger.info(f"[GoogleFit] Synced data for user {user_id}: {biomarker_data}")
     if sync_errors:
         logger.warning(f"[GoogleFit] Errors for user {user_id}: {sync_errors}")
@@ -279,6 +302,61 @@ async def sync_googlefit_data(user_id: str, tz_offset: int = 0):
     }
 
 
+async def get_week_summary(user_id: str, tz_offset: int = 0):
+    """Return daily averages / totals for the past 7 days from stored Google Fit syncs."""
+    db = Database.get_db()
+    tz_delta = timedelta(minutes=-tz_offset)
+    now_local = datetime.utcnow() + tz_delta
+    day_labels = []
+    for i in range(6, -1, -1):
+        d = now_local - timedelta(days=i)
+        day_labels.append(d.strftime("%Y-%m-%d"))
+
+    cursor = db.biomarkers.find({
+        "user_id": user_id,
+        "source": "googlefit",
+        "sync_date": {"$in": day_labels},
+    })
+    docs = await cursor.to_list(length=7)
+    by_date = {doc["sync_date"]: doc for doc in docs}
+
+    week_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    heart_rate = []
+    spo2 = []
+    steps = []
+    calories = []
+    sleep = []
+
+    for date_str in day_labels:
+        doc = by_date.get(date_str)
+        d = datetime.strptime(date_str, "%Y-%m-%d")
+        day_name = week_days[d.weekday()]
+        if doc:
+            hr_ts = doc.get("timeseries", {}).get("heart_rate", [])
+            hr_avg = round(sum(p["v"] for p in hr_ts) / len(hr_ts)) if hr_ts else None
+            spo2_ts = doc.get("timeseries", {}).get("spo2", [])
+            spo2_avg = round(sum(p["v"] for p in spo2_ts) / len(spo2_ts)) if spo2_ts else None
+            heart_rate.append({"day": day_name, "avg": hr_avg or doc.get("heart_rate"), "v": hr_avg or doc.get("heart_rate")})
+            spo2.append({"day": day_name, "avg": spo2_avg or doc.get("spo2"), "v": spo2_avg or doc.get("spo2")})
+            steps.append({"day": day_name, "value": doc.get("steps", 0)})
+            calories.append({"day": day_name, "value": doc.get("calories", 0)})
+            sleep.append({"day": day_name, "value": doc.get("sleep_hours", 0)})
+        else:
+            heart_rate.append({"day": day_name, "avg": None, "v": None})
+            spo2.append({"day": day_name, "avg": None, "v": None})
+            steps.append({"day": day_name, "value": 0})
+            calories.append({"day": day_name, "value": 0})
+            sleep.append({"day": day_name, "value": 0})
+
+    return {
+        "heart_rate": heart_rate,
+        "spo2": spo2,
+        "steps": steps,
+        "calories": calories,
+        "sleep": sleep,
+    }
+
+
 async def get_today_timeseries(user_id: str, tz_offset: int = 0):
     """Return the stored timeseries data for today (from last sync)"""
     db = Database.get_db()
@@ -296,7 +374,7 @@ async def get_today_timeseries(user_id: str, tz_offset: int = 0):
     return {
         "timeseries": doc.get("timeseries", {}),
         "synced_data": {
-            k: doc[k] for k in ["heart_rate", "spo2", "steps", "calories"]
+            k: doc[k] for k in ["heart_rate", "spo2", "steps", "calories", "sleep_hours"]
             if k in doc
         },
         "synced_at": doc.get("recorded_at", "").isoformat() if doc.get("recorded_at") else None,
