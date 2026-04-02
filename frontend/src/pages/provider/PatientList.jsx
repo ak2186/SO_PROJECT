@@ -31,6 +31,11 @@ export const PatientList = () => {
     permissionsAPI.getProviderPatients()
       .then((data) => {
         if (data && Array.isArray(data.patients)) {
+          const fmtDate = (iso) => {
+            if (!iso) return "";
+            const d = new Date(iso.endsWith("Z") ? iso : iso + "Z");
+            return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+          };
           const mapped = data.patients.map((u, idx) => {
             const name = `${u.first_name || ""} ${u.last_name || ""}`.trim() || u.email;
             const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -43,8 +48,8 @@ export const PatientList = () => {
               avatar: initials,
               condition: u.health_conditions || "",
               status: "Active",
-              lastVisit: "",
-              nextAppointment: "",
+              lastVisit: fmtDate(u.last_visit),
+              nextAppointment: fmtDate(u.next_appointment),
             };
           });
           setPatients(mapped);
@@ -167,14 +172,12 @@ export const PatientList = () => {
           </div>
         </div>
 
-        {/* Search & Filter */}
+        {/* Search */}
         <div style={{
-          display: "flex",
-          gap: "12px",
           marginBottom: "24px",
           animation: "fadeUp 0.6s ease 0.15s both",
         }}>
-          <div style={{ position: "relative", flex: 1 }}>
+          <div style={{ position: "relative" }}>
             <span style={{
               position: "absolute",
               left: "14px",
@@ -199,24 +202,10 @@ export const PatientList = () => {
                 fontSize: "14px",
                 outline: "none",
                 fontFamily: "'DM Sans', sans-serif",
+                boxSizing: "border-box",
               }}
             />
           </div>
-          <button className="action-btn" style={{
-            padding: "12px 24px",
-            background: "#10b981",
-            border: "none",
-            borderRadius: "12px",
-            color: "#fff",
-            fontSize: "14px",
-            fontWeight: "700",
-            fontFamily: "'DM Sans', sans-serif",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}>
-            👤 Add New Patient
-          </button>
         </div>
 
         {/* Patient Table */}
@@ -300,7 +289,7 @@ export const PatientList = () => {
               {/* Age/Gender */}
               <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>
                 {patient.age ? `${patient.age} yrs` : "-"}<br />
-                <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>{patient.gender === "M" ? "Male" : patient.gender === "F" ? "Female" : patient.gender || "-"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>{patient.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : "-"}</span>
               </div>
 
               {/* Reason */}

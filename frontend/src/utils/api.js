@@ -306,6 +306,8 @@ export const permissionsAPI = {
 export const gamificationAPI = {
     getMe: () => request("/gamification/me"),
 
+    getDetails: () => request("/gamification/details"),
+
     awardXP: (action) =>
         request("/gamification/xp", {
             method: "POST",
