@@ -8,8 +8,20 @@ from datetime import datetime
 from typing import Optional
 from bson import ObjectId
 from app.config.database import Database
+from app.utils.audit_logger import AuditLogger
 from app.models.prescription import PrescriptionCreate, SelfPrescriptionCreate
 from app.controllers.notification_controller import create_notification
+from app.utils.encryption import encrypt_dict_fields, decrypt_dict_fields
+
+# Sensitive prescription fields and their types
+_SENSITIVE_FIELDS = ["medication_name", "dosage", "frequency", "duration", "notes"]
+_FIELD_TYPES = {
+    "medication_name": str,
+    "dosage": str,
+    "frequency": str,
+    "duration": str,
+    "notes": str,
+}
 
 
 async def create_self_prescription(patient_id: str, data: SelfPrescriptionCreate):
@@ -33,7 +45,13 @@ async def create_self_prescription(patient_id: str, data: SelfPrescriptionCreate
         "updated_at": datetime.utcnow(),
     }
 
+    # Encrypt sensitive fields before storing
+    encrypt_dict_fields(prescription, _SENSITIVE_FIELDS)
+
     result = await db.prescriptions.insert_one(prescription)
+
+    # Decrypt for the response
+    decrypt_dict_fields(prescription, _FIELD_TYPES)
     prescription["_id"] = str(result.inserted_id)
 
     return {
@@ -69,7 +87,13 @@ async def create_prescription(provider_id: str, data: PrescriptionCreate):
         "updated_at": datetime.utcnow(),
     }
 
+    # Encrypt sensitive fields before storing
+    encrypt_dict_fields(prescription, _SENSITIVE_FIELDS)
+
     result = await db.prescriptions.insert_one(prescription)
+
+    # Decrypt for response and notifications
+    decrypt_dict_fields(prescription, _FIELD_TYPES)
     prescription["_id"] = str(result.inserted_id)
 
     # Notify patient about new prescription
@@ -80,6 +104,13 @@ async def create_prescription(provider_id: str, data: PrescriptionCreate):
         title="New Prescription",
         message=f"{provider_name} prescribed {data.medication_name}",
         notif_type="prescription",
+    )
+
+    await AuditLogger.log_provider_access(
+        provider_id=provider_id,
+        patient_id=data.patient_id,
+        action="PROVIDER_CREATE_PRESCRIPTION",
+        details={"medication": data.medication_name, "dosage": data.dosage, "prescription_id": str(result.inserted_id)},
     )
 
     return {
@@ -107,6 +138,7 @@ async def get_patient_prescriptions(
     prescriptions = await cursor.to_list(length=limit)
 
     for p in prescriptions:
+        decrypt_dict_fields(p, _FIELD_TYPES)
         p["_id"] = str(p["_id"])
         # Get provider name (skip for self-added medications)
         if p.get("provider_id") == "self" or p.get("source") == "self":
@@ -147,6 +179,7 @@ async def get_provider_prescriptions(
     prescriptions = await cursor.to_list(length=limit)
 
     for p in prescriptions:
+        decrypt_dict_fields(p, _FIELD_TYPES)
         p["_id"] = str(p["_id"])
         # Get patient name
         patient = await db.users.find_one({"_id": ObjectId(p["patient_id"])})
@@ -196,6 +229,9 @@ async def request_refill(prescription_id: str, patient_id: str, notes: Optional[
         {"_id": ObjectId(prescription_id)},
         {"$push": {"refill_requests": refill_request}}
     )
+
+    # Decrypt for notification text
+    decrypt_dict_fields(prescription, _FIELD_TYPES)
 
     # Notify provider about refill request
     patient = await db.users.find_one({"_id": ObjectId(patient_id)})
@@ -250,6 +286,9 @@ async def review_refill(prescription_id: str, refill_id: str, provider_id: str, 
             {"$inc": {"refills_used": 1}}
         )
 
+    # Decrypt for notification/audit text
+    decrypt_dict_fields(prescription, _FIELD_TYPES)
+
     # Notify patient about refill decision
     status_text = "approved" if action == "approved" else "denied"
     await create_notification(
@@ -257,6 +296,13 @@ async def review_refill(prescription_id: str, refill_id: str, provider_id: str, 
         title=f"Refill {status_text.capitalize()}",
         message=f"Your refill request for {prescription['medication_name']} has been {status_text}",
         notif_type="prescription",
+    )
+
+    await AuditLogger.log_provider_access(
+        provider_id=provider_id,
+        patient_id=prescription["patient_id"],
+        action="PROVIDER_REVIEW_REFILL",
+        details={"prescription_id": prescription_id, "refill_id": refill_id, "decision": action, "medication": prescription["medication_name"]},
     )
 
     return {"message": f"Refill request {action} successfully"}

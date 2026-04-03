@@ -14,8 +14,14 @@ from app.models.biomarker import BiomarkerCreate
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from bson import ObjectId
+from app.utils.encryption import encrypt_dict_fields, decrypt_dict_fields
 import json
 import logging
+
+_SENSITIVE_FIELDS = ["heart_rate", "spo2", "steps", "calories", "sleep_hours"]
+_FIELD_TYPES = {
+    "heart_rate": float, "spo2": float, "steps": float, "calories": float, "sleep_hours": float,
+}
 import calendar
 import time
 
@@ -277,8 +283,12 @@ async def sync_googlefit_data(user_id: str, tz_offset: int = 0):
     today_key = local_midnight.strftime("%Y-%m-%d")
     alerts = check_alerts(biomarker_data)
 
+    # Encrypt sensitive fields before storing
+    encrypted_data = dict(biomarker_data)
+    encrypt_dict_fields(encrypted_data, _SENSITIVE_FIELDS)
+
     update_fields = {
-        **biomarker_data,
+        **encrypted_data,
         "user_id": user_id,
         "recorded_at": now_utc,
         "source": "googlefit",
@@ -318,6 +328,8 @@ async def get_week_summary(user_id: str, tz_offset: int = 0):
         "sync_date": {"$in": day_labels},
     })
     docs = await cursor.to_list(length=7)
+    for doc in docs:
+        decrypt_dict_fields(doc, _FIELD_TYPES)
     by_date = {doc["sync_date"]: doc for doc in docs}
 
     week_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -370,6 +382,8 @@ async def get_today_timeseries(user_id: str, tz_offset: int = 0):
     )
     if not doc:
         return {"timeseries": {}, "synced_data": {}, "synced_at": None}
+
+    decrypt_dict_fields(doc, _FIELD_TYPES)
 
     return {
         "timeseries": doc.get("timeseries", {}),

@@ -6,7 +6,7 @@ Handles user registration and login logic
 from fastapi import HTTPException, status
 from app.models.user import UserCreate, UserInDB, UserResponse, UserLogin, Token
 from app.utils.password import hash_password, verify_password
-from app.utils.jwt import create_access_token
+from app.utils.jwt import create_access_token, create_refresh_token, verify_refresh_token
 from app.config.database import Database
 from datetime import datetime
 from bson import ObjectId
@@ -158,14 +158,15 @@ async def login_user(login_data: UserLogin, request: Request) -> Token:
             detail="Account is inactive"
         )
     
-    # Create access token
+    # Create access + refresh tokens
     token_data = {
         "user_id": str(user["_id"]),
         "email": user["email"],
         "role": user["role"]
     }
     access_token = create_access_token(data=token_data)
-    
+    refresh_token = create_refresh_token(data=token_data)
+
     # Log successful login
     await AuditLogger.log_login_attempt(
         email=login_data.email,
@@ -173,8 +174,8 @@ async def login_user(login_data: UserLogin, request: Request) -> Token:
         user_id=str(user["_id"]),
         request=request
     )
-    
-    return Token(access_token=access_token, token_type="bearer")
+
+    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
 
 async def get_current_user(user_id: str) -> UserResponse:
@@ -203,6 +204,35 @@ async def get_current_user(user_id: str) -> UserResponse:
     return _user_response(user)
 
 
+async def refresh_access_token(refresh_token_str: str) -> Token:
+    """Use a valid refresh token to get a new access token + refresh token pair."""
+    token_data = verify_refresh_token(refresh_token_str)
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        )
+
+    # Verify user still exists and is active
+    db = Database.get_db()
+    user = await db.users.find_one({"_id": ObjectId(token_data.user_id)})
+    if not user or user.get("status") != "active":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
+
+    new_token_data = {
+        "user_id": str(user["_id"]),
+        "email": user["email"],
+        "role": user["role"],
+    }
+    new_access = create_access_token(data=new_token_data)
+    new_refresh = create_refresh_token(data=new_token_data)
+
+    return Token(access_token=new_access, refresh_token=new_refresh, token_type="bearer")
+
+
 async def change_password(user_id: str, current_password: str, new_password: str) -> dict:
     """Change user password after verifying the current one."""
     db = Database.get_db()
@@ -226,6 +256,14 @@ async def change_password(user_id: str, current_password: str, new_password: str
         {"$set": {"hashed_password": new_hashed, "updated_at": datetime.utcnow()}}
     )
 
+    await AuditLogger.log(
+        action="PASSWORD_CHANGED",
+        user_id=user_id,
+        user_role=user.get("role"),
+        resource_type="user",
+        resource_id=user_id,
+    )
+
     return {"message": "Password changed successfully"}
 
 
@@ -245,6 +283,14 @@ async def update_user_profile(user_id: str, update_data: UserUpdate) -> UserResp
     await db.users.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": update_dict}
+    )
+
+    await AuditLogger.log(
+        action="PROFILE_UPDATED",
+        user_id=user_id,
+        resource_type="user",
+        resource_id=user_id,
+        details={"fields_updated": list(update_data.model_dump(exclude_none=True).keys())},
     )
 
     user = await db.users.find_one({"_id": ObjectId(user_id)})

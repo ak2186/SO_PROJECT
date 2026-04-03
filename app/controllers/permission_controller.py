@@ -2,6 +2,7 @@ from datetime import datetime
 from bson import ObjectId
 from fastapi import HTTPException
 from app.config.database import Database
+from app.utils.audit_logger import AuditLogger
 
 
 async def create_permission_request(patient_id: str, provider_id: str, appointment_id: str):
@@ -14,7 +15,7 @@ async def create_permission_request(patient_id: str, provider_id: str, appointme
     })
     if existing:
         return
-    await db.permissions.insert_one({
+    result = await db.permissions.insert_one({
         "patient_id": patient_id,
         "provider_id": provider_id,
         "appointment_id": appointment_id,
@@ -22,6 +23,15 @@ async def create_permission_request(patient_id: str, provider_id: str, appointme
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     })
+
+    await AuditLogger.log(
+        action="PERMISSION_REQUEST_CREATED",
+        user_id=provider_id,
+        user_role="provider",
+        resource_type="permission",
+        resource_id=str(result.inserted_id),
+        details={"patient_id": patient_id, "appointment_id": appointment_id},
+    )
 
 
 async def respond_to_permission(permission_id: str, patient_id: str, action: str):
@@ -51,6 +61,16 @@ async def respond_to_permission(permission_id: str, patient_id: str, action: str
             message=f"{patient_name} has granted you access to their health data.",
             notif_type="general",
         )
+
+    await AuditLogger.log(
+        action=f"PERMISSION_{action.upper()}",
+        user_id=patient_id,
+        user_role="patient",
+        resource_type="permission",
+        resource_id=permission_id,
+        details={"provider_id": perm["provider_id"], "decision": action},
+    )
+
     return {"message": f"Permission {action}"}
 
 

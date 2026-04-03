@@ -9,6 +9,17 @@ from typing import Optional
 from bson import ObjectId
 from app.config.database import Database
 from app.models.biomarker import BiomarkerCreate
+from app.utils.encryption import encrypt_dict_fields, decrypt_dict_fields
+
+# Sensitive biomarker fields and their original types (for decryption casting)
+_SENSITIVE_FIELDS = ["heart_rate", "spo2", "steps", "calories", "sleep_hours"]
+_FIELD_TYPES = {
+    "heart_rate": float,
+    "spo2": float,
+    "steps": float,
+    "calories": float,
+    "sleep_hours": float,
+}
 
 
 # Alert thresholds
@@ -48,7 +59,13 @@ async def record_biomarker(user_id: str, data: BiomarkerCreate):
         "alerts": alerts,
     }
 
+    # Encrypt sensitive fields before storing
+    encrypt_dict_fields(document, _SENSITIVE_FIELDS)
+
     result = await db.biomarkers.insert_one(document)
+
+    # Decrypt for the response
+    decrypt_dict_fields(document, _FIELD_TYPES)
     document["_id"] = str(result.inserted_id)
 
     return {
@@ -72,6 +89,7 @@ async def get_current_readings(user_id: str):
             sort=[("recorded_at", -1)]
         )
         if doc:
+            decrypt_dict_fields(doc, _FIELD_TYPES)
             latest[field] = {
                 "value": doc[field],
                 "recorded_at": doc["recorded_at"],
@@ -105,6 +123,7 @@ async def get_biomarker_history(
     readings = await cursor.to_list(length=limit)
 
     for r in readings:
+        decrypt_dict_fields(r, _FIELD_TYPES)
         r["_id"] = str(r["_id"])
 
     return {
@@ -126,6 +145,7 @@ async def get_alerts(user_id: str):
 
     alerts = await cursor.to_list(length=50)
     for a in alerts:
+        decrypt_dict_fields(a, _FIELD_TYPES)
         a["_id"] = str(a["_id"])
 
     return {"alerts": alerts, "total": len(alerts)}

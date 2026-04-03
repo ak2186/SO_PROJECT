@@ -13,6 +13,7 @@ from app.controllers.biomarker_controller import (
     get_patient_data_for_provider,
 )
 from app.controllers.pdf_controller import generate_health_report
+from app.utils.audit_logger import AuditLogger
 
 router = APIRouter(prefix="/api/biomarkers", tags=["Biomarkers"])
 
@@ -71,6 +72,11 @@ async def get_patient_report_pdf(
     has_perm = await check_provider_has_permission(current_user.user_id, patient_id)
     if not has_perm:
         raise HTTPException(status_code=403, detail="Permission not granted")
+    await AuditLogger.log_provider_access(
+        provider_id=current_user.user_id,
+        patient_id=patient_id,
+        action="PROVIDER_GENERATE_REPORT",
+    )
     return await generate_health_report(patient_id)
 
 
@@ -80,4 +86,9 @@ async def provider_patient_biomarkers(
     current_user=Depends(get_current_user_token),
 ):
     require_role(current_user, ["provider"])
+    await AuditLogger.log_provider_access(
+        provider_id=current_user.user_id,
+        patient_id=patient_id,
+        action="PROVIDER_VIEW_PATIENT_DATA",
+    )
     return await get_patient_data_for_provider(current_user.user_id, patient_id)

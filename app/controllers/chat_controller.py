@@ -10,6 +10,7 @@ from google import genai
 from google.genai import types
 from app.config.settings import settings
 from app.config.database import Database
+from app.utils.encryption import encrypt_field, decrypt_field, decrypt_dict_fields
 
 
 # Configure Gemini client
@@ -58,9 +59,11 @@ PATIENT INFORMATION:
     cursor = db.biomarkers.find({"user_id": user_id}).sort("recorded_at", -1).limit(5)
     biomarkers = await cursor.to_list(length=5)
 
+    _bio_types = {"heart_rate": float, "spo2": float, "steps": float, "calories": float, "sleep_hours": float}
     if biomarkers:
         context += "\nLATEST BIOMARKER READINGS:\n"
         for b in biomarkers:
+            decrypt_dict_fields(b, _bio_types)
             recorded = b.get("recorded_at", "")
             if isinstance(recorded, datetime):
                 recorded = recorded.strftime("%Y-%m-%d %H:%M")
@@ -98,9 +101,11 @@ PATIENT INFORMATION:
     cursor = db.prescriptions.find({"patient_id": user_id, "status": "active"}).limit(5)
     prescriptions = await cursor.to_list(length=5)
 
+    _rx_types = {"medication_name": str, "dosage": str, "frequency": str, "duration": str, "notes": str}
     if prescriptions:
         context += "\nACTIVE PRESCRIPTIONS:\n"
         for p in prescriptions:
+            decrypt_dict_fields(p, _rx_types)
             context += f"- {p['medication_name']} {p['dosage']} - {p['frequency']} for {p['duration']}\n"
 
     return context
@@ -118,12 +123,12 @@ async def send_message(user_id: str, message: str):
     # Get patient context
     patient_context = await get_patient_context(user_id)
 
-    # Build contents for Gemini
+    # Build contents for Gemini (decrypt stored messages)
     contents = []
     for msg in history_docs:
         contents.append(types.Content(
             role=msg["role"],
-            parts=[types.Part(text=msg["content"])]
+            parts=[types.Part(text=decrypt_field(msg["content"]))]
         ))
     contents.append(types.Content(
         role="user",
@@ -144,19 +149,19 @@ async def send_message(user_id: str, message: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gemini error: {str(e)}")
 
-    # Save user message to history
+    # Save user message to history (encrypted)
     await db.chat_history.insert_one({
         "user_id": user_id,
         "role": "user",
-        "content": message,
+        "content": encrypt_field(message),
         "timestamp": datetime.utcnow()
     })
 
-    # Save assistant reply to history
+    # Save assistant reply to history (encrypted)
     await db.chat_history.insert_one({
         "user_id": user_id,
         "role": "model",
-        "content": reply,
+        "content": encrypt_field(reply),
         "timestamp": datetime.utcnow()
     })
 
@@ -177,6 +182,7 @@ async def get_chat_history(user_id: str, page: int = 1, limit: int = 20):
 
     for m in messages:
         m["_id"] = str(m["_id"])
+        m["content"] = decrypt_field(m["content"])
 
     return {
         "total": total,

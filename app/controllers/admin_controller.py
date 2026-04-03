@@ -3,7 +3,12 @@ from typing import Optional
 from app.config.database import get_database
 from bson import ObjectId
 from fastapi import HTTPException
-from datetime import datetime
+from app.utils.audit_logger import AuditLogger
+from app.utils.encryption import decrypt_dict_fields
+
+_RX_FIELD_TYPES = {
+    "medication_name": str, "dosage": str, "frequency": str, "duration": str, "notes": str,
+}
 
 async def get_audit_logs(
     page: int = 1,
@@ -90,6 +95,14 @@ async def delete_user(user_id: str, current_admin_id: str):
         raise HTTPException(status_code=404, detail="User not found")
 
     await db.users.delete_one({"_id": ObjectId(user_id)})
+
+    await AuditLogger.log_admin_action(
+        admin_id=current_admin_id,
+        action="ADMIN_DELETE_USER",
+        target_user_id=user_id,
+        details={"deleted_email": user["email"], "deleted_role": user.get("role")},
+    )
+
     return {"message": f"User {user['email']} deleted successfully"}
 
 
@@ -103,9 +116,17 @@ async def update_user_role(user_id: str, new_role: str):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    old_role = user.get("role")
     await db.users.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": {"role": new_role, "updated_at": datetime.utcnow()}}
+    )
+
+    await AuditLogger.log_admin_action(
+        admin_id="system",
+        action="ADMIN_CHANGE_ROLE",
+        target_user_id=user_id,
+        details={"email": user["email"], "old_role": old_role, "new_role": new_role},
     )
 
     return {"message": f"User {user['email']} role updated to {new_role}"}
@@ -161,6 +182,7 @@ async def get_all_prescriptions(
     prescriptions = await cursor.to_list(length=limit)
 
     for p in prescriptions:
+        decrypt_dict_fields(p, _RX_FIELD_TYPES)
         p["_id"] = str(p["_id"])
         provider = await db.users.find_one({"_id": ObjectId(p["provider_id"])})
         if provider:
@@ -210,5 +232,12 @@ async def create_provider(user_data: dict):
     result = await db.users.insert_one(provider)
     provider["_id"] = str(result.inserted_id)
     del provider["hashed_password"]
+
+    await AuditLogger.log_admin_action(
+        admin_id="system",
+        action="ADMIN_CREATE_PROVIDER",
+        target_user_id=str(result.inserted_id),
+        details={"email": provider["email"], "name": f"{provider['first_name']} {provider['last_name']}"},
+    )
 
     return {"message": "Provider account created successfully", "provider": provider}

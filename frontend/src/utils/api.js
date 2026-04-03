@@ -18,12 +18,62 @@ export const setToken = (token) => localStorage.setItem("healix_token", token);
 /**
  * Remove the stored JWT token
  */
-export const removeToken = () => localStorage.removeItem("healix_token");
+export const removeToken = () => {
+    localStorage.removeItem("healix_token");
+    localStorage.removeItem("healix_refresh_token");
+};
 
 /**
- * Core fetch wrapper with auth headers and error handling
+ * Get/set refresh token
  */
-async function request(endpoint, options = {}) {
+export const getRefreshToken = () => localStorage.getItem("healix_refresh_token");
+export const setRefreshToken = (token) => localStorage.setItem("healix_refresh_token", token);
+
+/**
+ * Try to refresh the access token using the stored refresh token.
+ * Returns true if successful, false otherwise.
+ */
+let isRefreshing = false;
+let refreshPromise = null;
+
+async function tryRefreshToken() {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+
+    // Deduplicate: if a refresh is already in-flight, wait for it
+    if (isRefreshing) return refreshPromise;
+
+    isRefreshing = true;
+    refreshPromise = (async () => {
+        try {
+            const res = await fetch(`${API_BASE}/auth/refresh`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+            if (!res.ok) {
+                removeToken();
+                return false;
+            }
+            const data = await res.json();
+            setToken(data.access_token);
+            if (data.refresh_token) setRefreshToken(data.refresh_token);
+            return true;
+        } catch {
+            removeToken();
+            return false;
+        } finally {
+            isRefreshing = false;
+            refreshPromise = null;
+        }
+    })();
+    return refreshPromise;
+}
+
+/**
+ * Core fetch wrapper with auth headers, auto-refresh on 401, and error handling
+ */
+async function request(endpoint, options = {}, _retried = false) {
     const token = getToken();
     const headers = {
         "Content-Type": "application/json",
@@ -36,8 +86,13 @@ async function request(endpoint, options = {}) {
         headers,
     });
 
-    // Only clear token on 401 from the /auth/me endpoint (token truly invalid)
-    if (res.status === 401 && endpoint === "/auth/me") {
+    // On 401, try to refresh the token once (skip for login/refresh endpoints)
+    if (res.status === 401 && !_retried && endpoint !== "/auth/login" && endpoint !== "/auth/refresh") {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+            return request(endpoint, options, true);
+        }
+        // Refresh failed — clear everything
         removeToken();
     }
 

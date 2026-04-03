@@ -39,6 +39,31 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
+def create_refresh_token(data: dict) -> str:
+    """
+    Create a long-lived refresh token.
+    Contains user_id, email, role and a type marker.
+    """
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def verify_refresh_token(token: str) -> Optional[TokenData]:
+    """Verify a refresh token. Returns TokenData if valid and type is 'refresh'."""
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("type") != "refresh":
+            return None
+        user_id = payload.get("user_id")
+        if user_id is None:
+            return None
+        return TokenData(user_id=user_id, email=payload.get("email"), role=payload.get("role"))
+    except JWTError:
+        return None
+
+
 def verify_token(token: str) -> Optional[TokenData]:
     """
     Verify and decode a JWT token

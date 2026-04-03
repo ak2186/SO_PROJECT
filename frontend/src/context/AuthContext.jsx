@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI, setToken, removeToken, getToken, googleFitAPI, chatAPI, gamificationAPI } from "../utils/api";
+import { authAPI, setToken, removeToken, getToken, setRefreshToken, googleFitAPI, chatAPI, gamificationAPI } from "../utils/api";
 
 const AuthContext = createContext();
 
@@ -85,6 +85,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const tokenData = await authAPI.login(email, password);
     setToken(tokenData.access_token);
+    if (tokenData.refresh_token) setRefreshToken(tokenData.refresh_token);
 
     // Fetch user profile after login
     const userData = await authAPI.me();

@@ -5,7 +5,7 @@ API endpoints for registration and login
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.models.user import UserCreate, UserResponse, UserLogin, Token, UserUpdate
-from app.controllers.auth_controller import register_user, login_user, get_current_user, update_user_profile, change_password
+from app.controllers.auth_controller import register_user, login_user, get_current_user, update_user_profile, change_password, refresh_access_token
 from app.middleware.auth_middleware import get_current_user_token
 from app.models.user import TokenData
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -89,6 +89,20 @@ async def change_pwd(
     if len(new_password) < 8:
         raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
     return await change_password(token_data.user_id, current_password, new_password)
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh(body: dict):
+    """
+    Exchange a valid refresh token for a new access + refresh token pair.
+
+    Request body:
+    - refresh_token: The refresh token from login
+    """
+    refresh_token = body.get("refresh_token", "")
+    if not refresh_token:
+        raise HTTPException(status_code=400, detail="refresh_token is required")
+    return await refresh_access_token(refresh_token)
 
 
 @router.post("/logout")
