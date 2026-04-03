@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { biomarkersAPI, googleFitAPI, permissionsAPI, appointmentsAPI, gamificationAPI } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import { HealthAvatar } from "../../components/HealthAvatar";
+import { useNavigate } from "react-router-dom";
 
 export const PatientDashboard = () => {
   const { user } = useAuth();
@@ -13,11 +15,28 @@ export const PatientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [permRequests, setPermRequests] = useState([]);
   const [permLoading, setPermLoading] = useState({});
+  const navigate = useNavigate();
 
   const [weekData, setWeekData] = useState(null);
   const [nextAppt, setNextAppt] = useState(null);
   const [gamification, setGamification] = useState(null);
   const [xpToast, setXpToast] = useState(null);
+
+  const healthStatus = {
+  warnings: [
+    hrValue != null && hrValue > 100,
+    spo2Value != null && spo2Value < 95,
+    sleepVal != null && sleepVal < 7,
+  ].filter(Boolean).length,
+  hasData: hrValue != null || spo2Value != null || stepsVal != null,
+};
+    const [avatar, setAvatar] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('healix_avatar') || '{}');
+    } catch {
+      return {};
+    }
+  });
 
   const fetchCurrentReadings = () => {
     const todayStr = new Date().toISOString().split("T")[0];
@@ -86,6 +105,13 @@ export const PatientDashboard = () => {
     gamificationAPI.getMe()
       .then((data) => setGamification(data))
       .catch(() => {});
+
+    try {
+      const stored = JSON.parse(localStorage.getItem('healix_avatar') || '{}');
+      setAvatar(stored);
+    } catch {
+      // ignore
+    }
   }, []);
 
   const handlePermission = (permissionId, action) => {
@@ -451,6 +477,65 @@ export const PatientDashboard = () => {
             Your health metrics at a glance ✨
           </p>
         </div>
+
+        {/* Health Avatar */}
+          <div style={{
+            marginBottom: "48px",
+            animation: "fadeUp 0.8s ease 0.1s both",
+            position: "relative",
+            zIndex: 1,
+            }}>
+          <div style={{
+            background: "var(--bg-3)",
+            border: "1px solid var(--border-solid)",
+            borderRadius: "24px",
+            padding: "32px",
+            display: "flex",
+            alignItems: "center",
+            gap: "32px",
+            flexWrap: "wrap",
+            }}>
+              <HealthAvatar
+  gender={avatar.gender || 'male'}
+  skinTone={avatar.skinTone || '#f7c9a5'}
+  hairColor={avatar.hairColor || '#2e2935'}
+  hairStyle={avatar.hairStyle || 'short'}
+  eyeColor={avatar.eyeColor || '#2880d8'}
+  healthStatus={healthStatus}
+  size={180}
+/>
+    
+              <div style={{ flex: 1, minWidth: "250px" }}>
+                <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 8px 0" }}>
+                  Your Health Buddy
+                  </h3>
+                
+                <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: "0 0 16px 0", lineHeight: "1.6" }}>
+                  {healthStatus.warnings === 0 && healthStatus.hasData && "Everything looks great! Your avatar is happy and healthy. Keep up the good work! 🎉"}
+                  {healthStatus.warnings >= 3 && "Your avatar is worried. Multiple health metrics need attention. Please review your vitals."}
+                  {healthStatus.warnings >= 1 && healthStatus.warnings < 3 && "Your avatar is a bit concerned. Some health metrics could be better."}
+                  {!healthStatus.hasData && "Your avatar is waiting for health data. Connect Google Fit to get started!"}
+                 </p>
+      
+                <button
+                onClick={() => navigate('/patient/settings')}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "10px",
+                  border: "1px solid var(--border-solid)",
+                  background: "transparent",
+                  color: "var(--text)",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+      >
+        Customize Avatar
+      </button>
+    </div>
+  </div>
+</div>
 
         {/* Permission Requests */}
         {permRequests.length > 0 && (

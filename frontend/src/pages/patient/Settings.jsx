@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { googleFitAPI, authAPI } from "../../utils/api";
+import { AvatarCustomizer } from "../../components/AvatarCustomizer";
+
 
 export const Settings = () => {
   const { user, refreshUser } = useAuth();
+  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
   const [personal, setPersonal] = useState({
     first_name: user?.first_name || "",
     last_name: user?.last_name || "",
@@ -302,8 +305,9 @@ export const Settings = () => {
         .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
       `}</style>
 
+      
       <div style={{ background: "var(--bg)", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
-
+        
         {/* Toast */}
         {toast && (
           <div style={{ position: "fixed", bottom: "32px", right: "32px", zIndex: 2000, background: toast.type === "error" ? "#ef4444" : "#10b981", color: "#fff", padding: "12px 24px", borderRadius: "10px", fontWeight: "600", fontSize: "14px", animation: "toastIn 0.3s ease", boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
@@ -344,16 +348,60 @@ export const Settings = () => {
                     <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Update your profile information, health details, and emergency contacts.</p>
                   </div>
 
-                  {/* Avatar */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "32px", padding: "20px", background: "var(--bg)", borderRadius: "12px", border: "1px solid var(--border-solid)" }}>
-                    <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "linear-gradient(135deg,#3b82f6,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "22px", color: "#fff", flexShrink: 0 }}>
-                      {initials}
-                    </div>
-                    <div>
-                      <div style={{ color: "var(--text)", fontWeight: "700", fontSize: "16px" }}>{displayName || "Your Name"}</div>
-                      <div style={{ color: "var(--text-faint)", fontSize: "13px" }}>Patient Account</div>
-                    </div>
-                  </div>
+                  {/* Avatar Section */}
+<div style={{ marginBottom: "32px" }}>
+  <h3>Customize Avatar</h3>
+
+  {showAvatarCustomizer ? (
+    <AvatarCustomizer
+      onSave={() => {
+        setShowAvatarCustomizer(false);
+        refreshUser(); // better than reload
+      }}
+    />
+  ) : (
+    <div style={{ display: "flex", alignItems: "center", gap: "20px", padding: "20px", background: "var(--bg)", borderRadius: "12px", border: "1px solid var(--border-solid)" }}>
+      
+      {/* Avatar Preview */}
+      <div style={{
+        width: "64px",
+        height: "64px",
+        borderRadius: "16px",
+        background: "linear-gradient(135deg,#3b82f6,#8b5cf6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: "700",
+        fontSize: "22px",
+        color: "#fff"
+      }}>
+        {initials}
+      </div>
+
+      {/* Info */}
+      <div>
+        <div style={{ fontWeight: "700" }}>{displayName}</div>
+        <div style={{ fontSize: "13px", color: "var(--text-faint)" }}>Patient Account</div>
+      </div>
+
+      {/* Button */}
+      <button
+        onClick={() => setShowAvatarCustomizer(true)}
+        style={{
+          marginLeft: "auto",
+          padding: "10px 16px",
+          borderRadius: "10px",
+          border: "none",
+          background: "#3b82f6",
+          color: "#fff",
+          cursor: "pointer"
+        }}
+      >
+        Edit Avatar
+      </button>
+    </div>
+  )}
+</div>
 
                   {/* Form Fields */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
