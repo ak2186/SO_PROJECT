@@ -119,7 +119,7 @@ export const Landing = () => {
       ];
 
   return (
-    <div style={styles.page}>
+    <div className="page-responsive" style={styles.page}>
       <style>{`
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }

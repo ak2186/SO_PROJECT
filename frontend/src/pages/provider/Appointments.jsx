@@ -82,7 +82,7 @@ export const Appointments = () => {
         .action-btn:hover { opacity: 0.85; transform: translateY(-1px); }
       `}</style>
 
-      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="page-responsive" style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (

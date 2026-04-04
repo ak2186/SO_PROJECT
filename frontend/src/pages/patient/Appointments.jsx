@@ -120,7 +120,7 @@ export const Appointments = () => {
         .schedule-input::placeholder { color:var(--text-faint); }
       `}</style>
 
-      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="page-responsive" style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -130,7 +130,7 @@ export const Appointments = () => {
         )}
 
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
+        <div className="header-responsive" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
           <div>
             <p style={{ color: "#3b82f6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Healthcare</p>
             <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Appointments</h1>
@@ -215,7 +215,7 @@ export const Appointments = () => {
         {/* Cancel Modal */}
         {showModal && (
           <div className="modal-overlay">
-            <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "36px", width: "380px", textAlign: "center" }}>
+            <div className="modal-responsive" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "36px", width: "380px", textAlign: "center" }}>
               <div style={{ fontSize: "40px", marginBottom: "16px" }}>⚠️</div>
               <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 10px 0" }}>Cancel Appointment?</h3>
               <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 28px 0" }}>This action cannot be undone. The appointment will be permanently removed.</p>
@@ -230,7 +230,7 @@ export const Appointments = () => {
         {/* Schedule Modal */}
         {showSchedule && (
           <div className="modal-overlay">
-            <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "36px", width: "540px", maxHeight: "85vh", overflowY: "auto" }}>
+            <div className="modal-responsive" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "36px", width: "540px", maxHeight: "85vh", overflowY: "auto" }}>
               <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 20px 0" }}>Schedule Appointment</h3>
 
               {/* Doctor Selection Cards */}
@@ -261,7 +261,7 @@ export const Appointments = () => {
                 {providers.length === 0 && <div style={{ color: "var(--text-faint)", fontSize: "13px", padding: "20px", textAlign: "center" }}>No providers available.</div>}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
+              <div className="form-grid-responsive" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
                 <div>
                   <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Date *</label>
                   <input type="date" className="schedule-input" style={{ colorScheme: "dark" }} value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />

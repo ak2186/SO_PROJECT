@@ -40,7 +40,7 @@ export const vitalsWeek = {
 // ── Alert thresholds ────────────────────────────────────────────
 export const thresholds = {
     heartRate: { low: 50, high: 100 },
-    spo2: { low: 92, high: 100 },
+    spo2: { low: 95, high: 100 },
 };
 
 // ── Stat calculators ────────────────────────────────────────────

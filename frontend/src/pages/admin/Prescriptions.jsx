@@ -51,7 +51,7 @@ export const Prescriptions = () => {
         .search-input::placeholder { color: var(--border-mid); }
       `}</style>
 
-      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="page-responsive" style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
@@ -60,7 +60,7 @@ export const Prescriptions = () => {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", animation: "fadeUp 0.5s ease 0.08s both" }}>
+        <div className="stats-responsive" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", animation: "fadeUp 0.5s ease 0.08s both" }}>
           {[
             { label: "Total", value: stats.total, color: "#8b5cf6" },
             { label: "Active", value: stats.active, color: "#10b981" },

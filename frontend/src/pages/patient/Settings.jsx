@@ -315,7 +315,7 @@ export const Settings = () => {
           </div>
         )}
 
-        <div style={{ maxWidth: "960px", margin: "0 auto", padding: "40px 48px" }}>
+        <div className="settings-responsive" style={{ maxWidth: "960px", margin: "0 auto", padding: "40px 48px" }}>
 
           {/* Header */}
           <div style={{ marginBottom: "40px", animation: "fadeUp 0.5s ease both" }}>
@@ -323,7 +323,7 @@ export const Settings = () => {
             <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Settings</h1>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "28px", animation: "fadeUp 0.5s ease 0.1s both" }}>
+          <div className="form-grid-responsive" style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "28px", animation: "fadeUp 0.5s ease 0.1s both" }}>
 
             {/* Sidebar Nav */}
             <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "12px", height: "fit-content" }}>
@@ -404,7 +404,7 @@ export const Settings = () => {
 </div>
 
                   {/* Form Fields */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                  <div className="form-grid-responsive" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
 
                     {/* First Name */}
                     <div>
@@ -688,7 +688,7 @@ export const Settings = () => {
                   </div>
 
                   {/* Lifestyle Fields */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                  <div className="form-grid-responsive" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                     {sectionDivider("Lifestyle")}
 
                     {/* Smoking */}

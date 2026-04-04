@@ -167,7 +167,7 @@ export const AdminDashboard = () => {
         }
       `}</style>
 
-      <div style={{
+      <div className="page-responsive" style={{
         background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
@@ -459,6 +459,7 @@ export const AdminDashboard = () => {
         {selectedUser && (
           <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
             <div
+              className="modal-responsive"
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "var(--bg-3)",
@@ -518,6 +519,7 @@ export const AdminDashboard = () => {
         {showCreateProvider && (
           <div className="modal-overlay" onClick={() => setShowCreateProvider(false)}>
             <div
+              className="modal-responsive"
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "var(--bg-3)",
@@ -627,6 +629,7 @@ export const AdminDashboard = () => {
         {showRevokeModal && (
           <div className="modal-overlay" onClick={() => setShowRevokeModal(null)}>
             <div
+              className="modal-responsive"
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "var(--bg-3)",

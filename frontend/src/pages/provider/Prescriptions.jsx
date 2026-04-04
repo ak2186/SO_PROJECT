@@ -195,7 +195,7 @@ export const Prescriptions = () => {
         .rx-label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
       `}</style>
 
-      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="page-responsive" style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -322,6 +322,7 @@ export const Prescriptions = () => {
         {showAddRx && (
           <div className="modal-overlay" onClick={() => setShowAddRx(false)}>
             <div
+              className="modal-responsive"
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "var(--bg-3)",

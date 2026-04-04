@@ -109,7 +109,7 @@ export const PatientList = () => {
         }
       `}</style>
 
-      <div style={{
+      <div className="page-responsive" style={{
         background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
@@ -334,6 +334,7 @@ export const PatientList = () => {
         {selectedPatient && (
           <div className="modal-overlay" onClick={() => setSelectedPatient(null)}>
             <div
+              className="modal-responsive"
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "var(--bg-3)",
@@ -430,6 +431,7 @@ export const PatientList = () => {
                       { key: "spo2", label: "SpO₂", unit: "%", icon: "🫁", color: "#3b82f6" },
                       { key: "steps", label: "Steps", unit: "steps", icon: "👟", color: "#10b981" },
                       { key: "calories", label: "Calories", unit: "kcal", icon: "🔥", color: "#f59e0b" },
+                      { key: "sleep_hours", label: "Sleep", unit: "hrs", icon: "🌙", color: "#8b5cf6" },
                     ].map(({ key, label, unit, icon, color }) => {
                       const reading = biomarkerData.current_readings?.[key];
                       return (

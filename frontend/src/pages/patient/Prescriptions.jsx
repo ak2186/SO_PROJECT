@@ -121,7 +121,7 @@ export const Prescriptions = () => {
         .filter-btn { padding: 8px 18px; border-radius: 8px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s ease; font-family: 'DM Sans', sans-serif; }
       `}</style>
 
-      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="page-responsive" style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -174,7 +174,7 @@ export const Prescriptions = () => {
         {showAddModal && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center" }}
             onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}>
-            <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "32px", width: "460px", maxWidth: "90vw", animation: "fadeUp 0.3s ease" }}>
+            <div className="modal-responsive" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "32px", width: "460px", maxWidth: "90vw", animation: "fadeUp 0.3s ease" }}>
               <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 6px 0" }}>Add Your Medication</h2>
               <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "0 0 24px 0" }}>Add a medication you're already taking</p>
 

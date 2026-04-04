@@ -1,0 +1,313 @@
+/* ── Responsive CSS ─────────────────────────────────────
+   Handles tablet + mobile layouts.
+   Loaded after global.css so it can override defaults.
+   Uses !important where needed to override inline styles.
+   ─────────────────────────────────────────────────────── */
+
+/* ── Viewport meta already set in index.html ───────── */
+
+/* ── Add bottom padding on mobile for the bottom nav ── */
+@media (max-width: 768px) {
+  .mobile-layout-wrapper {
+    padding-bottom: 72px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   TABLET (≤ 1024px)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  /* Page containers — reduce outer padding */
+  .page-responsive {
+    padding: 28px 24px !important;
+  }
+
+  /* Goals page */
+  .goal-dashboard-inner {
+    padding: 0 20px;
+  }
+  .goal-card {
+    min-width: 320px;
+  }
+  .trackable-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+
+  /* Assistant page */
+  .assistant-dashboard-inner {
+    padding: 0 20px;
+  }
+
+  /* Modals */
+  .modal-responsive {
+    width: 90vw !important;
+    max-width: 540px !important;
+  }
+
+  /* Tables scroll horizontally */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-responsive table {
+    min-width: 700px;
+  }
+
+  /* Page headings */
+  .page-responsive h1 {
+    font-size: 26px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE (≤ 768px)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Page containers — tighter padding */
+  .page-responsive {
+    padding: 20px 16px !important;
+  }
+
+  /* Page headings */
+  .page-responsive h1 {
+    font-size: 22px !important;
+  }
+
+  /* Header rows — stack title and button */
+  .header-responsive {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  /* Appointment / prescription cards — stack layout */
+  .appt-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 18px !important;
+  }
+
+  /* Card action buttons full width */
+  .appt-card .action-btn,
+  .card-actions-responsive {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Goal cards */
+  .goal-dashboard {
+    padding: 20px 0;
+  }
+  .goal-dashboard-inner {
+    padding: 0 12px;
+  }
+  .goal-card {
+    min-width: unset;
+    min-height: unset;
+    overflow: hidden;
+    padding: 20px !important;
+  }
+  .goals-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .progress-circle {
+    width: 140px;
+    height: 140px;
+    margin: 20px auto !important;
+  }
+  .inner-circle {
+    width: 118px;
+    height: 118px;
+  }
+  .inner-circle h2 {
+    font-size: 24px;
+  }
+  .inner-circle p {
+    font-size: 11px;
+  }
+  .numbers h2 {
+    font-size: 22px !important;
+  }
+  .numbers span {
+    font-size: 16px !important;
+  }
+  .numbers p {
+    font-size: 13px;
+  }
+  .quicklog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  .trackable-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Assistant chat */
+  .assistant-dashboard {
+    padding: 20px 0;
+  }
+  .assistant-dashboard-inner {
+    padding: 0 8px;
+  }
+  .assistant-card {
+    height: calc(100vh - 180px);
+  }
+  .assistant-messages {
+    padding: 14px;
+  }
+  .message {
+    max-width: 85%;
+  }
+  .assistant-input {
+    padding: 12px;
+  }
+
+  /* Modals — full width on mobile */
+  .modal-responsive {
+    width: calc(100vw - 32px) !important;
+    max-width: none !important;
+    max-height: 90vh !important;
+    border-radius: 14px !important;
+  }
+
+  /* Notification dropdown — full width on mobile */
+  .notif-dropdown-responsive {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 72px !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-height: 60vh !important;
+    border-radius: 14px !important;
+  }
+
+  /* Achievements modal */
+  .achieve-overlay > div {
+    width: calc(100vw - 24px) !important;
+    max-height: 90vh !important;
+    border-radius: 14px !important;
+  }
+
+  /* Tabs — scrollable on small screens */
+  .tabs-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .tabs-responsive::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Grid layouts — single column */
+  .grid-responsive-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stats grids */
+  .stats-responsive {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Form grids — stack fields */
+  .form-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tables */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  .table-responsive table {
+    min-width: 600px;
+  }
+
+  /* Settings pages */
+  .settings-responsive {
+    padding: 20px 12px !important;
+    max-width: 100% !important;
+  }
+
+  /* Settings sidebar — horizontal scroll tabs on mobile */
+  .form-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Buttons — smaller padding on mobile */
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* Global card hover — disable transform on touch */
+  .card:hover {
+    transform: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SMALL MOBILE (≤ 480px)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .page-responsive {
+    padding: 16px 12px !important;
+  }
+
+  .page-responsive h1 {
+    font-size: 20px !important;
+  }
+
+  /* Stats — single column */
+  .stats-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Goal progress circles — even smaller */
+  .progress-circle {
+    width: 150px;
+    height: 150px;
+  }
+  .inner-circle {
+    width: 128px;
+    height: 128px;
+  }
+  .inner-circle h2 {
+    font-size: 24px;
+  }
+  .numbers h2 {
+    font-size: 24px !important;
+  }
+  .numbers span {
+    font-size: 16px !important;
+  }
+
+  /* Chat messages wider */
+  .message {
+    max-width: 92%;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   HIDE DESKTOP NAV ON MOBILE
+   (shown only when MobileNav is in use)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .desktop-nav-hide {
+    display: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   HIDE MOBILE NAV ON DESKTOP
+   ══════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+  .mobile-nav-container {
+    display: none !important;
+  }
+}

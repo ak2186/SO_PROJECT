@@ -86,7 +86,7 @@ export const Settings = () => {
           </div>
         )}
 
-        <div style={{ maxWidth:"960px", margin:"0 auto", padding:"40px 48px" }}>
+        <div className="settings-responsive" style={{ maxWidth:"960px", margin:"0 auto", padding:"40px 48px" }}>
 
           {/* Header */}
           <div style={{ marginBottom:"40px", animation:"fadeUp 0.5s ease both" }}>

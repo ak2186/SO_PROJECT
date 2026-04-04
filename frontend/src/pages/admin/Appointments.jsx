@@ -68,7 +68,7 @@ export const Appointments = () => {
         .search-input::placeholder { color: var(--border-mid); }
       `}</style>
 
-      <div style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="page-responsive" style={{ background: "var(--bg)", minHeight: "100vh", padding: "40px 48px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Toast */}
         {toast && (
@@ -84,7 +84,7 @@ export const Appointments = () => {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", animation: "fadeUp 0.5s ease 0.08s both" }}>
+        <div className="stats-responsive" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", animation: "fadeUp 0.5s ease 0.08s both" }}>
           {[
             { label: "Total", value: stats.total, color: "#8b5cf6" },
             { label: "Confirmed", value: stats.confirmed, color: "#10b981" },
