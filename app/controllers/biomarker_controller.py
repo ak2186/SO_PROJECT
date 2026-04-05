@@ -24,8 +24,19 @@ _FIELD_TYPES = {
 
 # Alert thresholds
 ALERTS = {
-    "heart_rate": {"low": 50, "high": 100, "msg_low": "Low heart rate detected", "msg_high": "High heart rate detected"},
-    "spo2": {"low": 95, "msg_low": "Low blood oxygen detected"},
+    "heart_rate": {
+        "low": 50, "high": 100,
+        "msg_low": "Low heart rate detected ({value} BPM)",
+        "msg_high": "High heart rate detected ({value} BPM)",
+    },
+    "spo2": {
+        "low": 95,
+        "msg_low": "Low blood oxygen detected ({value}%)",
+    },
+    "sleep_hours": {
+        "low": 6,
+        "msg_low": "Low sleep detected ({value}h — recommended 7-8h)",
+    },
 }
 
 
@@ -33,16 +44,51 @@ def check_alerts(data: dict) -> list:
     """Check biomarker values against alert thresholds"""
     triggered = []
 
-    if data.get("heart_rate"):
-        if data["heart_rate"] < ALERTS["heart_rate"]["low"]:
-            triggered.append(ALERTS["heart_rate"]["msg_low"])
-        elif data["heart_rate"] > ALERTS["heart_rate"]["high"]:
-            triggered.append(ALERTS["heart_rate"]["msg_high"])
-
-    if data.get("spo2") and data["spo2"] < ALERTS["spo2"]["low"]:
-        triggered.append(ALERTS["spo2"]["msg_low"])
+    for field, thresholds in ALERTS.items():
+        value = data.get(field)
+        if value is None:
+            continue
+        if "low" in thresholds and value < thresholds["low"]:
+            triggered.append(thresholds["msg_low"].format(value=value))
+        elif "high" in thresholds and value > thresholds["high"]:
+            triggered.append(thresholds["msg_high"].format(value=value))
 
     return triggered
+
+
+async def _notify_on_alerts(user_id: str, alerts: list):
+    """Send notifications to the patient and all their linked providers when alerts fire."""
+    from app.controllers.notification_controller import create_notification
+
+    if not alerts:
+        return
+
+    db = Database.get_db()
+    alert_summary = "; ".join(alerts)
+
+    # Notify the patient
+    await create_notification(
+        user_id=user_id,
+        title="Health Alert",
+        message=alert_summary,
+        notif_type="goal",   # reuse goal type for the warning icon style
+    )
+
+    # Find all providers linked to this patient
+    cursor = db.permissions.find({"patient_id": user_id, "status": "granted"})
+    perms = await cursor.to_list(length=50)
+
+    # Get patient name for provider notification
+    patient = await db.users.find_one({"_id": ObjectId(user_id)}, {"first_name": 1, "last_name": 1})
+    patient_name = f"{patient.get('first_name', '')} {patient.get('last_name', '')}".strip() if patient else "A patient"
+
+    for perm in perms:
+        await create_notification(
+            user_id=perm["provider_id"],
+            title=f"Patient Alert — {patient_name}",
+            message=alert_summary,
+            notif_type="provider_message",
+        )
 
 
 async def record_biomarker(user_id: str, data: BiomarkerCreate):
@@ -63,6 +109,10 @@ async def record_biomarker(user_id: str, data: BiomarkerCreate):
     encrypt_dict_fields(document, _SENSITIVE_FIELDS)
 
     result = await db.biomarkers.insert_one(document)
+
+    # Send notifications if alerts triggered
+    if alerts:
+        await _notify_on_alerts(user_id, alerts)
 
     # Decrypt for the response
     decrypt_dict_fields(document, _FIELD_TYPES)

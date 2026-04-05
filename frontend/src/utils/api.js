@@ -347,6 +347,12 @@ export const notificationsAPI = {
 
     markAllRead: () =>
         request("/notifications/read-all", { method: "PATCH" }),
+
+    create: (data) =>
+        request("/notifications", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
 };
 
 // ─── Permissions ─────────────────────────────────────────

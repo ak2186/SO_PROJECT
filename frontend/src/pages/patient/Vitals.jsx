@@ -30,6 +30,7 @@ export const PatientVitals = () => {
     breakdown: [],
   });
   const [sleepHours, setSleepHours] = useState(null);
+  const [activeAlerts, setActiveAlerts] = useState([]);
 
   // Apply timeseries data from the sync/today response to state
   const applyTimeseries = (data) => {
@@ -67,6 +68,9 @@ export const PatientVitals = () => {
     }
     if (d?.sleep_hours != null) {
       setSleepHours(d.sleep_hours);
+    }
+    if (data?.alerts?.length) {
+      setActiveAlerts(data.alerts);
     }
   };
 
@@ -137,18 +141,6 @@ export const PatientVitals = () => {
       ? calcStatsFromToday(vitalsToday.spo2)
       : calcStatsFromWeek(vitalsWeek.spo2);
 
-  // Warning detection
-  const hrWarning =
-    hrStats.peak > thresholds.heartRate.high ||
-    hrStats.resting < thresholds.heartRate.low;
-  const spo2Warning = spo2Stats.current < thresholds.spo2.low;
-
-  // Calculate time in range for SpO2
-  const spo2InRange = vitalsToday.spo2.filter(d => d.v >= thresholds.spo2.low && d.v <= thresholds.spo2.high).length;
-  const spo2TimeInRange = vitalsToday.spo2.length > 0 ? Math.round((spo2InRange / vitalsToday.spo2.length) * 100) : 0;
-
-  const stepsProgress = stepsData.goal > 0 ? (stepsData.today / stepsData.goal) * 100 : 0;
-
   // Data availability flags
   const hasHrData = vitalsToday.heartRate.length > 0 || vitalsWeek.heartRate.length > 0;
   const hasSpo2Data = vitalsToday.spo2.length > 0 || vitalsWeek.spo2.length > 0;
@@ -156,6 +148,19 @@ export const PatientVitals = () => {
   const hasCaloriesData = caloriesData.today > 0;
   const hasSleepData = sleepHours != null && sleepHours > 0;
   const hasAnyData = hasHrData || hasSpo2Data || hasStepsData || hasCaloriesData || hasSleepData;
+
+  // Status badge warnings — only flag with real nonzero readings
+  const hrWarning =
+    hasHrData && hrStats.current > 0 &&
+    (hrStats.current > thresholds.heartRate.high ||
+      hrStats.current < thresholds.heartRate.low);
+  const spo2Warning = hasSpo2Data && spo2Stats.current > 0 && spo2Stats.current < thresholds.spo2.low;
+
+  // Calculate time in range for SpO2
+  const spo2InRange = vitalsToday.spo2.filter(d => d.v >= thresholds.spo2.low && d.v <= thresholds.spo2.high).length;
+  const spo2TimeInRange = vitalsToday.spo2.length > 0 ? Math.round((spo2InRange / vitalsToday.spo2.length) * 100) : 0;
+
+  const stepsProgress = stepsData.goal > 0 ? (stepsData.today / stepsData.goal) * 100 : 0;
 
   const StatBox = ({ label, value, unit }) => (
     <div style={{
@@ -453,7 +458,7 @@ export const PatientVitals = () => {
         }
       `}</style>
 
-      <div style={{
+      <div className="page-responsive" style={{
         background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
@@ -529,6 +534,37 @@ export const PatientVitals = () => {
             />
           </div>
         </div>
+
+        {/* Active Alerts Banner */}
+        {activeAlerts.length > 0 && (
+          <div style={{
+            marginBottom: "24px",
+            padding: "16px 20px",
+            background: "rgba(239,68,68,0.08)",
+            border: "1px solid rgba(239,68,68,0.25)",
+            borderRadius: "14px",
+            position: "relative",
+            zIndex: 1,
+            animation: "fadeUp 0.5s ease both",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: activeAlerts.length > 1 ? "10px" : "0" }}>
+              <span style={{ fontSize: "18px" }}>⚠️</span>
+              <span style={{ color: "#ef4444", fontSize: "14px", fontWeight: "700" }}>
+                {activeAlerts.length === 1 ? "Active Alert" : `${activeAlerts.length} Active Alerts`}
+              </span>
+            </div>
+            {activeAlerts.map((alert, i) => (
+              <div key={i} style={{
+                color: "var(--text)",
+                fontSize: "13px",
+                padding: "6px 0",
+                borderTop: i > 0 ? "1px solid rgba(239,68,68,0.15)" : "none",
+              }}>
+                {alert}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Health Report Button */}
         <div style={{ marginBottom: "24px", position: "relative", zIndex: 1 }}>

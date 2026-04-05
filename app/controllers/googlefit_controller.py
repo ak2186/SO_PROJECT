@@ -9,7 +9,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from app.config.settings import settings
 from app.config.database import Database
-from app.controllers.biomarker_controller import record_biomarker, check_alerts
+from app.controllers.biomarker_controller import record_biomarker, check_alerts, _notify_on_alerts
 from app.models.biomarker import BiomarkerCreate
 from fastapi import HTTPException
 from datetime import datetime, timedelta
@@ -303,6 +303,10 @@ async def sync_googlefit_data(user_id: str, tz_offset: int = 0):
         upsert=True,
     )
 
+    # Send notifications if alerts triggered
+    if alerts:
+        await _notify_on_alerts(user_id, alerts)
+
     return {
         "message": "Google Fit data synced successfully",
         "synced_data": biomarker_data,
@@ -381,7 +385,7 @@ async def get_today_timeseries(user_id: str, tz_offset: int = 0):
         {"user_id": user_id, "source": "googlefit", "sync_date": today_key}
     )
     if not doc:
-        return {"timeseries": {}, "synced_data": {}, "synced_at": None}
+        return {"timeseries": {}, "synced_data": {}, "synced_at": None, "alerts": []}
 
     decrypt_dict_fields(doc, _FIELD_TYPES)
 
@@ -392,4 +396,5 @@ async def get_today_timeseries(user_id: str, tz_offset: int = 0):
             if k in doc
         },
         "synced_at": doc.get("recorded_at", "").isoformat() if doc.get("recorded_at") else None,
+        "alerts": doc.get("alerts", []),
     }

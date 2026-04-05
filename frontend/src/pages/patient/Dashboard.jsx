@@ -18,6 +18,7 @@ export const PatientDashboard = () => {
   const navigate = useNavigate();
 
   const [weekData, setWeekData] = useState(null);
+  const [weeklySummary, setWeeklySummary] = useState({ avgHr: null, totalSteps: null, avgSleep: null });
   const [nextAppt, setNextAppt] = useState(null);
   const [gamification, setGamification] = useState(null);
   const [xpToast, setXpToast] = useState(null);
@@ -38,6 +39,9 @@ export const PatientDashboard = () => {
     }
   });
 
+  // Read user's custom step goal from Goals page, default 10000
+  const stepGoal = Number(localStorage.getItem(`healix_goal_steps_${user?.id}`)) || 10000;
+
   const fetchCurrentReadings = () => {
     const todayStr = new Date().toISOString().split("T")[0];
     biomarkersAPI.getCurrent()
@@ -55,7 +59,7 @@ export const PatientDashboard = () => {
         if (r.steps && isToday(r.steps)) {
           const steps = Number(r.steps.value);
           setStepsVal(steps);
-          setStepsProgress(Math.min(Math.round((steps / 10000) * 100), 100));
+          setStepsProgress(Math.min(Math.round((steps / stepGoal) * 100), 100));
         }
         if (r.calories && isToday(r.calories)) setCaloriesVal(Math.round(r.calories.value));
         if (r.sleep_hours && isToday(r.sleep_hours)) setSleepVal(r.sleep_hours.value);
@@ -71,7 +75,7 @@ export const PatientDashboard = () => {
     if (d.spo2 != null) setSpo2Value(Math.round(d.spo2));
     if (d.steps != null) {
       setStepsVal(d.steps);
-      setStepsProgress(Math.min(Math.round((d.steps / 10000) * 100), 100));
+      setStepsProgress(Math.min(Math.round((d.steps / stepGoal) * 100), 100));
     }
     if (d.calories != null) setCaloriesVal(Math.round(d.calories));
     if (d.sleep_hours != null) setSleepVal(d.sleep_hours);
@@ -91,6 +95,24 @@ export const PatientDashboard = () => {
 
     googleFitAPI.week()
       .then((data) => setWeekData(data))
+      .catch(() => {});
+
+    // Fetch biomarker history for the last 7 days to compute weekly summary
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    biomarkersAPI.getHistory({ date_from: weekAgo.toISOString(), limit: 100 })
+      .then((data) => {
+        const readings = data?.readings || [];
+        if (readings.length === 0) return;
+        const hrVals = readings.map(r => r.heart_rate).filter(v => v != null);
+        const stepVals = readings.map(r => r.steps).filter(v => v != null);
+        const sleepVals = readings.map(r => r.sleep_hours).filter(v => v != null);
+        setWeeklySummary({
+          avgHr: hrVals.length > 0 ? Math.round(hrVals.reduce((s, v) => s + v, 0) / hrVals.length) : null,
+          avgSteps: stepVals.length > 0 ? Math.round(stepVals.reduce((s, v) => s + v, 0) / stepVals.length) : null,
+          avgSleep: sleepVals.length > 0 ? +(sleepVals.reduce((s, v) => s + v, 0) / sleepVals.length).toFixed(1) : null,
+        });
+      })
       .catch(() => {});
 
     appointmentsAPI.getMyAppointments({ limit: 5, status: "confirmed" })
@@ -127,16 +149,26 @@ export const PatientDashboard = () => {
     setTimeout(() => setXpToast(null), 3000);
   };
 
-  // Compute weekly avg heart rate from weekData
-  const weeklyHrReadings = weekData?.heart_rate?.filter(d => d.avg != null) ?? [];
-  const weeklyAvgHr = weeklyHrReadings.length > 0
-    ? Math.round(weeklyHrReadings.reduce((s, d) => s + d.avg, 0) / weeklyHrReadings.length)
+  // Compute weekly avg heart rate — prefer Google Fit, fallback to biomarker history
+  const gfitHrReadings = weekData?.heart_rate?.filter(d => d.avg != null) ?? [];
+  const gfitAvgHr = gfitHrReadings.length > 0
+    ? Math.round(gfitHrReadings.reduce((s, d) => s + d.avg, 0) / gfitHrReadings.length)
     : null;
+  const weeklyAvgHr = gfitAvgHr ?? weeklySummary.avgHr;
 
-  // Compute total weekly steps
-  const weeklySteps = weekData?.steps
-    ? weekData.steps.reduce((s, d) => s + (d.value || 0), 0)
+  // Compute weekly avg daily steps — prefer Google Fit, fallback to biomarker history
+  const gfitStepDays = weekData?.steps?.filter(d => d.value > 0) ?? [];
+  const gfitAvgSteps = gfitStepDays.length > 0
+    ? Math.round(gfitStepDays.reduce((s, d) => s + d.value, 0) / gfitStepDays.length)
     : null;
+  const weeklySteps = gfitAvgSteps ?? weeklySummary.avgSteps;
+
+  // Compute weekly avg sleep — prefer Google Fit, fallback to biomarker history
+  const gfitSleepReadings = weekData?.sleep?.filter(d => d.value > 0) ?? [];
+  const gfitAvgSleep = gfitSleepReadings.length > 0
+    ? +(gfitSleepReadings.reduce((s, d) => s + d.value, 0) / gfitSleepReadings.length).toFixed(1)
+    : null;
+  const weeklySleep = gfitAvgSleep ?? weeklySummary.avgSleep;
 
   // Build dynamic health insights
   const buildInsights = () => {
@@ -164,13 +196,13 @@ export const PatientDashboard = () => {
       });
     }
 
-    if (stepsVal != null && stepsVal >= 10000) {
+    if (stepsVal != null && stepsVal >= stepGoal) {
       insights.push({
         icon: "🏆",
         type: "success",
         color: "#10b981",
         title: "Step Goal Achieved!",
-        body: `You've walked ${stepsVal.toLocaleString()} steps today`,
+        body: `You've walked ${stepsVal.toLocaleString()} steps today — goal of ${stepGoal.toLocaleString()} reached!`,
       });
     } else if (stepsVal != null && stepsVal > 0) {
       insights.push({
@@ -178,7 +210,7 @@ export const PatientDashboard = () => {
         type: "info",
         color: "#3b82f6",
         title: "Keep Moving",
-        body: `You're at ${stepsProgress}% of your step goal. Keep moving!`,
+        body: `You're at ${stepsProgress}% of your ${stepGoal.toLocaleString()} step goal. Keep moving!`,
       });
     }
 
@@ -412,7 +444,7 @@ export const PatientDashboard = () => {
         }
       `}</style>
 
-      <div style={{
+      <div className="page-responsive" style={{
         background: "var(--bg)",
         minHeight: "100vh",
         padding: "40px 48px",
@@ -880,24 +912,24 @@ export const PatientDashboard = () => {
               </div>
             </div>
 
-            {/* Steps This Week */}
+            {/* Avg Daily Steps */}
             <div className="weekly-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                 <div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
-                    Steps This Week
+                    Avg Daily Steps
                   </div>
                   <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
                     {weeklySteps != null ? weeklySteps.toLocaleString() : "—"}
                   </div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
-                    Total steps
+                    Last 7 days
                   </div>
                 </div>
                 <div style={{ fontSize: "24px" }}>⚡</div>
               </div>
               <div style={{ color: weeklySteps != null ? "#10b981" : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
-                {weeklySteps != null ? `${weeklySteps.toLocaleString()} steps this week` : "No data this week"}
+                {weeklySteps != null ? `${weeklySteps.toLocaleString()} steps/day avg` : "No data this week"}
               </div>
             </div>
 
@@ -906,19 +938,19 @@ export const PatientDashboard = () => {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                 <div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
-                    Sleep
+                    Avg Sleep
                   </div>
                   <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
-                    {sleepVal != null ? <>{sleepVal}<span style={{ fontSize: "20px" }}>h</span></> : "—"}
+                    {weeklySleep != null ? <>{weeklySleep}<span style={{ fontSize: "20px" }}>h</span></> : "—"}
                   </div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
-                    Last night
+                    Last 7 days
                   </div>
                 </div>
                 <div style={{ fontSize: "24px" }}>🌙</div>
               </div>
-              <div style={{ color: sleepVal != null ? (sleepVal >= 7 ? "#10b981" : "#f59e0b") : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
-                {sleepVal != null ? (sleepVal >= 7 ? "Good quality" : "Below recommended") : "No data yet"}
+              <div style={{ color: weeklySleep != null ? (weeklySleep >= 7 ? "#10b981" : "#f59e0b") : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
+                {weeklySleep != null ? (weeklySleep >= 7 ? `${weeklySleep}h avg — good quality` : `${weeklySleep}h avg — below recommended`) : "No data this week"}
               </div>
             </div>
           </div>

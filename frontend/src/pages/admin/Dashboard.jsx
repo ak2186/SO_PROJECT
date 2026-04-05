@@ -20,8 +20,8 @@ const avatarColors = {
 export const AdminDashboard = () => {
   const [users, setUsers] = useState(mockUsers);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showRevokeModal, setShowRevokeModal] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [showCreateProvider, setShowCreateProvider] = useState(false);
   const [providerForm, setProviderForm] = useState({ first_name: "", last_name: "", email: "", password: "", gender: "" });
   const [providerError, setProviderError] = useState("");
@@ -66,34 +66,6 @@ export const AdminDashboard = () => {
     patients: users.filter((u) => u.role === "Patient").length,
   };
 
-  const handleGrantProvider = async (userId) => {
-    try {
-      await adminAPI.changeRole(userId, "provider");
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId ? { ...u, role: "Healthcare Provider", backendRole: "provider" } : u
-        )
-      );
-    } catch {
-      alert("Failed to grant provider access");
-    }
-    setSelectedUser(null);
-  };
-
-  const handleRevokeProvider = async (userId) => {
-    try {
-      await adminAPI.changeRole(userId, "patient");
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId ? { ...u, role: "Patient", backendRole: "patient" } : u
-        )
-      );
-    } catch {
-      alert("Failed to revoke provider access");
-    }
-    setShowRevokeModal(null);
-  };
-
   const handleCreateProvider = async (e) => {
     e.preventDefault();
     if (!providerForm.first_name || !providerForm.last_name || !providerForm.email || !providerForm.password) {
@@ -126,6 +98,19 @@ export const AdminDashboard = () => {
       setProviderError(err.message || "Failed to create provider.");
     } finally {
       setProviderLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    setDeleteLoading(true);
+    try {
+      await adminAPI.deleteUser(userId);
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+    } catch {
+      alert("Failed to delete user");
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteModal(null);
     }
   };
 
@@ -207,7 +192,7 @@ export const AdminDashboard = () => {
               gap: "6px",
             }}
           >
-            + Create Provider
+            + Add Provider
           </button>
         </div>
 
@@ -408,30 +393,10 @@ export const AdminDashboard = () => {
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", gap: "8px" }}>
-                {user.role === "Patient" ? (
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {user.role !== "Admin" && (
                   <button
-                    onClick={() => setSelectedUser(user)}
-                    className="action-btn"
-                    style={{
-                      padding: "6px 12px",
-                      background: "transparent",
-                      border: "1px solid rgba(16,185,129,0.3)",
-                      borderRadius: "8px",
-                      color: "#10b981",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      fontFamily: "'DM Sans', sans-serif",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                    }}
-                  >
-                    👨‍⚕️ Grant Provider
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowRevokeModal(user)}
+                    onClick={() => setShowDeleteModal(user)}
                     className="action-btn"
                     style={{
                       padding: "6px 12px",
@@ -447,73 +412,13 @@ export const AdminDashboard = () => {
                       gap: "4px",
                     }}
                   >
-                    🚫 Revoke Provider
+                    🗑️ Delete
                   </button>
                 )}
               </div>
             </div>
           ))}
         </div>
-
-        {/* Grant Provider Modal */}
-        {selectedUser && (
-          <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
-            <div
-              className="modal-responsive"
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: "var(--bg-3)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "20px",
-                padding: "32px",
-                width: "440px",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: "48px", marginBottom: "16px" }}>👨‍⚕️</div>
-              <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 12px 0" }}>
-                Grant Provider Access
-              </h2>
-              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 24px 0", lineHeight: 1.6 }}>
-                Are you sure you want to grant Healthcare Provider privileges to <strong style={{ color: "var(--text)" }}>{selectedUser.name}</strong>?
-              </p>
-              <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-                <button
-                  onClick={() => setSelectedUser(null)}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    background: "transparent",
-                    color: "var(--text-muted)",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleGrantProvider(selectedUser.id)}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "10px",
-                    border: "none",
-                    background: "#10b981",
-                    color: "#fff",
-                    fontWeight: "700",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  Confirm Grant
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Create Provider Modal */}
         {showCreateProvider && (
@@ -531,7 +436,7 @@ export const AdminDashboard = () => {
             >
               <div style={{ fontSize: "48px", marginBottom: "16px", textAlign: "center" }}>👨‍⚕️</div>
               <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 8px 0", textAlign: "center" }}>
-                Create Provider Account
+                Add Provider Account
               </h2>
               <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 24px 0", textAlign: "center" }}>
                 Create a new healthcare provider account
@@ -547,55 +452,32 @@ export const AdminDashboard = () => {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
                     <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Name *</label>
-                    <input
-                      type="text"
-                      placeholder="First Name"
-                      value={providerForm.first_name}
-                      onChange={(e) => setProviderForm(f => ({ ...f, first_name: e.target.value }))}
-                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
-                    />
+                    <input type="text" placeholder="First Name" value={providerForm.first_name} onChange={(e) => setProviderForm(f => ({ ...f, first_name: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                   </div>
                   <div>
                     <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Last Name *</label>
-                    <input
-                      type="text"
-                      placeholder="Last Name"
-                      value={providerForm.last_name}
-                      onChange={(e) => setProviderForm(f => ({ ...f, last_name: e.target.value }))}
-                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
-                    />
+                    <input type="text" placeholder="Last Name" value={providerForm.last_name} onChange={(e) => setProviderForm(f => ({ ...f, last_name: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: "12px" }}>
                   <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email *</label>
-                  <input
-                    type="email"
-                    placeholder="provider@hospital.com"
-                    value={providerForm.email}
-                    onChange={(e) => setProviderForm(f => ({ ...f, email: e.target.value }))}
-                    style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
-                  />
+                  <input type="email" placeholder="provider@hospital.com" value={providerForm.email} onChange={(e) => setProviderForm(f => ({ ...f, email: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
                     <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Password *</label>
-                    <input
-                      type="password"
-                      placeholder="Min 8 chars"
-                      value={providerForm.password}
-                      onChange={(e) => setProviderForm(f => ({ ...f, password: e.target.value }))}
-                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
-                    />
+                    <input type="password" placeholder="Min 8 chars" value={providerForm.password} onChange={(e) => setProviderForm(f => ({ ...f, password: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                   </div>
                   <div>
                     <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Gender</label>
-                    <select
-                      value={providerForm.gender}
-                      onChange={(e) => setProviderForm(f => ({ ...f, gender: e.target.value }))}
-                      style={{ width: "100%", padding: "10px 12px", background: "#060d1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#f1f5f9", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif", appearance: "none" }}
-                    >
+                    <select value={providerForm.gender} onChange={(e) => setProviderForm(f => ({ ...f, gender: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}>
                       <option value="">Select</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
@@ -605,19 +487,13 @@ export const AdminDashboard = () => {
                 </div>
 
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "24px" }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateProvider(false)}
-                    style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
-                  >
+                  <button type="button" onClick={() => setShowCreateProvider(false)}
+                    style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={providerLoading}
-                    style={{ padding: "10px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #1d4ed8, #0891b2)", color: "#fff", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: providerLoading ? 0.7 : 1 }}
-                  >
-                    {providerLoading ? "Creating..." : "Create Provider"}
+                  <button type="submit" disabled={providerLoading}
+                    style={{ padding: "10px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #1d4ed8, #0891b2)", color: "#fff", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: providerLoading ? 0.7 : 1 }}>
+                    {providerLoading ? "Creating..." : "Add Provider"}
                   </button>
                 </div>
               </form>
@@ -625,9 +501,9 @@ export const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Revoke Provider Modal */}
-        {showRevokeModal && (
-          <div className="modal-overlay" onClick={() => setShowRevokeModal(null)}>
+        {/* Delete User Modal */}
+        {showDeleteModal && (
+          <div className="modal-overlay" onClick={() => setShowDeleteModal(null)}>
             <div
               className="modal-responsive"
               onClick={(e) => e.stopPropagation()}
@@ -640,16 +516,19 @@ export const AdminDashboard = () => {
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
+              <div style={{ fontSize: "48px", marginBottom: "16px" }}>🗑️</div>
               <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 12px 0" }}>
-                Revoke Provider Access
+                Delete User
               </h2>
-              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 24px 0", lineHeight: 1.6 }}>
-                Are you sure you want to revoke Healthcare Provider privileges from <strong style={{ color: "var(--text)" }}>{showRevokeModal.name}</strong>?
+              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 8px 0", lineHeight: 1.6 }}>
+                Are you sure you want to permanently delete <strong style={{ color: "var(--text)" }}>{showDeleteModal.name}</strong>?
+              </p>
+              <p style={{ color: "#ef4444", fontSize: "13px", margin: "0 0 24px 0" }}>
+                This action cannot be undone. All user data will be removed.
               </p>
               <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
                 <button
-                  onClick={() => setShowRevokeModal(null)}
+                  onClick={() => setShowDeleteModal(null)}
                   style={{
                     padding: "10px 24px",
                     borderRadius: "10px",
@@ -665,7 +544,8 @@ export const AdminDashboard = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleRevokeProvider(showRevokeModal.id)}
+                  onClick={() => handleDeleteUser(showDeleteModal.id)}
+                  disabled={deleteLoading}
                   style={{
                     padding: "10px 24px",
                     borderRadius: "10px",
@@ -676,9 +556,10 @@ export const AdminDashboard = () => {
                     fontSize: "14px",
                     cursor: "pointer",
                     fontFamily: "'DM Sans', sans-serif",
+                    opacity: deleteLoading ? 0.7 : 1,
                   }}
                 >
-                  Confirm Revoke
+                  {deleteLoading ? "Deleting..." : "Delete User"}
                 </button>
               </div>
             </div>

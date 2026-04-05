@@ -184,12 +184,22 @@ async def get_all_prescriptions(
     for p in prescriptions:
         decrypt_dict_fields(p, _RX_FIELD_TYPES)
         p["_id"] = str(p["_id"])
-        provider = await db.users.find_one({"_id": ObjectId(p["provider_id"])})
-        if provider:
-            p["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
-        patient = await db.users.find_one({"_id": ObjectId(p["patient_id"])})
-        if patient:
-            p["patient_name"] = f"{patient['first_name']} {patient['last_name']}"
+        # Resolve provider name (skip for self-added medications)
+        if p.get("provider_id") == "self" or p.get("source") == "self":
+            p["provider_name"] = "Self-added"
+        else:
+            try:
+                provider = await db.users.find_one({"_id": ObjectId(p["provider_id"])})
+                if provider:
+                    p["provider_name"] = f"{provider['first_name']} {provider['last_name']}"
+            except Exception:
+                p["provider_name"] = "Unknown"
+        try:
+            patient = await db.users.find_one({"_id": ObjectId(p["patient_id"])})
+            if patient:
+                p["patient_name"] = f"{patient['first_name']} {patient['last_name']}"
+        except Exception:
+            p["patient_name"] = "Unknown"
 
     return {
         "total": total,
