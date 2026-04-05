@@ -28,8 +28,6 @@ export const Login = () => {
       const user = await login(loginForm.email, loginForm.password);
       if (user.role === "admin") {
         navigate("/admin");
-      } else if (user.role === "provider") {
-        navigate("/provider");
       } else if (!user.profile_completed) {
         navigate("/landing", { state: { newUser: true } });
       } else {

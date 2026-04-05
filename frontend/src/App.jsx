@@ -32,187 +32,187 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-      <AuthProvider>
-        <Routes>
-          {/* Default redirect to login */}
-          <Route path="/" element={<Navigate to="/login" />} />
+        <AuthProvider>
+          <Routes>
+            {/* Default redirect to login */}
+            <Route path="/" element={<Navigate to="/login" />} />
 
-          {/* Auth page */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/auth" element={<Login />} />
-          <Route path="/signup" element={<Navigate to="/login" replace />} />
+            {/* Auth page */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/auth" element={<Login />} />
+            <Route path="/signup" element={<Navigate to="/login" replace />} />
 
-          {/* Profile Setup (new patients, no navbar) */}
-          <Route
-            path="/profile-setup"
-            element={
-              <ProtectedRoute role="patient">
-                <ProfileSetup />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Landing page (all roles, with navbar) */}
-          <Route element={<Layout />}>
+            {/* Profile Setup (new patients, no navbar) */}
             <Route
-              path="/landing"
-              element={
-                <ProtectedRoute>
-                  <Landing />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-
-          {/* Patient pages */}
-          <Route element={<Layout />}>
-            <Route
-              path="/patient"
+              path="/profile-setup"
               element={
                 <ProtectedRoute role="patient">
-                  <PatientDashboard />
+                  <ProfileSetup />
                 </ProtectedRoute>
               }
             />
-          </Route>
 
-          {/* Provider main - redirect to patients */}
-          <Route element={<Layout />}>
-            <Route
-              path="/provider"
-              element={
-                <ProtectedRoute role="provider">
-                  <Navigate to="/provider/patients" replace />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+            {/* Landing page (all roles, with navbar) */}
+            <Route element={<Layout />}>
+              <Route
+                path="/landing"
+                element={
+                  <ProtectedRoute>
+                    <Landing />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-          {/* Admin pages */}
-          <Route element={<Layout />}>
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute role="admin">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+            {/* Patient pages */}
+            <Route element={<Layout />}>
+              <Route
+                path="/patient"
+                element={
+                  <ProtectedRoute role="patient">
+                    <PatientDashboard />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-          {/* Patient sub-pages */}
-          <Route element={<Layout />}>
-            <Route path="/patient/vitals" element={
-              <ProtectedRoute role="patient">
-                <PatientVitals />
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/patient/goals" element={
-              <ProtectedRoute role="patient">
-                <Goals />
-              </ProtectedRoute>
-            }
-            />
-            <Route
-              path="/patient/appointments"
-              element={
+            {/* Provider main - redirect to patients */}
+            <Route element={<Layout />}>
+              <Route
+                path="/provider"
+                element={
+                  <ProtectedRoute role="provider">
+                    <Navigate to="/provider/patients" replace />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+
+            {/* Admin pages */}
+            <Route element={<Layout />}>
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute role="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+
+            {/* Patient sub-pages */}
+            <Route element={<Layout />}>
+              <Route path="/patient/vitals" element={
                 <ProtectedRoute role="patient">
-                  <Appointments />
+                  <PatientVitals />
                 </ProtectedRoute>
               }
-            />
-            <Route
-              path="/patient/prescriptions"
-              element={
+              />
+              <Route path="/patient/goals" element={
                 <ProtectedRoute role="patient">
-                  <Prescriptions />
+                  <Goals />
                 </ProtectedRoute>
               }
-            />
-            <Route path="/patient/assistant" element={
-              <ProtectedRoute role="patient">
-                <Assistant />
-              </ProtectedRoute>
-            }
-            />
-            <Route
-              path="/patient/settings"
-              element={
+              />
+              <Route
+                path="/patient/appointments"
+                element={
+                  <ProtectedRoute role="patient">
+                    <Appointments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/patient/prescriptions"
+                element={
+                  <ProtectedRoute role="patient">
+                    <Prescriptions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/patient/assistant" element={
                 <ProtectedRoute role="patient">
-                  <Settings />
+                  <Assistant />
                 </ProtectedRoute>
               }
-            />
-          </Route>
+              />
+              <Route
+                path="/patient/settings"
+                element={
+                  <ProtectedRoute role="patient">
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-          {/* Provider sub-pages */}
-          <Route element={<Layout />}>
+            {/* Provider sub-pages */}
+            <Route element={<Layout />}>
 
-            <Route
-              path="/provider/patients"
-              element={
-                <ProtectedRoute role="provider">
-                  <PatientList />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/provider/patients"
+                element={
+                  <ProtectedRoute role="provider">
+                    <PatientList />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/provider/appointments"
-              element={
-                <ProtectedRoute role="provider">
-                  <ProviderAppointments />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/provider/prescriptions"
-              element={
-                <ProtectedRoute role="provider">
-                  <ProviderPrescriptions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/provider/settings"
-              element={
-                <ProtectedRoute role="provider">
-                  <ProviderSettings />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+              <Route
+                path="/provider/appointments"
+                element={
+                  <ProtectedRoute role="provider">
+                    <ProviderAppointments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/provider/prescriptions"
+                element={
+                  <ProtectedRoute role="provider">
+                    <ProviderPrescriptions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/provider/settings"
+                element={
+                  <ProtectedRoute role="provider">
+                    <ProviderSettings />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-          {/* Admin sub-pages */}
-          <Route element={<Layout />}>
-            <Route
-              path="/admin/appointments"
-              element={
-                <ProtectedRoute role="admin">
-                  <AdminAppointments />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/prescriptions"
-              element={
-                <ProtectedRoute role="admin">
-                  <AdminPrescriptions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/settings"
-              element={
-                <ProtectedRoute role="admin">
-                  <AdminSettings />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-        </Routes>
-      </AuthProvider>
+            {/* Admin sub-pages */}
+            <Route element={<Layout />}>
+              <Route
+                path="/admin/appointments"
+                element={
+                  <ProtectedRoute role="admin">
+                    <AdminAppointments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/prescriptions"
+                element={
+                  <ProtectedRoute role="admin">
+                    <AdminPrescriptions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute role="admin">
+                    <AdminSettings />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
