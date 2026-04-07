@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { biomarkersAPI } from "../utils/api";
+import { useTranslation } from "react-i18next";
 
 export const HealthReportModal = ({ onClose, patientId = null }) => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   const generatePdf = async () => {
     setLoading(true);
@@ -16,7 +18,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
     } catch (err) {
-      setError(err.message || "Failed to generate report");
+      setError(err.message || t("failedGenerateReport"));
     } finally {
       setLoading(false);
     }
@@ -93,10 +95,10 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              Health Report
+              {t("healthReport")}
             </h2>
             <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "4px 0 0 0" }}>
-              Generate and preview your medical summary
+              {t("healthReportDesc")}
             </p>
           </div>
           <button
@@ -138,7 +140,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                Generate Your Health Report
+                {t("generateYourReport")}
               </h3>
               <p
                 style={{
@@ -151,8 +153,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                   lineHeight: 1.6,
                 }}
               >
-                This will compile your demographics, medical history, medications, lifestyle, and
-                latest biomarker readings into a clean PDF document.
+                {t("reportCompileDesc")}
               </p>
               <button
                 onClick={generatePdf}
@@ -168,7 +169,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                Generate Report
+                {t("generateReportBtn")}
               </button>
             </div>
           )}
@@ -187,7 +188,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                 }}
               />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-              <p style={{ color: "var(--text-subtle)", fontSize: "14px" }}>Generating report...</p>
+              <p style={{ color: "var(--text-subtle)", fontSize: "14px" }}>{t("generatingReport")}</p>
             </div>
           )}
 
@@ -209,7 +210,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                Try Again
+                {t("tryAgain")}
               </button>
             </div>
           )}
@@ -254,7 +255,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              Regenerate
+              {t("regenerate")}
             </button>
             <button
               onClick={handleShare}
@@ -270,7 +271,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              Share
+              {t("share")}
             </button>
             <button
               onClick={handleDownload}
@@ -286,7 +287,7 @@ export const HealthReportModal = ({ onClose, patientId = null }) => {
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              Download PDF
+              {t("downloadPDF")}
             </button>
           </div>
         )}

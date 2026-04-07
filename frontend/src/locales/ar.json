@@ -539,5 +539,16 @@
     "assistantTyping": "المساعد يكتب...",
     "typeYourMessage": "اكتب رسالتك...",
     "assistantWelcome": "مرحباً كيف يمكنني مساعدتك اليوم؟",
-    "assistantError": "عذراً، لم أتمكن من الاتصال بالخادم. يرجى المحاولة مرة أخرى."
+    "assistantError": "عذراً، لم أتمكن من الاتصال بالخادم. يرجى المحاولة مرة أخرى.",
+    "healthReport": "التقرير الصحي",
+    "healthReportDesc": "إنشاء ومعاينة ملخصك الطبي",
+    "generateYourReport": "إنشاء تقريرك الصحي",
+    "reportCompileDesc": "سيتم تجميع بياناتك الشخصية والتاريخ الطبي والأدوية ونمط الحياة وأحدث قراءات المؤشرات الحيوية في مستند PDF.",
+    "generateReportBtn": "إنشاء التقرير",
+    "generatingReport": "جاري إنشاء التقرير...",
+    "tryAgain": "حاول مرة أخرى",
+    "regenerate": "إعادة الإنشاء",
+    "share": "مشاركة",
+    "downloadPDF": "تحميل PDF",
+    "failedGenerateReport": "فشل إنشاء التقرير"
 }

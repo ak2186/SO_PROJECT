@@ -539,5 +539,16 @@
     "assistantTyping": "Assistant is typing...",
     "typeYourMessage": "Type your message...",
     "assistantWelcome": "Hey How can I help you today?",
-    "assistantError": "Sorry, I couldn't reach the server. Please try again."
+    "assistantError": "Sorry, I couldn't reach the server. Please try again.",
+    "healthReport": "Health Report",
+    "healthReportDesc": "Generate and preview your medical summary",
+    "generateYourReport": "Generate Your Health Report",
+    "reportCompileDesc": "This will compile your demographics, medical history, medications, lifestyle, and latest biomarker readings into a clean PDF document.",
+    "generateReportBtn": "Generate Report",
+    "generatingReport": "Generating report...",
+    "tryAgain": "Try Again",
+    "regenerate": "Regenerate",
+    "share": "Share",
+    "downloadPDF": "Download PDF",
+    "failedGenerateReport": "Failed to generate report"
 }
