@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 export const Login = () => {
   const { login, register } = useAuth();
@@ -264,6 +265,10 @@ export const Login = () => {
           transform: translateX(-50%);
         }
 
+        [dir="rtl"] .auth-track.signup {
+          transform: translateX(50%);
+        }
+
         .auth-panel {
           width: 50%;
           padding: 32px;
@@ -446,7 +451,9 @@ export const Login = () => {
           .auth-grid-two { grid-template-columns: 1fr; }
         }
       `}</style>
-
+      <div style={{ position: "absolute", top: "20px", right: "20px", zIndex: 10 }}>
+        <LanguageSwitcher />
+      </div>
       <section className={`auth-brand ${mode === "signup" ? "signup" : ""}`}>
         <iframe
           className="auth-brand-iframe"
@@ -491,7 +498,7 @@ export const Login = () => {
                 </div>
 
                 <div className="auth-field">
-                  <label className="auth-label">Password</label>
+                  <label className="auth-label">{t("password")}</label>
                   <input
                     type="password"
                     placeholder="••••••••"
