@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { SegmentedToggle } from "../../components/SegmentedToggle";
+import { useTranslation } from "react-i18next";
+
 import {
   thresholds,
   calcStatsFromToday,
@@ -101,6 +103,7 @@ export const PatientVitals = () => {
   const [weekCalories, setWeekCalories] = useState([]);
   const [weekSleep, setWeekSleep] = useState([]);
   const [showReport, setShowReport] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // 1. Show cached timeseries immediately
@@ -200,7 +203,7 @@ export const PatientVitals = () => {
     if (!data || data.length < 2) {
       return (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "var(--text-faint)", fontSize: "14px", fontWeight: "600" }}>
-          No chart data available
+          {t("noChartData")}
         </div>
       );
     }
@@ -361,7 +364,7 @@ export const PatientVitals = () => {
     if (!data || data.length === 0) {
       return (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "180px", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
-          No activity data available
+          {t("noActivityData")}
         </div>
       );
     }
@@ -496,7 +499,7 @@ export const PatientVitals = () => {
             margin: "0 0 10px 0",
             opacity: 0.9,
           }}>
-            Health Monitoring
+            {t("healthMonitoring")}
           </p>
           <div style={{
             display: "flex",
@@ -513,21 +516,21 @@ export const PatientVitals = () => {
                 letterSpacing: "-1.5px",
                 lineHeight: 1.1,
               }}>
-                Vital Signs
+                {t("vitalSigns")}
               </h1>
               <p style={{
                 color: "var(--text-subtle)",
                 fontSize: "15px",
                 margin: "8px 0 0 0",
               }}>
-                Detailed view of your biomarker data and health metrics
+                {t("vitalsDesc")}
               </p>
             </div>
 
             <SegmentedToggle
               options={[
-                { label: "Today", value: "today" },
-                { label: "This Week", value: "week" },
+                { label: t("today"), value: "today" },
+                { label: t("thisWeek"), value: "week" },
               ]}
               value={timeRange}
               onChange={setTimeRange}
@@ -550,7 +553,7 @@ export const PatientVitals = () => {
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: activeAlerts.length > 1 ? "10px" : "0" }}>
               <span style={{ fontSize: "18px" }}>⚠️</span>
               <span style={{ color: "#ef4444", fontSize: "14px", fontWeight: "700" }}>
-                {activeAlerts.length === 1 ? "Active Alert" : `${activeAlerts.length} Active Alerts`}
+                {activeAlerts.length === 1 ? t("activeAlert") : `${activeAlerts.length} ${t("activeAlerts")}`}
               </span>
             </div>
             {activeAlerts.map((alert, i) => (
@@ -585,7 +588,7 @@ export const PatientVitals = () => {
               gap: "8px",
             }}
           >
-            📋 Generate Health Report
+            📋 {t("generateHealthReport")}
           </button>
         </div>
 
@@ -621,10 +624,10 @@ export const PatientVitals = () => {
                     margin: 0,
                     letterSpacing: "-0.5px",
                   }}>
-                    Heart Rate
+                    {t("heartRate")}
                   </h2>
                   <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
-                    Detailed heart rate monitoring and trends
+                    {t("heartRateDesc")}
                   </p>
                 </div>
               </div>
@@ -647,7 +650,7 @@ export const PatientVitals = () => {
                   color: hrWarning ? "#ef4444" : "#10b981",
                   marginTop: "8px",
                 }}>
-                  {!hasHrData ? "No data" : hrWarning ? "⚠️ Warning" : "✓ Normal"}
+                  {!hasHrData ? t("noData") : hrWarning ? "⚠️" + t("warning") : "✓ " + t("normal")}
                 </div>
               </div>
             </div>
@@ -658,9 +661,9 @@ export const PatientVitals = () => {
               gap: "16px",
               marginBottom: "28px",
             }}>
-              <StatBox label="Current" value={hasHrData ? hrStats.current : "—"} unit="BPM" />
-              <StatBox label="Resting" value={hasHrData ? hrStats.resting : "—"} unit="BPM" />
-              <StatBox label="Peak" value={hasHrData ? hrStats.peak : "—"} unit="BPM" />
+              <StatBox label={t("current")} value={hasHrData ? hrStats.current : "—"} unit="BPM" />
+              <StatBox label={t("resting")} value={hasHrData ? hrStats.resting : "—"} unit="BPM" />
+              <StatBox label={t("peak")} value={hasHrData ? hrStats.peak : "—"} unit="BPM" />
             </div>
 
             <LineChart
@@ -701,10 +704,10 @@ export const PatientVitals = () => {
                     margin: 0,
                     letterSpacing: "-0.5px",
                   }}>
-                    Blood Oxygen (SpO₂)
+                    {t("bloodOxygenSpo2")}
                   </h2>
                   <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
-                    Oxygen saturation levels throughout the day
+                    {t("spo2Desc")}
                   </p>
                 </div>
               </div>
@@ -727,7 +730,7 @@ export const PatientVitals = () => {
                   color: spo2Warning ? "#ef4444" : "#10b981",
                   marginTop: "8px",
                 }}>
-                  {!hasSpo2Data ? "No data" : spo2Warning ? "⚠️ Warning" : "✓ Excellent"}
+                  {!hasSpo2Data ? t("noData") : spo2Warning ? "⚠️" + t("warning") : "✓ " + t("excellent")}
                 </div>
               </div>
             </div>
@@ -738,10 +741,10 @@ export const PatientVitals = () => {
               gap: "16px",
               marginBottom: "28px",
             }}>
-              <StatBox label="Current" value={hasSpo2Data ? spo2Stats.current : "—"} unit="%" />
-              <StatBox label="Average" value={hasSpo2Data ? Math.round((spo2Stats.current + spo2Stats.peak + spo2Stats.resting) / 3 * 10) / 10 : "—"} unit="%" />
-              <StatBox label="Lowest" value={hasSpo2Data ? spo2Stats.resting : "—"} unit="%" />
-              <StatBox label="Time in Range" value={hasSpo2Data ? spo2TimeInRange : "—"} unit="%" />
+              <StatBox label={t("current")} value={hasSpo2Data ? spo2Stats.current : "—"} unit="%" />
+              <StatBox label={t("average")} value={hasSpo2Data ? Math.round((spo2Stats.current + spo2Stats.peak + spo2Stats.resting) / 3 * 10) / 10 : "—"} unit="%" />
+              <StatBox label={t("lowest")} value={hasSpo2Data ? spo2Stats.resting : "—"} unit="%" />
+              <StatBox label={t("timeInRange")} value={hasSpo2Data ? spo2TimeInRange : "—"} unit="%" />
             </div>
 
             <LineChart
@@ -762,7 +765,7 @@ export const PatientVitals = () => {
             }}>
               <span style={{ fontSize: "18px" }}>📊</span>
               <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: 0, lineHeight: 1.6 }}>
-                Your oxygen levels are excellent and consistently within the healthy range (92-100%).
+                {t("spo2InfoText")}
               </p>
             </div>
           </div>
@@ -791,10 +794,10 @@ export const PatientVitals = () => {
                 </div>
                 <div>
                   <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: 0 }}>
-                    Steps & Activity
+                    {t("stepsAndActivity")}
                   </h2>
                   <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
-                    Daily movement and activity tracking
+                    {t("stepsDesc")}
                   </p>
                 </div>
               </div>
@@ -809,7 +812,7 @@ export const PatientVitals = () => {
                   {hasStepsData ? stepsData.today.toLocaleString() : "—"}
                 </div>
                 <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "4px 0 0 0" }}>
-                  {hasStepsData ? `of ${stepsData.goal.toLocaleString()} goal` : "No data yet"}
+                  {hasStepsData ? `${t("ofGoal")} ${stepsData.goal.toLocaleString()}` : t("noDataYet")}
                 </p>
               </div>
             </div>
@@ -817,7 +820,7 @@ export const PatientVitals = () => {
             <div style={{ marginBottom: "24px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-                  Daily Goal Progress
+                  {t("dailyGoalProgress")}
                 </span>
                 <span style={{ color: "#10b981", fontSize: "14px", fontWeight: "800" }}>
                   {Math.round(stepsProgress)}%
@@ -845,7 +848,7 @@ export const PatientVitals = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                   <span style={{ fontSize: "16px" }}>📍</span>
                   <span style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-                    Distance
+                    {t("distance")}
                   </span>
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
@@ -857,7 +860,7 @@ export const PatientVitals = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                   <span style={{ fontSize: "16px" }}>⏱️</span>
                   <span style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-                    Active Time
+                    {t("activeTime")}
                   </span>
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
@@ -869,7 +872,7 @@ export const PatientVitals = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
                   <span style={{ fontSize: "16px" }}>🔥</span>
                   <span style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-                    Streak
+                    {t("streak")}
                   </span>
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
@@ -909,10 +912,10 @@ export const PatientVitals = () => {
                 </div>
                 <div>
                   <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: 0 }}>
-                    Calories Burned
+                    {t("caloriesBurned")}
                   </h2>
                   <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
-                    Daily energy expenditure tracking
+                    {t("caloriesDesc")}
                   </p>
                 </div>
               </div>
@@ -927,7 +930,7 @@ export const PatientVitals = () => {
                   {hasCaloriesData ? caloriesData.today.toLocaleString() : "—"}
                 </div>
                 <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "4px 0 0 0" }}>
-                  {hasCaloriesData ? "calories today" : "No data yet"}
+                  {hasCaloriesData ? t("caloriesToday") : t("noDataYet")}
                 </p>
               </div>
             </div>
@@ -935,7 +938,7 @@ export const PatientVitals = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "28px" }}>
               <div className="stat-box">
                 <div style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
-                  Total Burned
+                  {t("totalBurned")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {caloriesData.totalBurned.toLocaleString()}
@@ -944,7 +947,7 @@ export const PatientVitals = () => {
 
               <div className="stat-box">
                 <div style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
-                  Active
+                  {t("active")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {caloriesData.active.toLocaleString()}
@@ -953,7 +956,7 @@ export const PatientVitals = () => {
 
               <div className="stat-box">
                 <div style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
-                  Resting
+                  {t("restingLabel")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {caloriesData.resting.toLocaleString()}
@@ -992,10 +995,10 @@ export const PatientVitals = () => {
                 </div>
                 <div>
                   <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: 0 }}>
-                    Sleep
+                    {t("sleep")}
                   </h2>
                   <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "2px 0 0 0" }}>
-                    Sleep duration tracking from Google Fit
+                    {t("sleepDesc")}
                   </p>
                 </div>
               </div>
@@ -1016,7 +1019,7 @@ export const PatientVitals = () => {
                   color: hasSleepData && sleepHours >= 7 ? "#10b981" : "#f59e0b",
                   marginTop: "8px",
                 }}>
-                  {!hasSleepData ? "No data" : sleepHours >= 7 ? "✓ Good" : "⚠️ Below 7h"}
+                  {!hasSleepData ? t("noData") : sleepHours >= 7 ? " ✓ " + t("good") : " ⚠️ " + t("below7h")}
                 </div>
               </div>
             </div>
@@ -1027,9 +1030,9 @@ export const PatientVitals = () => {
               gap: "16px",
               marginBottom: "28px",
             }}>
-              <StatBox label="Last Night" value={hasSleepData ? sleepHours : "—"} unit="hrs" />
-              <StatBox label="Goal" value="8" unit="hrs" />
-              <StatBox label="Deficit" value={hasSleepData ? Math.max(0, (8 - sleepHours)).toFixed(1) : "—"} unit="hrs" />
+              <StatBox label={t("lastNight")} value={hasSleepData ? sleepHours : "—"} unit="hrs" />
+              <StatBox label={t("goal")} value="8" unit="hrs" />
+              <StatBox label={t("deficit")} value={hasSleepData ? Math.max(0, (8 - sleepHours)).toFixed(1) : "—"} unit="hrs" />
             </div>
 
             {timeRange === "week" && weekSleep.length > 0 ? (
@@ -1051,8 +1054,8 @@ export const PatientVitals = () => {
                 <span style={{ fontSize: "18px" }}>💡</span>
                 <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: 0, lineHeight: 1.6 }}>
                   {hasSleepData
-                    ? `You slept ${sleepHours}h last night. ${sleepHours >= 7 ? "Great job meeting your sleep goal!" : "Try to aim for 7-8 hours for optimal health."}`
-                    : "Sleep data syncs from Google Fit. Make sure your device tracks sleep."}
+                    ? `${t("youSlept")} ${sleepHours}${t("hLastNight")} ${sleepHours >= 7 ? t("greatJobSleep") : t("aimFor7to8")}`
+                    : t("sleepSyncsFromGFit")}
                 </p>
               </div>
             )}
