@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { adminAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 const mockUsers = [
   { id: 1, name: "John Doe", email: "john@example.com", role: "Patient", joinDate: "Sep 15, 2024", status: "Active", avatar: "JD" },
@@ -26,6 +27,7 @@ export const AdminDashboard = () => {
   const [providerForm, setProviderForm] = useState({ first_name: "", last_name: "", email: "", password: "", gender: "" });
   const [providerError, setProviderError] = useState("");
   const [providerLoading, setProviderLoading] = useState(false);
+  const { t } = useTranslation();
 
   // Fetch users from backend
   useEffect(() => {
@@ -69,7 +71,7 @@ export const AdminDashboard = () => {
   const handleCreateProvider = async (e) => {
     e.preventDefault();
     if (!providerForm.first_name || !providerForm.last_name || !providerForm.email || !providerForm.password) {
-      setProviderError("Please fill all required fields.");
+      setProviderError(t("fillAllFields"));
       return;
     }
     setProviderError("");
@@ -95,7 +97,7 @@ export const AdminDashboard = () => {
       setShowCreateProvider(false);
       setProviderForm({ first_name: "", last_name: "", email: "", password: "", gender: "" });
     } catch (err) {
-      setProviderError(err.message || "Failed to create provider.");
+      setProviderError(err.message || t("failedCreateProvider"));
     } finally {
       setProviderLoading(false);
     }
@@ -107,7 +109,7 @@ export const AdminDashboard = () => {
       await adminAPI.deleteUser(userId);
       setUsers((prev) => prev.filter((u) => u.id !== userId));
     } catch {
-      alert("Failed to delete user");
+      alert( t("failedDeleteUser"));
     } finally {
       setDeleteLoading(false);
       setShowDeleteModal(null);
@@ -169,10 +171,10 @@ export const AdminDashboard = () => {
               margin: "0 0 6px 0",
               letterSpacing: "-1px",
             }}>
-              Admin Dashboard
+              {t("adminDashboard")}
             </h1>
             <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: 0 }}>
-              Manage users and account privileges
+              {t("adminDashboardDesc")}
             </p>
           </div>
           <button
@@ -192,7 +194,7 @@ export const AdminDashboard = () => {
               gap: "6px",
             }}
           >
-            + Add Provider
+            + {t("addProvider")}
           </button>
         </div>
 
@@ -205,9 +207,9 @@ export const AdminDashboard = () => {
           animation: "fadeUp 0.6s ease 0.1s both",
         }}>
           {[
-            { label: "Total Users", value: stats.totalUsers, icon: "👥", color: "#3b82f6" },
-            { label: "Healthcare Providers", value: stats.healthcareProviders, icon: "👨‍⚕️", color: "#10b981" },
-            { label: "Patients", value: stats.patients, icon: "🏥", color: "#8b5cf6" },
+            { label: t("totalUsers"), value: stats.totalUsers, icon: "👥", color: "#3b82f6" },
+            { label: t("healthcareProviders"), value: stats.healthcareProviders, icon: "👨‍⚕️", color: "#10b981" },
+            { label: t("patientsLabel"), value: stats.patients, icon: "🏥", color: "#8b5cf6" },
           ].map((stat, i) => (
             <div key={i} style={{
               background: "var(--bg-3)",
@@ -286,7 +288,7 @@ export const AdminDashboard = () => {
           marginBottom: "16px",
           animation: "fadeUp 0.6s ease 0.2s both",
         }}>
-          All Users
+          {t("allUsers")}
         </div>
 
         {/* Users Table */}
@@ -305,7 +307,7 @@ export const AdminDashboard = () => {
             background: "var(--bg)",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}>
-            {["User", "Email", "Role", "Join Date", "Status", "Actions"].map((header) => (
+            {[t("user"), t("email"), t("role"), t("joinDate"), t("status"), t("actions")].map((header) => (
               <div key={header} style={{
                 color: "var(--text-subtle)",
                 fontSize: "11px",
@@ -388,7 +390,7 @@ export const AdminDashboard = () => {
                   color: "#10b981",
                   border: "1px solid rgba(16,185,129,0.3)",
                 }}>
-                  Active
+                  {t("activeStatus")}
                 </span>
               </div>
 
@@ -412,7 +414,7 @@ export const AdminDashboard = () => {
                       gap: "4px",
                     }}
                   >
-                    🗑️ Delete
+                    🗑️ {t("delete")}
                   </button>
                 )}
               </div>
@@ -436,10 +438,10 @@ export const AdminDashboard = () => {
             >
               <div style={{ fontSize: "48px", marginBottom: "16px", textAlign: "center" }}>👨‍⚕️</div>
               <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 8px 0", textAlign: "center" }}>
-                Add Provider Account
+                {t("addProviderAccount")}
               </h2>
               <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 24px 0", textAlign: "center" }}>
-                Create a new healthcare provider account
+                {t("createProviderDesc")}
               </p>
 
               {providerError && (
@@ -451,37 +453,37 @@ export const AdminDashboard = () => {
               <form onSubmit={handleCreateProvider}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
-                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Name *</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("firstName")} *</label>
                     <input type="text" placeholder="First Name" value={providerForm.first_name} onChange={(e) => setProviderForm(f => ({ ...f, first_name: e.target.value }))}
                       style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                   </div>
                   <div>
-                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Last Name *</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("lastName")} *</label>
                     <input type="text" placeholder="Last Name" value={providerForm.last_name} onChange={(e) => setProviderForm(f => ({ ...f, last_name: e.target.value }))}
                       style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: "12px" }}>
-                  <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email *</label>
+                  <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("email")} *</label>
                   <input type="email" placeholder="provider@hospital.com" value={providerForm.email} onChange={(e) => setProviderForm(f => ({ ...f, email: e.target.value }))}
                     style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
-                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Password *</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("password")} *</label>
                     <input type="password" placeholder="Min 8 chars" value={providerForm.password} onChange={(e) => setProviderForm(f => ({ ...f, password: e.target.value }))}
                       style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }} />
                   </div>
                   <div>
-                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Gender</label>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("gender")}</label>
                     <select value={providerForm.gender} onChange={(e) => setProviderForm(f => ({ ...f, gender: e.target.value }))}
                       style={{ width: "100%", padding: "10px 12px", background: "var(--bg)", border: "1px solid var(--border-solid)", borderRadius: "8px", color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}>
-                      <option value="">Select</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                      <option value="">{t("select")}</option>
+                      <option value="male">{t("male")}</option>
+                      <option value="female">{t("female")}</option>
+                      <option value="other">{t("other")}</option>
                     </select>
                   </div>
                 </div>
@@ -489,11 +491,11 @@ export const AdminDashboard = () => {
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "24px" }}>
                   <button type="button" onClick={() => setShowCreateProvider(false)}
                     style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
-                    Cancel
+                    {t("cancel")}
                   </button>
                   <button type="submit" disabled={providerLoading}
                     style={{ padding: "10px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #1d4ed8, #0891b2)", color: "#fff", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: providerLoading ? 0.7 : 1 }}>
-                    {providerLoading ? "Creating..." : "Add Provider"}
+                    {providerLoading ? t("creating") : t("addProvider")}
                   </button>
                 </div>
               </form>
@@ -518,13 +520,13 @@ export const AdminDashboard = () => {
             >
               <div style={{ fontSize: "48px", marginBottom: "16px" }}>🗑️</div>
               <h2 style={{ color: "var(--text)", fontSize: "24px", fontWeight: "800", margin: "0 0 12px 0" }}>
-                Delete User
+                {t("deleteUser")}
               </h2>
               <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 8px 0", lineHeight: 1.6 }}>
-                Are you sure you want to permanently delete <strong style={{ color: "var(--text)" }}>{showDeleteModal.name}</strong>?
+                {t("confirmDeleteUser")} <strong style={{ color: "var(--text)" }}>{showDeleteModal.name}</strong>?
               </p>
               <p style={{ color: "#ef4444", fontSize: "13px", margin: "0 0 24px 0" }}>
-                This action cannot be undone. All user data will be removed.
+                {t("deleteUserWarning")}
               </p>
               <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
                 <button
@@ -541,7 +543,7 @@ export const AdminDashboard = () => {
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   onClick={() => handleDeleteUser(showDeleteModal.id)}
@@ -559,7 +561,7 @@ export const AdminDashboard = () => {
                     opacity: deleteLoading ? 0.7 : 1,
                   }}
                 >
-                  {deleteLoading ? "Deleting..." : "Delete User"}
+                  {deleteLoading ? t("deleting") : t("deleteUser")}
                 </button>
               </div>
             </div>
