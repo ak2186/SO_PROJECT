@@ -2,14 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Bot } from "lucide-react";
 import "./assistant.css";
 import { chatAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 export const Assistant = () => {
   const [messages, setMessages] = useState([
-    { text: "Hey \ud83d\udc4b How can I help you today?", user: false },
+    { text: t("assistantWelcome"), user: false },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesContainerRef = useRef(null);
+  const { t } = useTranslation();
 
   // Load chat history from backend on mount
   useEffect(() => {
@@ -21,7 +23,7 @@ export const Assistant = () => {
             user: m.role === "user",
           }));
           setMessages([
-            { text: "Hey \ud83d\udc4b How can I help you today?", user: false },
+            { text: t("assistantWelcome"), user: false },
             ...history,
           ]);
         }
@@ -53,7 +55,7 @@ export const Assistant = () => {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { text: "Sorry, I couldn't reach the server. Please try again.", user: false },
+        { text: t("assistantError"), user: false },
       ]);
     } finally {
       setIsTyping(false);
@@ -64,10 +66,10 @@ export const Assistant = () => {
     <div className="assistant-dashboard page-enter">
       <div className="assistant-dashboard-inner tab-animate">
         <div className="page-header">
-          <p className="page-label purple">SUPPORT</p>
-          <h1>Health Assistant</h1>
+          <p className="page-label purple">{t("support")}</p>
+          <h1>{t("healthAssistant")}</h1>
           <p className="page-subtext">
-            Chat with your AI health assistant here
+            {t("healthAssistantDesc")}
           </p>
         </div>
         <div className="assistant-wrapper">
@@ -77,7 +79,7 @@ export const Assistant = () => {
               <div className="assistant-icon">
                 <Bot size={22} />
               </div>
-              <h2 style={{ fontWeight: 20 }}>HEALIX Bot</h2>
+              <h2 style={{ fontWeight: 20 }}>{t("healixBot")}</h2>
             </div>
 
             {/* Chat Area */}
@@ -91,7 +93,7 @@ export const Assistant = () => {
                 </div>
               ))}
               {isTyping && (
-                <div className="message bot typing">Assistant is typing...</div>
+                <div className="message bot typing">{t("assistantTyping")}</div>
               )}
             </div>
 
@@ -99,7 +101,7 @@ export const Assistant = () => {
             <div className="assistant-input">
               <input
                 type="text"
-                placeholder="Type your message..."
+                placeholder={t("typeYourMessage")}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}

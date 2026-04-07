@@ -531,5 +531,13 @@
     "lifestyleAndHabits": "نمط الحياة والعادات",
     "alcoholConsumption": "استهلاك الكحول",
     "typicalSleepDuration": "مدة النوم المعتادة",
-    "contactAndInsurance": "التواصل والتأمين"
+    "contactAndInsurance": "التواصل والتأمين",
+    "support": "الدعم",
+    "healthAssistant": "المساعد الصحي",
+    "healthAssistantDesc": "تحدث مع مساعدك الصحي الذكي هنا",
+    "healixBot": "بوت HEALIX",
+    "assistantTyping": "المساعد يكتب...",
+    "typeYourMessage": "اكتب رسالتك...",
+    "assistantWelcome": "مرحباً كيف يمكنني مساعدتك اليوم؟",
+    "assistantError": "عذراً، لم أتمكن من الاتصال بالخادم. يرجى المحاولة مرة أخرى."
 }

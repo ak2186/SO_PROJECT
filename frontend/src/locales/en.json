@@ -531,5 +531,13 @@
     "lifestyleAndHabits": "Lifestyle & Habits",
     "alcoholConsumption": "Alcohol Consumption",
     "typicalSleepDuration": "Typical Sleep Duration",
-    "contactAndInsurance": "Contact & Insurance"
+    "contactAndInsurance": "Contact & Insurance",
+    "support": "SUPPORT",
+    "healthAssistant": "Health Assistant",
+    "healthAssistantDesc": "Chat with your AI health assistant here",
+    "healixBot": "HEALIX Bot",
+    "assistantTyping": "Assistant is typing...",
+    "typeYourMessage": "Type your message...",
+    "assistantWelcome": "Hey How can I help you today?",
+    "assistantError": "Sorry, I couldn't reach the server. Please try again."
 }
