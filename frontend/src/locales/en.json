@@ -340,5 +340,12 @@
     "provider": "Provider",
     "department": "Department",
     "noAppointmentsFound": "No appointments found.",
-    "appointmentCancelledAdmin": "Appointment cancelled by admin."
-}
+    "appointmentCancelledAdmin": "Appointment cancelled by admin.",
+    "allPrescriptions": "All Prescriptions",
+    "expired": "Expired",
+    "completed": "Completed",
+    "medication": "Medication",
+    "refills": "Refills",
+    "loadingPrescriptions": "Loading prescriptions...",
+    "noPrescriptionsFound": "No prescriptions found."
+    }

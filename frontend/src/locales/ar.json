@@ -340,5 +340,12 @@
     "provider": "مقدم الرعاية",
     "department": "القسم",
     "noAppointmentsFound": "لا توجد مواعيد.",
-    "appointmentCancelledAdmin": "تم إلغاء الموعد بواسطة المسؤول."
+    "appointmentCancelledAdmin": "تم إلغاء الموعد بواسطة المسؤول.",
+    "allPrescriptions": "جميع الوصفات الطبية",
+    "expired": "منتهية",
+    "completed": "مكتملة",
+    "medication": "الدواء",
+    "refills": "إعادات التعبئة",
+    "loadingPrescriptions": "جاري تحميل الوصفات الطبية...",
+    "noPrescriptionsFound": "لا توجد وصفات طبية."
 }

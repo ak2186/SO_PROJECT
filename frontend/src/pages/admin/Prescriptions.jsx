@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { adminAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 export const Prescriptions = () => {
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const { t } = useTranslation();
 
   useEffect(() => {
     adminAPI.getAllPrescriptions({ limit: 200 })
@@ -55,17 +57,17 @@ export const Prescriptions = () => {
 
         {/* Header */}
         <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
-          <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Admin Portal</p>
-          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>All Prescriptions</h1>
+          <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>{t("adminPortal")}</p>
+          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>{t("allPrescriptions")}</h1>
         </div>
 
         {/* Stats */}
         <div className="stats-responsive" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", animation: "fadeUp 0.5s ease 0.08s both" }}>
           {[
-            { label: "Total", value: stats.total, color: "#8b5cf6" },
-            { label: "Active", value: stats.active, color: "#10b981" },
-            { label: "Expired", value: stats.expired, color: "#f59e0b" },
-            { label: "Completed", value: stats.completed, color: "#64748b" },
+            { label: t("total"), value: stats.total, color: "#8b5cf6" },
+            { label: t("activeStatus"), value: stats.active, color: "#10b981" },
+            { label: t("expired"), value: stats.expired, color: "#f59e0b" },
+            { label: t("completed"), value: stats.completed, color: "#64748b" },
           ].map((s, i) => (
             <div key={i} style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px 24px" }}>
               <div style={{ color: s.color, fontSize: "28px", fontWeight: "700", marginBottom: "4px" }}>{s.value}</div>
@@ -81,7 +83,7 @@ export const Prescriptions = () => {
             <input type="text" placeholder="Search patients, medications, providers..." className="search-input" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
-            {[["all", "All"], ["active", "Active"], ["expired", "Expired"], ["completed", "Completed"]].map(([val, label]) => (
+            {[["all", t("all")], ["active", t("activeStatus")], ["expired", t("expired")], ["completed", t("completed")]].map(([val, label]) => (
               <button key={val} onClick={() => setFilter(val)}
                 style={{ padding: "8px 18px", borderRadius: "8px", border: filter === val ? "none" : "1px solid var(--border-solid)", fontWeight: "600", fontSize: "13px", cursor: "pointer", transition: "all 0.15s ease", fontFamily: "'DM Sans',sans-serif", background: filter === val ? "#8b5cf6" : "var(--bg-3)", color: filter === val ? "#fff" : "var(--text-subtle)" }}>
                 {label}
@@ -94,17 +96,17 @@ export const Prescriptions = () => {
         <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", overflow: "hidden", animation: "fadeUp 0.5s ease 0.16s both" }}>
           {/* Header */}
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.4fr 1fr 0.8fr 0.6fr 0.7fr", padding: "16px 24px", background: "var(--bg)", borderBottom: "1px solid var(--border-solid)" }}>
-            {["Patient", "Medication", "Provider", "Issued", "Refills", "Status"].map(h => (
+            {[t("patient"), t("medication"), t("provider"), t("issued"), t("refills"), t("status")].map(h => (
               <div key={h} style={{ color: "var(--text-subtle)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</div>
             ))}
           </div>
 
           {/* Rows */}
           {loading && (
-            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "15px" }}>Loading prescriptions...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "15px" }}>{t("loadingPrescriptions")}</div>
           )}
           {!loading && filtered.length === 0 && (
-            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No prescriptions found.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>{t("noPrescriptionsFound")}</div>
           )}
           {filtered.map(rx => (
             <div key={rx.id} className="rx-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1.4fr 1fr 0.8fr 0.6fr 0.7fr", padding: "18px 24px", borderBottom: "1px solid var(--border-solid)" }}>
@@ -116,17 +118,17 @@ export const Prescriptions = () => {
               <div>
                 {rx.status === "active" && (
                   <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>
-                    Active
+                    {t("activeStatus")}
                   </span>
                 )}
                 {rx.status === "expired" && (
                   <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
-                    Expired
+                    {t("expired")}
                   </span>
                 )}
                 {rx.status === "completed" && (
                   <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(100,116,139,0.12)", color: "#64748b", border: "1px solid rgba(100,116,139,0.3)" }}>
-                    Completed
+                    {t("completed")}
                   </span>
                 )}
               </div>
