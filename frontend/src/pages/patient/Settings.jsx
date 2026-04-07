@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { googleFitAPI, authAPI } from "../../utils/api";
 import { AvatarCustomizer } from "../../components/AvatarCustomizer";
+import { useTranslation } from "react-i18next";
 
 
 export const Settings = () => {
   const { user, refreshUser } = useAuth();
+  const { t } = useTranslation();
   const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
   const [personal, setPersonal] = useState({
     first_name: user?.first_name || "",
@@ -79,7 +81,7 @@ export const Settings = () => {
       if (event.data?.type === "GFIT_CONNECTED") {
         localStorage.setItem(`healix_gfit_connected_${uid}`, "true");
         setGfitConnected(true);
-        showToast("Google Fit connected! Click 'Sync Now' to pull your data.");
+        showToast(t("gfitConnectedMsg"));
       }
     };
     window.addEventListener("message", handleMessage);
@@ -93,9 +95,9 @@ export const Settings = () => {
 
   const handlePersonalSave = async () => {
     const e = {};
-    if (!personal.first_name.trim()) e.first_name = "First name is required";
-    if (!personal.last_name.trim()) e.last_name = "Last name is required";
-    if (!personal.email.includes("@")) e.email = "Valid email required";
+    if (!personal.first_name.trim()) e.first_name = t("firstNameRequired");
+    if (!personal.last_name.trim()) e.last_name = t("lastNameRequired");
+    if (!personal.email.includes("@")) e.email = t("validEmailRequired");
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
     setSaving(true);
@@ -123,9 +125,9 @@ export const Settings = () => {
       await refreshUser();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-      showToast("Personal details updated!");
+      showToast(t("personalUpdated"));
     } catch (err) {
-      showToast(err.message || "Failed to save changes", "error");
+      showToast(err.message || t("failedToSave"), "error");
     } finally {
       setSaving(false);
     }
@@ -141,7 +143,7 @@ export const Settings = () => {
       };
       await authAPI.updateProfile(payload);
       await refreshUser();
-      showToast("Medical history updated!");
+      showToast(t("medHistoryUpdated"));
     } catch (err) {
       showToast(err.message || "Failed to save changes", "error");
     } finally {
@@ -164,9 +166,9 @@ export const Settings = () => {
       };
       await authAPI.updateProfile(payload);
       await refreshUser();
-      showToast("Medications & lifestyle updated!");
+      showToast(t("lifestyleUpdated"));
     } catch (err) {
-      showToast(err.message || "Failed to save changes", "error");
+      showToast(err.message || t("failedToSave"), "error");
     } finally {
       setSaving(false);
     }
@@ -182,17 +184,17 @@ export const Settings = () => {
 
   const handlePasswordSave = async () => {
     const e = {};
-    if (!passwords.current) e.current = "Enter your current password";
-    if (passwords.newPass.length < 8) e.newPass = "Password must be at least 8 characters";
-    if (passwords.newPass !== passwords.confirm) e.confirm = "Passwords do not match";
+    if (!passwords.current) e.current = t("enterCurrentPassword");
+    if (passwords.newPass.length < 8) e.newPass = t("passMin8");
+    if (passwords.newPass !== passwords.confirm) e.confirm = t("passwordsNoMatch");
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
     try {
       await authAPI.changePassword(passwords.current, passwords.newPass);
       setPasswords({ current: "", newPass: "", confirm: "" });
-      showToast("Password changed successfully!");
+      showToast(t("passwordChanged"));
     } catch (err) {
-      setErrors({ current: err.message || "Failed to change password" });
+      setErrors({ current: err.message || t("failedToChangePassword") });
     }
   };
 
@@ -201,12 +203,12 @@ export const Settings = () => {
       const data = await googleFitAPI.connect();
       if (data?.auth_url) {
         window.open(data.auth_url, "_blank", "width=500,height=600");
-        showToast("Complete sign-in in the popup window, then click 'Sync Now'");
+        showToast(t("gfitCompleteSignIn"));
         localStorage.setItem(`healix_gfit_connected_${uid}`, "true");
         setGfitConnected(true);
       }
     } catch (err) {
-      showToast(err.message || "Failed to connect Google Fit", "error");
+      showToast(err.message || t("gfitFailedConnect"), "error");
     }
   };
 
@@ -230,7 +232,7 @@ export const Settings = () => {
       if (msg.includes("not connected") || msg.includes("expired") || msg.includes("reconnect")) {
         setGfitConnected(false);
         localStorage.removeItem(`healix_gfit_connected_${uid}`);
-        showToast("Google Fit session expired. Please reconnect.", "error");
+        showToast(t("gfitExpired"), "error");
       } else {
         showToast(msg, "error");
       }
@@ -244,15 +246,15 @@ export const Settings = () => {
     localStorage.removeItem(`healix_gfit_last_sync_${uid}`);
     setGfitConnected(false);
     setGfitLastSync(null);
-    showToast("Google Fit disconnected");
+    showToast(t("gfitDisconnected"));
   };
 
   const sections = [
-    { id: "personal", label: "Personal Details", icon: "👤" },
-    { id: "medhistory", label: "Medical History", icon: "🩺" },
-    { id: "lifestyle", label: "Medications & Lifestyle", icon: "💊" },
-    { id: "password", label: "Change Password", icon: "🔒" },
-    { id: "integrations", label: "Integrations", icon: "🔗" },
+    { id: "personal", label: t("personalDetails"), icon: "👤" },
+    { id: "medhistory", label: t("medicalHistory"), icon: "🩺" },
+    { id: "lifestyle", label: t("medsAndLifestyle"), icon: "💊" },
+    { id: "password", label: t("changePassword"), icon: "🔒" },
+    { id: "integrations", label: t("integrations"), icon: "🔗" },
   ];
 
   const labelStyle = { display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" };
@@ -318,9 +320,9 @@ export const Settings = () => {
         <div className="settings-responsive" style={{ maxWidth: "960px", margin: "0 auto", padding: "40px 48px" }}>
 
           {/* Header */}
-          <div style={{ marginBottom: "40px", animation: "fadeUp 0.5s ease both" }}>
-            <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Account</p>
-            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Settings</h1>
+          <div style={{ marginBottom: "40px", animation: "fadeUp 0.5s ease both" }}>{t("account")}
+            <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}></p>
+            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>{t("settings")}</h1>
           </div>
 
           <div className="form-grid-responsive" style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "28px", animation: "fadeUp 0.5s ease 0.1s both" }}>
@@ -344,13 +346,13 @@ export const Settings = () => {
               {activeSection === "personal" && (
                 <div>
                   <div style={{ marginBottom: "28px" }}>
-                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Personal Details</h2>
-                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Update your profile information, health details, and emergency contacts.</p>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>{t("personalDetails")}</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>{t("personalDetailsDesc")}</p>
                   </div>
 
                   {/* Avatar Section */}
 <div style={{ marginBottom: "32px" }}>
-  <h3>Customize Avatar</h3>
+  <h3>{t("customizeAvatar")}</h3>
 
   {showAvatarCustomizer ? (
     <AvatarCustomizer
@@ -381,7 +383,7 @@ export const Settings = () => {
       {/* Info */}
       <div>
         <div style={{ fontWeight: "700" }}>{displayName}</div>
-        <div style={{ fontSize: "13px", color: "var(--text-faint)" }}>Patient Account</div>
+        <div style={{ fontSize: "13px", color: "var(--text-faint)" }}>{t("patientAccount")}</div>
       </div>
 
       {/* Button */}
@@ -397,7 +399,7 @@ export const Settings = () => {
           cursor: "pointer"
         }}
       >
-        Edit Avatar
+        {t("editAvatar")}
       </button>
     </div>
   )}
@@ -408,7 +410,7 @@ export const Settings = () => {
 
                     {/* First Name */}
                     <div>
-                      <label style={labelStyle}>First Name</label>
+                      <label style={labelStyle}>{t("firstName")}</label>
                       <input type="text" className="settings-input" style={inputStyle(errors.first_name)} value={personal.first_name}
                         onChange={e => setPersonal(p => ({ ...p, first_name: e.target.value }))} placeholder="First name" />
                       {errors.first_name && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.first_name}</p>}
@@ -416,7 +418,7 @@ export const Settings = () => {
 
                     {/* Last Name */}
                     <div>
-                      <label style={labelStyle}>Last Name</label>
+                      <label style={labelStyle}>{t("lastName")}</label>
                       <input type="text" className="settings-input" style={inputStyle(errors.last_name)} value={personal.last_name}
                         onChange={e => setPersonal(p => ({ ...p, last_name: e.target.value }))} placeholder="Last name" />
                       {errors.last_name && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.last_name}</p>}
@@ -424,7 +426,7 @@ export const Settings = () => {
 
                     {/* Email */}
                     <div>
-                      <label style={labelStyle}>Email Address</label>
+                      <label style={labelStyle}>{t("emailAddress")}</label>
                       <input type="email" className="settings-input" style={inputStyle(errors.email)} value={personal.email}
                         onChange={e => setPersonal(p => ({ ...p, email: e.target.value }))} placeholder="you@example.com" />
                       {errors.email && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.email}</p>}
@@ -432,53 +434,53 @@ export const Settings = () => {
 
                     {/* Phone */}
                     <div>
-                      <label style={labelStyle}>Phone Number</label>
+                      <label style={labelStyle}>{t("phoneNumber")}</label>
                       <input type="tel" className="settings-input" style={inputStyle(false)} value={personal.phone_number}
                         onChange={e => setPersonal(p => ({ ...p, phone_number: e.target.value }))} placeholder="+1 234 567 8900" />
                     </div>
 
                     {/* DOB */}
                     <div>
-                      <label style={labelStyle}>Date of Birth</label>
+                      <label style={labelStyle}>{t("dateOfBirth")}</label>
                       <input type="date" className="settings-input" style={{ ...inputStyle(false), colorScheme: "dark" }} value={personal.date_of_birth}
                         onChange={e => setPersonal(p => ({ ...p, date_of_birth: e.target.value }))} />
                     </div>
 
                     {/* Gender */}
                     <div>
-                      <label style={labelStyle}>Gender</label>
+                      <label style={labelStyle}>{t("gender")}</label>
                       <select className="settings-input" style={selectStyle} value={personal.gender}
                         onChange={e => setPersonal(p => ({ ...p, gender: e.target.value }))}>
-                        <option value="">Select gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                        <option value="Prefer not to say">Prefer not to say</option>
+                        <option value="">{t("selectGender")}</option>
+                        <option value="Male">{t("male")}</option>
+                        <option value="Female">{t("female")}</option>
+                        <option value="Other">{t("other")}</option>
+                        <option value="Prefer not to say">{t("preferNotToSay")}</option>
                       </select>
                     </div>
 
                     {/* Age */}
                     <div>
-                      <label style={labelStyle}>Age</label>
+                      <label style={labelStyle}>{t("age")}</label>
                       <input type="number" className="settings-input" style={inputStyle(false)} value={personal.age}
                         onChange={e => setPersonal(p => ({ ...p, age: e.target.value }))} placeholder="e.g. 25" min="0" max="150" />
                     </div>
 
                     {/* Health Conditions */}
                     <div>
-                      <label style={labelStyle}>Health Conditions</label>
+                      <label style={labelStyle}>{t("healthConditions")}</label>
                       <input type="text" className="settings-input" style={inputStyle(false)} value={personal.health_conditions}
                         onChange={e => setPersonal(p => ({ ...p, health_conditions: e.target.value }))} placeholder="e.g. Asthma, Diabetes" />
                     </div>
 
-                    {sectionDivider("Health Information")}
+                    {sectionDividert("healthInformation")}
 
                     {/* Blood Type */}
                     <div>
-                      <label style={labelStyle}>Blood Type</label>
+                      <label style={labelStyle}>{t("bloodType")}</label>
                       <select className="settings-input" style={selectStyle} value={personal.blood_type}
                         onChange={e => setPersonal(p => ({ ...p, blood_type: e.target.value }))}>
-                        <option value="">Select blood type</option>
+                        <option value="">{t("selectBloodType")}</option>
                         <option value="A+">A+</option>
                         <option value="A-">A-</option>
                         <option value="B+">B+</option>
@@ -492,53 +494,53 @@ export const Settings = () => {
 
                     {/* Height */}
                     <div>
-                      <label style={labelStyle}>Height (cm)</label>
+                      <label style={labelStyle}>{t("heightCm")}</label>
                       <input type="number" className="settings-input" style={inputStyle(false)} value={personal.height}
                         onChange={e => setPersonal(p => ({ ...p, height: e.target.value }))} placeholder="e.g. 175" min="0" step="0.1" />
                     </div>
 
                     {/* Weight */}
                     <div>
-                      <label style={labelStyle}>Weight (kg)</label>
+                      <label style={labelStyle}>{t("weightKg")}</label>
                       <input type="number" className="settings-input" style={inputStyle(false)} value={personal.weight}
                         onChange={e => setPersonal(p => ({ ...p, weight: e.target.value }))} placeholder="e.g. 70" min="0" step="0.1" />
                     </div>
 
                     {/* Medical Insurance */}
                     <div>
-                      <label style={labelStyle}>Medical Insurance</label>
+                      <label style={labelStyle}>{t("medicalInsurance")}</label>
                       <input type="text" className="settings-input" style={inputStyle(false)} value={personal.medical_insurance}
                         onChange={e => setPersonal(p => ({ ...p, medical_insurance: e.target.value }))} placeholder="Insurance provider" />
                     </div>
 
-                    {sectionDivider("Emergency Contact")}
+                    {sectionDivider(t("emergencyContact"))}
 
                     {/* Emergency Contact Name */}
                     <div>
-                      <label style={labelStyle}>Contact Name</label>
+                      <label style={labelStyle}>{t("contactName")}</label>
                       <input type="text" className="settings-input" style={inputStyle(false)} value={personal.emergency_contact_name}
                         onChange={e => setPersonal(p => ({ ...p, emergency_contact_name: e.target.value }))} placeholder="Full name" />
                     </div>
 
                     {/* Emergency Contact Phone */}
                     <div>
-                      <label style={labelStyle}>Contact Phone</label>
+                      <label style={labelStyle}>{t("contactPhone")}</label>
                       <input type="tel" className="settings-input" style={inputStyle(false)} value={personal.emergency_contact_phone}
                         onChange={e => setPersonal(p => ({ ...p, emergency_contact_phone: e.target.value }))} placeholder="+1 234 567 8900" />
                     </div>
 
                     {/* Emergency Contact Relationship */}
                     <div>
-                      <label style={labelStyle}>Relationship</label>
+                      <label style={labelStyle}>{t("relationship")}</label>
                       <select className="settings-input" style={selectStyle} value={personal.emergency_contact_relationship}
                         onChange={e => setPersonal(p => ({ ...p, emergency_contact_relationship: e.target.value }))}>
-                        <option value="">Select relationship</option>
-                        <option value="Parent">Parent</option>
-                        <option value="Spouse">Spouse</option>
-                        <option value="Sibling">Sibling</option>
-                        <option value="Child">Child</option>
-                        <option value="Friend">Friend</option>
-                        <option value="Other">Other</option>
+                        <option value="">{t("selectRelationship")}</option>
+                        <option value="Parent">{t("parent")}</option>
+                        <option value="Spouse">{t("spouse")}</option>
+                        <option value="Sibling">{t("sibling")}</option>
+                        <option value="Child">{t("child")}</option>
+                        <option value="Friend">{t("friend")}</option>
+                        <option value="Other">{t("Other")}</option>
                       </select>
                     </div>
                   </div>
@@ -546,7 +548,7 @@ export const Settings = () => {
                   <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
                     <button className="save-btn" onClick={handlePersonalSave} disabled={saving}
                       style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: "8px", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
-                      {saving ? "Saving..." : saved ? <span style={{ animation: "checkIn 0.3s ease" }}>Saved!</span> : "Save Changes"}
+                      {saving ? t("saving") : saved ? <span style={{ animation: "checkIn 0.3s ease" }}>t("saved")</span> : t("saveChanges")}
                     </button>
                   </div>
                 </div>
@@ -556,14 +558,14 @@ export const Settings = () => {
               {activeSection === "medhistory" && (
                 <div>
                   <div style={{ marginBottom: "28px" }}>
-                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Medical History</h2>
-                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Record your health conditions, allergies, and family medical history.</p>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>{t("medicalHistory")}</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>{t("medicalHistoryDesc")}</p>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     {/* Health Conditions */}
                     <div>
-                      <label style={labelStyle}>Health Conditions</label>
+                      <label style={labelStyle}>{t("healthConditions")}</label>
                       <textarea className="settings-input" rows={3}
                         style={{ ...inputStyle(false), resize: "vertical", minHeight: "80px" }}
                         value={medHistory.health_conditions}
@@ -573,7 +575,7 @@ export const Settings = () => {
 
                     {/* Allergies */}
                     <div>
-                      <label style={labelStyle}>Allergies</label>
+                      <label style={labelStyle}>{t("allergies")}</label>
                       <textarea className="settings-input" rows={3}
                         style={{ ...inputStyle(false), resize: "vertical", minHeight: "80px" }}
                         value={medHistory.allergies}
@@ -583,7 +585,7 @@ export const Settings = () => {
 
                     {/* Family History */}
                     <div>
-                      <label style={labelStyle}>Family History</label>
+                      <label style={labelStyle}>{t("familyHistory")}</label>
                       <textarea className="settings-input" rows={3}
                         style={{ ...inputStyle(false), resize: "vertical", minHeight: "80px" }}
                         value={medHistory.family_history}
@@ -595,7 +597,7 @@ export const Settings = () => {
                   <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
                     <button className="save-btn" onClick={handleMedHistorySave} disabled={saving}
                       style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
-                      {saving ? "Saving..." : "Save Changes"}
+                      {saving ? "Saving..." : t("saveChanges")}
                     </button>
                   </div>
                 </div>
@@ -605,35 +607,35 @@ export const Settings = () => {
               {activeSection === "lifestyle" && (
                 <div>
                   <div style={{ marginBottom: "28px" }}>
-                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Medications & Lifestyle</h2>
-                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Manage your current medications, supplements, and lifestyle habits.</p>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>{t("medsAndLifestyle")}</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>{t("medsAndLifestyleDesc")}</p>
                   </div>
 
                   {/* Medications */}
                   <div style={{ marginBottom: "28px" }}>
-                    {sectionDivider("Medications")}
+                    {sectionDivider(t("medicationsLabel"))}
                     {medications.map((med, i) => (
                       <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "12px", marginTop: "12px", alignItems: "end" }}>
                         <div>
-                          {i === 0 && <label style={labelStyle}>Name</label>}
+                          {i === 0 && <label style={labelStyle}>{t("name")}</label>}
                           <input type="text" className="settings-input" style={inputStyle(false)} value={med.name}
                             onChange={e => updateMedication(i, "name", e.target.value)} placeholder="Medication name" />
                         </div>
                         <div>
-                          {i === 0 && <label style={labelStyle}>Dosage</label>}
+                          {i === 0 && <label style={labelStyle}>{t("dosage")}</label>}
                           <input type="text" className="settings-input" style={inputStyle(false)} value={med.dosage}
                             onChange={e => updateMedication(i, "dosage", e.target.value)} placeholder="e.g. 10mg" />
                         </div>
                         <div>
-                          {i === 0 && <label style={labelStyle}>Frequency</label>}
+                          {i === 0 && <label style={labelStyle}>{t("frequency")}</label>}
                           <select className="settings-input" style={selectStyle} value={med.frequency}
                             onChange={e => updateMedication(i, "frequency", e.target.value)}>
-                            <option value="">Select frequency</option>
-                            <option value="Once daily">Once daily</option>
-                            <option value="Twice daily">Twice daily</option>
-                            <option value="Three times daily">Three times daily</option>
-                            <option value="As needed">As needed</option>
-                            <option value="Weekly">Weekly</option>
+                            <option value="">{t("selectFrequency")}</option>
+                            <option value="Once daily">{t("onceDaily")}</option>
+                            <option value="Twice daily">{t("twiceDaily")}</option>
+                            <option value="Three times daily">{t("threeTimesDaily")}</option>
+                            <option value="As needed">{t("asNeeded")}</option>
+                            <option value="Weekly">{t("weekly")}</option>
                           </select>
                         </div>
                         <button onClick={() => removeMedication(i)}
@@ -644,13 +646,13 @@ export const Settings = () => {
                     ))}
                     <button onClick={addMedication}
                       style={{ marginTop: "12px", padding: "9px 20px", borderRadius: "10px", border: "1px dashed var(--border-solid)", background: "transparent", color: "var(--text-subtle)", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}>
-                      + Add Medication
+                      + {t("addMedication")}
                     </button>
                   </div>
 
                   {/* Supplements */}
                   <div style={{ marginBottom: "28px" }}>
-                    {sectionDivider("Supplements")}
+                    {sectionDivider(t("supplementsLabel"))}
                     {supplements.map((sup, i) => (
                       <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "12px", marginTop: "12px", alignItems: "end" }}>
                         <div>
@@ -667,7 +669,7 @@ export const Settings = () => {
                           {i === 0 && <label style={labelStyle}>Frequency</label>}
                           <select className="settings-input" style={selectStyle} value={sup.frequency}
                             onChange={e => updateSupplement(i, "frequency", e.target.value)}>
-                            <option value="">Select frequency</option>
+                            <option value="">{t("selectFrequency")}</option>
                             <option value="Once daily">Once daily</option>
                             <option value="Twice daily">Twice daily</option>
                             <option value="Three times daily">Three times daily</option>
@@ -683,59 +685,59 @@ export const Settings = () => {
                     ))}
                     <button onClick={addSupplement}
                       style={{ marginTop: "12px", padding: "9px 20px", borderRadius: "10px", border: "1px dashed var(--border-solid)", background: "transparent", color: "var(--text-subtle)", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}>
-                      + Add Supplement
+                      + {t("addSupplement")}
                     </button>
                   </div>
 
                   {/* Lifestyle Fields */}
                   <div className="form-grid-responsive" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                    {sectionDivider("Lifestyle")}
+                    {sectionDivider(t("lifestyleLabel"))}
 
                     {/* Smoking */}
                     <div>
-                      <label style={labelStyle}>Smoking Status</label>
+                      <label style={labelStyle}>{t("smokingStatus")}</label>
                       <select className="settings-input" style={selectStyle} value={lifestyle.smoking_status}
                         onChange={e => setLifestyle(p => ({ ...p, smoking_status: e.target.value }))}>
-                        <option value="">Select status</option>
-                        <option value="Never">Never</option>
-                        <option value="Former smoker">Former smoker</option>
-                        <option value="Current smoker">Current smoker</option>
+                        <option value="">{t("selectStatus")}</option>
+                        <option value="Never">{t("never")}</option>
+                        <option value="Former smoker">{t("formerSmoker")}</option>
+                        <option value="Current smoker">{t("currentSmoker")}</option>
                       </select>
                     </div>
 
                     {/* Alcohol */}
                     <div>
-                      <label style={labelStyle}>Alcohol Frequency</label>
+                      <label style={labelStyle}>{t("alcoholFrequency")}</label>
                       <select className="settings-input" style={selectStyle} value={lifestyle.alcohol_frequency}
                         onChange={e => setLifestyle(p => ({ ...p, alcohol_frequency: e.target.value }))}>
-                        <option value="">Select frequency</option>
-                        <option value="Never">Never</option>
-                        <option value="Occasional">Occasional</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Heavy">Heavy</option>
+                        <option value="">{t("selectFrequency")}</option>
+                        <option value="Never">{t("never")}</option>
+                        <option value="Occasional">{t("occasional")}</option>
+                        <option value="Moderate">{t("moderate")}</option>
+                        <option value="Heavy">{t("heavy")}</option>
                       </select>
                     </div>
 
                     {/* Exercise */}
                     <div>
-                      <label style={labelStyle}>Exercise Frequency</label>
+                      <label style={labelStyle}>{t("exerciseFrequency")}</label>
                       <select className="settings-input" style={selectStyle} value={lifestyle.exercise_frequency}
                         onChange={e => setLifestyle(p => ({ ...p, exercise_frequency: e.target.value }))}>
-                        <option value="">Select frequency</option>
-                        <option value="Sedentary">Sedentary</option>
-                        <option value="Light">Light</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Active">Active</option>
-                        <option value="Very Active">Very Active</option>
+                        <option value="">{t("selectFrequency")}</option>
+                        <option value="Sedentary">{t("sedentary")}</option>
+                        <option value="Light">{t("light")}</option>
+                        <option value="Moderate">{t("moderate")}</option>
+                        <option value="Active">{t("active")}</option>
+                        <option value="Very Active">{t("veryActive")}</option>
                       </select>
                     </div>
 
                     {/* Sleep */}
                     <div>
-                      <label style={labelStyle}>Typical Sleep</label>
+                      <label style={labelStyle}>{t("typicalSleep")}</label>
                       <select className="settings-input" style={selectStyle} value={lifestyle.sleep_habit}
                         onChange={e => setLifestyle(p => ({ ...p, sleep_habit: e.target.value }))}>
-                        <option value="">Select sleep duration</option>
+                        <option value="">{t("selectSleepDuration")}</option>
                         <option value="Less than 5h">Less than 5h</option>
                         <option value="5-6h">5-6h</option>
                         <option value="6-7h">6-7h</option>
@@ -746,23 +748,23 @@ export const Settings = () => {
 
                     {/* Dietary */}
                     <div>
-                      <label style={labelStyle}>Dietary Preference</label>
+                      <label style={labelStyle}>{t("dietaryPreference")}</label>
                       <select className="settings-input" style={selectStyle} value={lifestyle.dietary_preference}
                         onChange={e => setLifestyle(p => ({ ...p, dietary_preference: e.target.value }))}>
-                        <option value="">Select preference</option>
-                        <option value="No preference">No preference</option>
-                        <option value="Vegetarian">Vegetarian</option>
-                        <option value="Vegan">Vegan</option>
-                        <option value="Halal">Halal</option>
-                        <option value="Kosher">Kosher</option>
-                        <option value="Gluten-free">Gluten-free</option>
-                        <option value="Other">Other</option>
+                        <option value="">{t("selectPreference")}</option>
+                        <option value="No preference">{t("noPreference")}</option>
+                        <option value="Vegetarian">{t("vegetarian")}</option>
+                        <option value="Vegan">{t("vegan")}</option>
+                        <option value="Halal">{t("halal")}</option>
+                        <option value="Kosher">{t("kosher")}</option>
+                        <option value="Gluten-free">{t("glutenFree")}</option>
+                        <option value="Other">{t("Other")}</option>
                       </select>
                     </div>
 
                     {/* Occupation */}
                     <div>
-                      <label style={labelStyle}>Occupation</label>
+                      <label style={labelStyle}>{t("occupation")}</label>
                       <input type="text" className="settings-input" style={inputStyle(false)} value={lifestyle.occupation}
                         onChange={e => setLifestyle(p => ({ ...p, occupation: e.target.value }))} placeholder="e.g. Software Engineer" />
                     </div>
@@ -771,7 +773,7 @@ export const Settings = () => {
                   <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
                     <button className="save-btn" onClick={handleLifestyleSave} disabled={saving}
                       style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
-                      {saving ? "Saving..." : "Save Changes"}
+                      {saving ? t("saving") : t("saveChanges")}
                     </button>
                   </div>
                 </div>
@@ -780,8 +782,8 @@ export const Settings = () => {
               {/* ── Integrations ── */}
               {activeSection === "integrations" && (
                 <div>
-                  <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Integrations</h2>
-                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "0 0 28px 0" }}>Connect external services to sync your health data automatically.</p>
+                  <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>{t("integrations")}</h2>
+                  <p style={{ color: "var(--text-subtle)", fontSize: "13px", margin: "0 0 28px 0" }}>{t("integrationsDesc")}</p>
 
                   {/* Google Fit Card */}
                   <div style={{
@@ -800,9 +802,9 @@ export const Settings = () => {
                         ❤️
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ color: "var(--text)", fontWeight: "700", fontSize: "16px" }}>Google Fit</div>
+                        <div style={{ color: "var(--text)", fontWeight: "700", fontSize: "16px" }}>{t("googleFit")}</div>
                         <div style={{ color: "var(--text-subtle)", fontSize: "13px", marginTop: "2px" }}>
-                          Sync heart rate, SpO₂, steps, and calories from Google Fit
+                          {t("googleFitDesc")}
                         </div>
                       </div>
                       <div style={{
@@ -811,7 +813,7 @@ export const Settings = () => {
                         color: gfitConnected ? "#10b981" : "#ef4444",
                         border: `1px solid ${gfitConnected ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`,
                       }}>
-                        {gfitConnected ? "Connected" : "Not Connected"}
+                        {gfitConnected ? t("connected") : t("notConnected")}
                       </div>
                     </div>
 
@@ -829,7 +831,7 @@ export const Settings = () => {
                           fontFamily: "'DM Sans',sans-serif", cursor: "pointer",
                           display: "flex", alignItems: "center", gap: "8px",
                         }}>
-                          Connect Google Fit
+                          {t("connectGoogleFitBtn")}
                         </button>
                       )}
                       <button onClick={handleGfitSync} disabled={gfitSyncing} style={{
@@ -841,7 +843,7 @@ export const Settings = () => {
                         opacity: gfitSyncing ? 0.6 : 1,
                         display: "flex", alignItems: "center", gap: "8px",
                       }}>
-                        {gfitSyncing ? "Syncing..." : "Sync Now"}
+                        {gfitSyncing ? t("syncing") : t("syncNow")}
                       </button>
                       {gfitConnected && (
                         <button onClick={handleGfitDisconnect} style={{
@@ -850,7 +852,7 @@ export const Settings = () => {
                           fontFamily: "'DM Sans',sans-serif", cursor: "pointer",
                           display: "flex", alignItems: "center", gap: "8px",
                         }}>
-                          Disconnect
+                          {t("disconnect")}
                         </button>
                       )}
                     </div>
@@ -860,8 +862,7 @@ export const Settings = () => {
                       background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)",
                     }}>
                       <p style={{ color: "var(--text-muted)", fontSize: "12px", margin: 0, lineHeight: "1.6" }}>
-                        <strong style={{ color: "var(--text)" }}>How it works:</strong> Click "Connect Google Fit" to authorize access to your health data.
-                        Once connected, your data will automatically sync each time you log in. You can also manually sync anytime.
+                        <strong style={{ color: "var(--text)" }}>{t("howItWorks")}</strong> {t("howItWorksDesc")}
                       </p>
                     </div>
                   </div>
@@ -872,14 +873,14 @@ export const Settings = () => {
               {activeSection === "password" && (
                 <div>
                   <div style={{ marginBottom: "28px" }}>
-                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>Change Password</h2>
-                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>Choose a strong password with at least 8 characters.</p>
+                    <h2 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 4px 0" }}>{t("changePassword")}</h2>
+                    <p style={{ color: "var(--text-faint)", fontSize: "14px", margin: 0 }}>{t("changePasswordDesc")}</p>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     {/* Current */}
                     <div>
-                      <label style={labelStyle}>Current Password</label>
+                      <label style={labelStyle}>{t("currentPassword")}</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.current)} value={passwords.current}
                         onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))} placeholder="••••••••" />
                       {errors.current && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.current}</p>}
@@ -887,7 +888,7 @@ export const Settings = () => {
 
                     {/* New */}
                     <div>
-                      <label style={labelStyle}>New Password</label>
+                      <label style={labelStyle}>{t("newPassword")}</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.newPass)} value={passwords.newPass}
                         onChange={e => setPasswords(p => ({ ...p, newPass: e.target.value }))} placeholder="At least 8 characters" />
                       {errors.newPass && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.newPass}</p>}
@@ -903,7 +904,7 @@ export const Settings = () => {
                             }} />
                           </div>
                           <p style={{ color: passwords.newPass.length < 6 ? "#ef4444" : passwords.newPass.length < 10 ? "#f59e0b" : "#10b981", fontSize: "12px", margin: "4px 0 0 0", fontWeight: "600" }}>
-                            {passwords.newPass.length < 6 ? "Weak" : passwords.newPass.length < 10 ? "Fair" : "Strong"}
+                            {passwords.newPass.length < 6 ? t("weak") : passwords.newPass.length < 10 ? t("fair") : t("strong")}
                           </p>
                         </div>
                       )}
@@ -911,7 +912,7 @@ export const Settings = () => {
 
                     {/* Confirm */}
                     <div>
-                      <label style={labelStyle}>Confirm New Password</label>
+                      <label style={labelStyle}>{t("confirmNewPassword")}</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.confirm)} value={passwords.confirm}
                         onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} placeholder="Repeat new password" />
                       {errors.confirm && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0 0" }}>{errors.confirm}</p>}
@@ -921,7 +922,7 @@ export const Settings = () => {
                   <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
                     <button className="save-btn" onClick={handlePasswordSave}
                       style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: "#8b5cf6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif" }}>
-                      Update Password
+                      {t("updatePassword")}
                     </button>
                   </div>
                 </div>
