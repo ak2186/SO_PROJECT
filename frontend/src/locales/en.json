@@ -379,5 +379,20 @@
     "eg500mg": "e.g. 500mg",
     "egTwiceDaily": "e.g. Twice daily",
     "eg3Months": "e.g. 3 months",
-    "anyAdditionalNotes": "Any additional notes"
+    "anyAdditionalNotes": "Any additional notes",
+    "patientList": "Patient List",
+    "patientListDesc": "Manage and monitor your patients",
+    "totalPatients": "Total Patients",
+    "ageGender": "Age/Gender",
+    "lastVisit": "Last Visit",
+    "nextAppointment": "Next Appointment",
+    "view": "View",
+    "loadingPatients": "Loading patients...",
+    "noPatientsYet": "No patients yet. Patients appear here after they grant you access to their health data.",
+    "yearsOld": "years old",
+    "notSpecified": "Not specified",
+    "healthDataSummary": "Health Data Summary",
+    "loadingHealthData": "Loading health data...",
+    "noHealthData": "No health data recorded yet.",
+    "generateReport": "Generate Health Report PDF"
     }

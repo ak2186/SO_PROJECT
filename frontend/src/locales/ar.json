@@ -379,5 +379,20 @@
     "eg500mg": "مثال: 500 ملغ",
     "egTwiceDaily": "مثال: مرتين يومياً",
     "eg3Months": "مثال: 3 أشهر",
-    "anyAdditionalNotes": "أي ملاحظات إضافية"
+    "anyAdditionalNotes": "أي ملاحظات إضافية",
+    "patientList": "قائمة المرضى",
+    "patientListDesc": "إدارة ومتابعة مرضاك",
+    "totalPatients": "إجمالي المرضى",
+    "ageGender": "العمر/الجنس",
+    "lastVisit": "آخر زيارة",
+    "nextAppointment": "الموعد القادم",
+    "view": "عرض",
+    "loadingPatients": "جاري تحميل المرضى...",
+    "noPatientsYet": "لا يوجد مرضى بعد. يظهر المرضى هنا بعد أن يمنحوك حق الوصول إلى بياناتهم الصحية.",
+    "yearsOld": "سنة",
+    "notSpecified": "غير محدد",
+    "healthDataSummary": "ملخص البيانات الصحية",
+    "loadingHealthData": "جاري تحميل البيانات الصحية...",
+    "noHealthData": "لا توجد بيانات صحية مسجلة بعد.",
+    "generateReport": "إنشاء تقرير صحي PDF"
 }

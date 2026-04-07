@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { permissionsAPI, biomarkersAPI } from "../../utils/api";
 import { HealthReportModal } from "../../components/HealthReportModal";
+import { useTranslation } from "react-i18next";
 
 const defaultAvatarColors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899"];
 
@@ -16,6 +17,7 @@ export const PatientList = () => {
   const [biomarkerData, setBiomarkerData] = useState(null);
   const [biomarkerLoading, setBiomarkerLoading] = useState(false);
   const [showReport, setShowReport] = useState(null);
+  const { t } = useTranslation();
 
   const handleViewPatient = (patient) => {
     setSelectedPatient(patient);
@@ -125,10 +127,10 @@ export const PatientList = () => {
             margin: "0 0 6px 0",
             letterSpacing: "-1px",
           }}>
-            Patient List
+            {t("patientList")}
           </h1>
           <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: 0 }}>
-            Manage and monitor your patients
+            {t("patientListDesc")}
           </p>
         </div>
 
@@ -163,7 +165,7 @@ export const PatientList = () => {
             </div>
             <div>
               <div style={{ color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
-                Total Patients
+                {t("totalPatients")}
               </div>
               <div style={{ color: "#3b82f6", fontSize: "28px", fontWeight: "800", letterSpacing: "-1px" }}>
                 {stats.total}
@@ -224,7 +226,7 @@ export const PatientList = () => {
             background: "var(--bg)",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}>
-            {["Patient", "Age/Gender", "Reason", "Last Visit", "Next Appointment", "Actions"].map(
+            {[t("patient"), t("ageGender"), t("reason"), t("lastVisit"), t("nextAppointment"), t("actions")].map(
               (header) => (
                 <div key={header} style={{
                   color: "var(--text-subtle)",
@@ -241,11 +243,11 @@ export const PatientList = () => {
 
           {/* Table Rows */}
           {loading && (
-            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading patients...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>{t("loadingPatients")}</div>
           )}
           {!loading && filteredPatients.length === 0 && (
             <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>
-              No patients yet. Patients appear here after they grant you access to their health data.
+              {t("noPatientsYet")}
             </div>
           )}
           {filteredPatients.map((patient, idx) => (
@@ -323,7 +325,7 @@ export const PatientList = () => {
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
-                  👁️ View
+                  👁️ {t("view")}
                 </button>
               </div>
             </div>
@@ -368,7 +370,7 @@ export const PatientList = () => {
                       {selectedPatient.name}
                     </h2>
                     <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: 0 }}>
-                      {selectedPatient.patientId} • {selectedPatient.age ? `${selectedPatient.age} years old` : ""} {selectedPatient.gender ? `• ${selectedPatient.gender === "M" ? "Male" : selectedPatient.gender === "F" ? "Female" : selectedPatient.gender}` : ""}
+                      {selectedPatient.patientId} • {selectedPatient.age ? `${selectedPatient.age} t("yearsOld")` : ""} {selectedPatient.gender ? `• ${selectedPatient.gender === "M" ? "Male" : selectedPatient.gender === "F" ? "Female" : selectedPatient.gender}` : ""}
                     </p>
                   </div>
                 </div>
@@ -390,21 +392,21 @@ export const PatientList = () => {
               {/* Reason */}
               <div style={{ marginBottom: "24px" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", marginBottom: "8px" }}>
-                  Reason
+                  {t("reason")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "15px" }}>
-                  {selectedPatient.condition || "Not specified"}
+                  {selectedPatient.condition || t("notSpecified")}
                 </div>
               </div>
 
               {/* Visit Info */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }}>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px" }}>
-                  <div style={{ color: "var(--text-subtle)", fontSize: "11px", marginBottom: "4px" }}>Last Visit</div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "11px", marginBottom: "4px" }}>{t("lastVisit")}</div>
                   <div style={{ color: "var(--text)", fontSize: "16px", fontWeight: "800" }}>{selectedPatient.lastVisit || "-"}</div>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "10px" }}>
-                  <div style={{ color: "var(--text-subtle)", fontSize: "11px", marginBottom: "4px" }}>Next Appointment</div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "11px", marginBottom: "4px" }}>{t("nextAppointment")}</div>
                   <div style={{ color: "var(--text)", fontSize: "16px", fontWeight: "800" }}>{selectedPatient.nextAppointment || "-"}</div>
                 </div>
               </div>
@@ -412,26 +414,26 @@ export const PatientList = () => {
               {/* Biomarker Summary */}
               <div style={{ marginTop: "24px" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", marginBottom: "12px" }}>
-                  Health Data Summary
+                  {t("healthDataSummary")}
                 </div>
                 {biomarkerLoading && (
                   <div style={{ color: "var(--text-subtle)", fontSize: "14px", textAlign: "center", padding: "20px" }}>
-                    Loading health data...
+                    {t("loadingHealthData")}
                   </div>
                 )}
                 {!biomarkerLoading && !biomarkerData && (
                   <div style={{ color: "var(--text-subtle)", fontSize: "14px", textAlign: "center", padding: "20px" }}>
-                    No health data recorded yet.
+                    {t("noHealthData")}
                   </div>
                 )}
                 {!biomarkerLoading && biomarkerData && (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
                     {[
-                      { key: "heart_rate", label: "Heart Rate", unit: "bpm", icon: "❤️", color: "#ef4444" },
+                      { key: "heart_rate", label: t("heartRate"), unit: "bpm", icon: "❤️", color: "#ef4444" },
                       { key: "spo2", label: "SpO₂", unit: "%", icon: "🫁", color: "#3b82f6" },
-                      { key: "steps", label: "Steps", unit: "steps", icon: "👟", color: "#10b981" },
-                      { key: "calories", label: "Calories", unit: "kcal", icon: "🔥", color: "#f59e0b" },
-                      { key: "sleep_hours", label: "Sleep", unit: "hrs", icon: "🌙", color: "#8b5cf6" },
+                      { key: "steps", label: t("steps"), unit: "steps", icon: "👟", color: "#10b981" },
+                      { key: "calories", label: t("calories"), unit: "kcal", icon: "🔥", color: "#f59e0b" },
+                      { key: "sleep_hours", label: t("sleep"), unit: "hrs", icon: "🌙", color: "#8b5cf6" },
                     ].map(({ key, label, unit, icon, color }) => {
                       const reading = biomarkerData.current_readings?.[key];
                       return (
@@ -481,7 +483,7 @@ export const PatientList = () => {
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
-                  📋 Generate Health Report PDF
+                  📋 {t("generateReport")}
                 </button>
               </div>
             </div>
