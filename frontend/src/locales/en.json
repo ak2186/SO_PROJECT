@@ -68,5 +68,6 @@
     "passLowercase": "Password must contain at least one lowercase letter.",
     "passNumber": "Password must contain at least one number.",
     "loginFailed": "Login failed. Check your credentials.",
-    "registrationFailed": "Registration failed."
+    "registrationFailed": "Registration failed.",
+    "accountCreatedAvatar": "Account created! Continue to avatar setup..."
 }

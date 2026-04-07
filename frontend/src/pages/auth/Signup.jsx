@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { AvatarCustomizer } from "../../components/AvatarCustomizer";
+import { useTranslation } from "react-i18next";
 
 export const Signup = () => {
   const navigate = useNavigate();
@@ -18,28 +19,29 @@ export const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false); // kept (not removed)
   const [step, setStep] = useState(1); // ✅ NEW
+  const { t } = useTranslation();
 
   const handleSignup = async (e) => {
     e.preventDefault();
 
     if (!form.first_name || !form.last_name || !form.email || !form.password) {
-      setError("Please fill all fields.");
+      setError(t("fillAllFields"));
       return;
     }
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(t("passMin8"));
       return;
     }
     if (!/[A-Z]/.test(form.password)) {
-      setError("Password must contain at least one uppercase letter.");
+      setError(t("passUppercase"));
       return;
     }
     if (!/[a-z]/.test(form.password)) {
-      setError("Password must contain at least one lowercase letter.");
+      setError(t("passLowercase"));
       return;
     }
     if (!/\d/.test(form.password)) {
-      setError("Password must contain at least one number.");
+      setError(t("passNumber"));
       return;
     }
 
@@ -59,7 +61,7 @@ export const Signup = () => {
       setStep(2); // 
 
     } catch (err) {
-      setError(err.message || "Registration failed.");
+      setError(err.message || t("registrationFailed"));
     } finally {
       setLoading(false);
     }
@@ -135,7 +137,7 @@ export const Signup = () => {
                 letterSpacing: "-0.4px",
               }}
             >
-              Create Account
+              {t("createAccount")}
             </h2>
 
             <p
@@ -145,7 +147,7 @@ export const Signup = () => {
                 margin: "0 0 28px 0",
               }}
             >
-              Start your health journey with HEALIX
+              {t("signUpSub")}
             </p>
 
             {/* Error / Success messages */}
@@ -176,7 +178,7 @@ export const Signup = () => {
                 }}
               >
                 <span style={{ color: "#34d399", fontSize: "13px" }}>
-                  Account created! Continue to avatar setup...
+                  {t("accountCreatedAvatar")}
                 </span>
               </div>
             )}
@@ -266,7 +268,7 @@ export const Signup = () => {
               />
 
               <button type="submit" disabled={loading}>
-                {loading ? "Creating Account..." : "Create Account"}
+                {loading ? t("creatingAccount") : t("createAccount")}
               </button>
             </form>
 
@@ -278,9 +280,9 @@ export const Signup = () => {
                 color: "#64748b",
               }}
             >
-              Already have an account?{" "}
+              t("haveAccount")}{" "}
               <a href="/login" style={{ color: "#60a5fa" }}>
-                Log in
+                {t("signIn")}
               </a>
             </p>
           </div>
