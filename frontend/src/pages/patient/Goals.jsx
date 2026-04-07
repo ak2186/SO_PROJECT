@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import "./goals.css";
 import {
   Pencil,
@@ -26,6 +27,7 @@ const GoalCard = ({
   daysColor,
   storageKey,
 }) => {
+  const { t } = useTranslation();
   // Load persisted target or use default
   const loadTarget = () => {
     if (storageKey) {
@@ -122,7 +124,7 @@ const GoalCard = ({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {streak > 0 && (
-            <span className="streak-badge">🔥 {streak} day streak</span>
+            <span className="streak-badge">🔥 {streak} {t("dayStreak")}</span>
           )}
           {personalBest > 0 && (
             <span className="pb-badge">
@@ -138,7 +140,7 @@ const GoalCard = ({
       {isEditing ? (
         // Edit Target
         <div className="edit-section">
-          <label>Daily Target</label>
+          <label>{t("dailyTarget")}</label>
           <input
             type="number"
             value={editTarget}
@@ -147,10 +149,10 @@ const GoalCard = ({
 
           <div className="edit-actions">
             <button className="save-btn" onClick={handleSave}>
-              Save
+              {t("save")}
             </button>
             <button className="cancel-btn" onClick={() => setIsEditing(false)}>
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </div>
@@ -165,7 +167,7 @@ const GoalCard = ({
           >
             <div className="inner-circle">
               <h2>{percentage}%</h2>
-              <p>Complete</p>
+              <p>{t("complete")}</p>
             </div>
           </div>
 
@@ -175,9 +177,9 @@ const GoalCard = ({
               {current.toLocaleString()}{" "}
               <span>/ {target.toLocaleString()}</span>
             </h2>
-            {remaining > 0 && <p>{remaining} remaining to reach goal</p>}
+            {remaining > 0 && <p>`${remaining} ${t("remainingToReachGoal")}`</p>}
             {remaining <= 0 && (
-              <p className="success-text">🎉 Goal achieved today!</p>
+              <p className="success-text">🎉 {t("goalAchievedToday")}</p>
             )}
           </div>
 
@@ -188,6 +190,7 @@ const GoalCard = ({
 };
 
 const TrackableCard = ({ storageKey, title, icon, color }) => {
+  const { t } = useTranslation();
   const todayStr = new Date().toISOString().split("T")[0];
 
   // Daily water counter
@@ -219,15 +222,15 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
           <div className="trackable-info">
-            <div className="trackable-title">Water Intake</div>
-            <div className="trackable-sub">Daily goal: {target} glasses</div>
+            <div className="trackable-title">{t("waterIntake")}</div>
+            <div className="trackable-sub">{t("dailyGoalLabel")} {target} {t("glasses")}</div>
           </div>
           {achieved && (
             <span
               className="streak-badge"
               style={{ color, borderColor: color, background: `${color}18` }}
             >
-              ✓ Done
+              ✓ {t("done")}
             </span>
           )}
         </div>
@@ -286,9 +289,9 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
           <div className="trackable-info">
-            <div className="trackable-title">Sleep Tracker</div>
+            <div className="trackable-title">{t("sleepTracker")}</div>
             <div className="trackable-sub" style={{ margin: 0 }}>
-              Goal: 8 hours
+              {t("goal")}: 8 {t("hours")}
             </div>
           </div>
           {achieved && (
@@ -300,13 +303,13 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
                 background: `${color}18`,
               }}
             >
-              ✓ Done
+              ✓ {t("done")}
             </span>
           )}
         </div>
         <div className="sleep-inputs">
           <div className="sleep-field">
-            <label>Slept at</label>
+            <label>{t("sleptAt")}</label>
             <input
               type="time"
               value={sleep}
@@ -318,7 +321,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
           </div>
           <div className="sleep-divider">→</div>
           <div className="sleep-field">
-            <label>Woke up</label>
+            <label>{t("wokeUp")}</label>
             <input
               type="time"
               value={wake}
@@ -336,8 +339,8 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
             style={{ color: achieved ? color : "var(--text-muted)" }}
           >
             {achieved
-              ? `🌙 ${hours} hrs — great sleep!`
-              : `😴 ${hours} hrs — try for 8`}
+              ? `🌙 ${hours} ${t("hrsGreatSleep")}`
+              : `😴 ${hours} ${t("hrsTryFor8")}`}
           </div>
         )}
       </div>
@@ -381,8 +384,8 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
           <div className="trackable-info">
-            <div className="trackable-title">Exercise Time</div>
-            <div className="trackable-sub">Daily goal: {target} min</div>
+            <div className="trackable-title">{t("exerciseTime")}</div>
+            <div className="trackable-sub">{t("dailyGoalLabel")} {target} min</div>
           </div>
           {achieved && (
             <span
@@ -465,11 +468,11 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
   if (title === "Mood") {
     const moodKey = `${storageKey}_${todayStr}`;
     const moods = [
-      { label: "Great", emoji: "😄", value: 5 },
-      { label: "Good", emoji: "🙂", value: 4 },
-      { label: "Okay", emoji: "😐", value: 3 },
-      { label: "Low", emoji: "😔", value: 2 },
-      { label: "Bad", emoji: "😞", value: 1 },
+      { label: t("great"), emoji: "😄", value: 5 },
+      { label: t("goodMood"), emoji: "🙂", value: 4 },
+      { label: t("okay"), emoji: "😐", value: 3 },
+      { label: t("low"), emoji: "😔", value: 2 },
+      { label: t("bad"), emoji: "😞", value: 1 },
     ];
     const [selected, setSelected] = useState(() =>
       Number(localStorage.getItem(moodKey) || 0)
@@ -493,9 +496,9 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
         <div className="trackable-header">
           <div className="quicklog-icon">{icon}</div>
           <div className="trackable-info">
-            <div className="trackable-title">Mood Check-in</div>
+            <div className="trackable-title">{t("moodCheckIn")}</div>
             <div className="trackable-sub" style={{ margin: 0 }}>
-              How are you feeling?
+              {t("howAreYouFeeling")}
             </div>
           </div>
           {achieved && (
@@ -585,6 +588,7 @@ export const Goals = () => {
   const { user } = useAuth();
   const [currentSteps, setCurrentSteps] = useState(0);
   const [currentCalories, setCurrentCalories] = useState(0);
+  const { t } = useTranslation();
 
   const fetchGoalData = () => {
     biomarkersAPI
@@ -608,16 +612,16 @@ export const Goals = () => {
     <div className="goal-dashboard page-enter">
       <div className="goal-dashboard-inner tab-animate">
         <div className="page-header">
-          <p className="page-label">HEALTHCARE</p>
-          <h1>Goals</h1>
-          <p className="page-subtext">Set and track your fitness goals here</p>
+          <p className="page-label">{t("healthcare")}</p>
+          <h1>{t("goals")}</h1>
+          <p className="page-subtext">{t("goalsDesc")}</p>
         </div>
 
         <div className="goals-container">
           {/* Steps Goal */}
           <GoalCard
-            title="Steps Goal"
-            subtitle="Daily Step Target"
+            title={t("stepsGoal")}
+            subtitle={t("dailyStepTarget")}
             current={currentSteps}
             initialTarget={10000}
             color="#6366f1"
@@ -629,8 +633,8 @@ export const Goals = () => {
 
           {/* Calories Goal */}
           <GoalCard
-            title="Calories Goal"
-            subtitle="Daily Calorie Burn Target"
+            title={t("caloriesGoal")}
+            subtitle={t("dailyCalorieBurnTarget")}
             current={currentCalories}
             initialTarget={3000}
             color="#f97316"
@@ -644,8 +648,8 @@ export const Goals = () => {
         {/* Trackable Goals */}
         <div className="quicklog-panel">
           <div className="quicklog-header">
-            <h2 className="section-title">Health Habits</h2>
-            <p className="section-subtext">Log your daily habits</p>
+            <h2 className="section-title">{t("healthHabits")}</h2>
+            <p className="section-subtext">{t("logDailyHabits")}</p>
           </div>
           <div className="trackable-grid">
             <TrackableCard
@@ -678,32 +682,32 @@ export const Goals = () => {
         {/* Quick Log Panel */}
         <div className="quicklog-panel">
           <div className="quicklog-header">
-            <h2 className="section-title">Today's Checklist</h2>
-            <p className="section-subtext">Tap to log — resets each day</p>
+            <h2 className="section-title">{t("todaysChecklist")}</h2>
+            <p className="section-subtext">{t("tapToLog")}</p>
           </div>
           <div className="quicklog-grid">
             {[
               {
                 key: `healix_ql_mindful_${user?.id}`,
-                label: "Meditation",
+                label: t("meditation"),
                 icon: <Wind size={18} color="#6366f1" />,
                 color: "#6366f1",
               },
               {
                 key: `healix_ql_stretch_${user?.id}`,
-                label: "Stretching",
+                label: t("stretching"),
                 icon: <Dumbbell size={18} color="#3b82f6" />,
                 color: "#3b82f6",
               },
               {
                 key: `healix_ql_outside_${user?.id}`,
-                label: "Went outside",
+                label: t("wentOutside"),
                 icon: <Sun size={18} color="#10b981" />,
                 color: "#10b981",
               },
               {
                 key: `healix_ql_meds_${user?.id}`,
-                label: "Took medication",
+                label: t("tookMedication"),
                 icon: <Pill size={18} color="#8b5cf6" />,
                 color: "#8b5cf6",
               },
