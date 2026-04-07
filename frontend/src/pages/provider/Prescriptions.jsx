@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { prescriptionsAPI, permissionsAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 const defaultAvatarColors = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"];
 
@@ -18,6 +19,7 @@ export const Prescriptions = () => {
   const [rxError, setRxError] = useState("");
   const [rxLoading, setRxLoading] = useState(false);
   const [medications, setMedications] = useState([]);
+  const { t } = useTranslation();
 
   // Fetch provider's patients for dropdown
   useEffect(() => {
@@ -95,9 +97,9 @@ export const Prescriptions = () => {
     try {
       await prescriptionsAPI.handleRefill(r.prescriptionId, r.id, { action: "approved" });
       setRequests(prev => prev.map(req => req.id === r.id ? { ...req, status: "approved" } : req));
-      showToast("Refill request approved!");
+      showToast(t("refillApproved"));
     } catch {
-      showToast("Failed to approve refill.");
+      showToast(t("failedApproveRefill"));
     }
   };
 
@@ -105,9 +107,9 @@ export const Prescriptions = () => {
     try {
       await prescriptionsAPI.handleRefill(r.prescriptionId, r.id, { action: "denied" });
       setRequests(prev => prev.filter(req => req.id !== r.id));
-      showToast("Refill request denied.");
+      showToast(t("refillDenied"));
     } catch {
-      showToast("Failed to deny refill.");
+      showToast( t("failedDenyRefill"));
     }
   };
 
@@ -129,15 +131,15 @@ export const Prescriptions = () => {
   };
 
   const handleAddPrescription = async () => {
-    if (!rxForm.patient_id) { setRxError("Please select a patient."); return; }
-    if (medications.length === 0) { setRxError("Please add at least one medication."); return; }
+    if (!rxForm.patient_id) { setRxError(t("selectPatientError")); return; }
+    if (medications.length === 0) { setRxError(t("addAtLeastOneMed")); return; }
     setRxError("");
     setRxLoading(true);
     try {
       for (const med of medications) {
         await prescriptionsAPI.create({ patient_id: rxForm.patient_id, ...med });
       }
-      showToast(`${medications.length} prescription(s) created!`);
+      showToast(`${medications.length} ${t("prescription(s) created!")}`);
       setShowAddRx(false);
       setMedications([]);
       setRxForm({ patient_id: "", medication_name: "", dosage: "", frequency: "", duration: "", notes: "", refills_allowed: 0 });
@@ -162,7 +164,7 @@ export const Prescriptions = () => {
         setActivePrescriptions(active);
       }
     } catch (err) {
-      setRxError(err.message || "Failed to create prescription.");
+      setRxError(err.message || t("failedCreatePrescription"));
     } finally {
       setRxLoading(false);
     }
@@ -207,24 +209,24 @@ export const Prescriptions = () => {
         {/* Header */}
         <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
           <div>
-            <p style={{ color: "#10b981", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Provider Portal</p>
-            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Prescription Management</h1>
+            <p style={{ color: "#10b981", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>{t("providerPortal")}</p>
+            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>{t("prescriptionManagement")}</h1>
           </div>
           <button
             onClick={() => { setShowAddRx(true); setRxError(""); setMedications([]); setRxForm({ patient_id: "", medication_name: "", dosage: "", frequency: "", duration: "", notes: "", refills_allowed: 0 }); }}
             className="action-btn"
             style={{ padding: "10px 22px", borderRadius: "10px", border: "none", background: "#10b981", color: "#fff", fontSize: "14px", fontWeight: "700", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: "6px" }}
           >
-            + Add Prescription
+            + {t("addPrescription")}
           </button>
         </div>
 
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "32px", animation: "fadeUp 0.5s ease 0.08s both" }}>
           {[
-            { label: "Pending Refill Requests", value: requests.filter(r => r.status === "pending").length, color: "#f59e0b" },
-            { label: "Approved Today", value: requests.filter(r => r.status === "approved").length, color: "#10b981" },
-            { label: "Active Prescriptions", value: activePrescriptions.length, color: "#06b6d4" },
+            { label: t("pendingRefillRequests"), value: requests.filter(r => r.status === "pending").length, color: "#f59e0b" },
+            { label: t("approvedToday"), value: requests.filter(r => r.status === "approved").length, color: "#10b981" },
+            { label: t("activePrescriptions"), value: activePrescriptions.length, color: "#06b6d4" },
           ].map((s, i) => (
             <div key={i} style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px 24px" }}>
               <div style={{ color: s.color, fontSize: "28px", fontWeight: "700", marginBottom: "4px" }}>{s.value}</div>
@@ -240,7 +242,7 @@ export const Prescriptions = () => {
             <input type="text" placeholder="Search patients or medications..." className="search-input" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
-            {[["all", "All"], ["pending", "Pending"], ["approved", "Approved"]].map(([val, label]) => (
+            {[["all", t("all")], ["pending", t("pending")], ["approved", t("approved")]].map(([val, label]) => (
               <button key={val} onClick={() => setFilter(val)}
                 style={{ padding: "8px 18px", borderRadius: "8px", border: filter === val ? "none" : "1px solid var(--border-solid)", fontWeight: "600", fontSize: "13px", cursor: "pointer", transition: "all 0.15s ease", fontFamily: "'DM Sans',sans-serif", background: filter === val ? "#10b981" : "var(--bg-3)", color: filter === val ? "#fff" : "var(--text-subtle)" }}>
                 {label}
@@ -250,13 +252,13 @@ export const Prescriptions = () => {
         </div>
 
         {/* Refill Requests */}
-        <h2 style={{ color: "var(--text)", fontSize: "18px", fontWeight: "700", marginBottom: "16px", animation: "fadeUp 0.5s ease 0.16s both" }}>Refill Requests</h2>
+        <h2 style={{ color: "var(--text)", fontSize: "18px", fontWeight: "700", marginBottom: "16px", animation: "fadeUp 0.5s ease 0.16s both" }}>{t("refillRequests")}</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "40px" }}>
           {filtered.length === 0 && !loading && (
-            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "40px", fontSize: "16px" }}>No refill requests found.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "40px", fontSize: "16px" }}>{t("noRefillRequests")}</div>
           )}
           {loading && (
-            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "40px", fontSize: "16px" }}>Loading...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "40px", fontSize: "16px" }}>{t("loading")}</div>
           )}
           {filtered.map((r, i) => (
             <div key={r.id} className="rx-card" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${0.16 + i * 0.06}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)", opacity: r.status === "approved" ? 0.6 : 1 }}>
@@ -267,24 +269,24 @@ export const Prescriptions = () => {
                 <div style={{ color: "var(--text)", fontWeight: "700", fontSize: "16px", marginBottom: "4px" }}>{r.patient}</div>
                 <div style={{ color: "#10b981", fontSize: "14px", fontWeight: "600", marginBottom: "8px" }}>{r.medication}</div>
                 <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-                  <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>📅 Requested {r.requestedDate}</span>
-                  <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>Current refills: {r.currentRefills}</span>
+                  <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>📅 {t("requested")} {r.requestedDate}</span>
+                  <span style={{ color: "var(--text-subtle)", fontSize: "13px" }}>{t("currentRefills:")} {r.currentRefills}</span>
                 </div>
               </div>
               {r.status === "pending" ? (
                 <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
                   <button onClick={() => handleApprove(r)} className="action-btn"
                     style={{ padding: "8px 18px", borderRadius: "8px", border: "none", background: "#10b981", color: "#fff", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
-                    Approve
+                    {t("approve")}
                   </button>
                   <button onClick={() => handleDeny(r)} className="action-btn"
                     style={{ padding: "8px 18px", borderRadius: "8px", border: "1px solid #ef4444", background: "transparent", color: "#ef4444", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
-                    Deny
+                    {t("denyBtn")}
                   </button>
                 </div>
               ) : (
                 <span style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: "600", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>
-                  Approved
+                  {t("approved")}
                 </span>
               )}
             </div>
@@ -292,10 +294,10 @@ export const Prescriptions = () => {
         </div>
 
         {/* Active Prescriptions */}
-        <h2 style={{ color: "var(--text)", fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Active Prescriptions</h2>
+        <h2 style={{ color: "var(--text)", fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>{t("activePrescriptions")}</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px" }}>
           {activePrescriptions.length === 0 && !loading && (
-            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "40px", fontSize: "16px" }}>No active prescriptions.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "40px", fontSize: "16px" }}>{t("noActivePrescriptions")}</div>
           )}
           {activePrescriptions.map((p, i) => (
             <div key={p.id} style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px" }}>
@@ -305,13 +307,13 @@ export const Prescriptions = () => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: "var(--text)", fontWeight: "700", fontSize: "14px" }}>{p.patient}</div>
-                  <div style={{ color: "var(--text-subtle)", fontSize: "12px" }}>Issued {p.issued}</div>
+                  <div style={{ color: "var(--text-subtle)", fontSize: "12px" }}>{t("issued")}  {p.issued}</div>
                 </div>
               </div>
               <div style={{ color: "#10b981", fontSize: "15px", fontWeight: "600", marginBottom: "6px" }}>{p.medication}</div>
               <div style={{ color: "var(--text-subtle)", fontSize: "13px", marginBottom: "10px" }}>{p.dosage}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ color: "var(--text-subtle)", fontSize: "12px" }}>Refills left</span>
+                <span style={{ color: "var(--text-subtle)", fontSize: "12px" }}>{t("refillsLeft")}</span>
                 <span style={{ color: "#10b981", fontWeight: "700", fontSize: "14px" }}>{p.refills}</span>
               </div>
             </div>
@@ -336,7 +338,7 @@ export const Prescriptions = () => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                <h2 style={{ color: "var(--text)", fontSize: "22px", fontWeight: "800", margin: 0 }}>Add Prescription</h2>
+                <h2 style={{ color: "var(--text)", fontSize: "22px", fontWeight: "800", margin: 0 }}>{t("addPrescription")}</h2>
                 <button onClick={() => setShowAddRx(false)} style={{ background: "var(--bg)", border: "none", color: "var(--text-muted)", width: "32px", height: "32px", borderRadius: "8px", fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
 
@@ -348,14 +350,14 @@ export const Prescriptions = () => {
 
               {/* Patient Select */}
               <div style={{ marginBottom: "20px" }}>
-                <label className="rx-label">Patient *</label>
+                <label className="rx-label">{t("patient")}  *</label>
                 <select
                   className="rx-input"
                   value={rxForm.patient_id}
                   onChange={(e) => setRxForm(f => ({ ...f, patient_id: e.target.value }))}
                   style={{ appearance: "none" }}
                 >
-                  <option value="">Select a patient...</option>
+                  <option value="">{t("selectPatient")}</option>
                   {patientList.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -365,7 +367,7 @@ export const Prescriptions = () => {
               {/* Added Medications List */}
               {medications.length > 0 && (
                 <div style={{ marginBottom: "20px" }}>
-                  <label className="rx-label">Medications Added ({medications.length})</label>
+                  <label className="rx-label">{t("medicationsAdded")} ({medications.length})</label>
                   {medications.map((med, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", background: "var(--bg)", border: "1px solid var(--border-solid)", marginBottom: "8px" }}>
                       <div style={{ flex: 1 }}>
@@ -381,33 +383,33 @@ export const Prescriptions = () => {
               {/* Medication Form */}
               <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px", marginBottom: "20px" }}>
                 <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text)", marginBottom: "14px" }}>
-                  {medications.length > 0 ? "Add Another Medication" : "Medication Details"}
+                  {medications.length > 0 ? t("addAnotherMedication") : t("medicationDetails")}
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
-                    <label className="rx-label">Medication Name *</label>
+                    <label className="rx-label">{t("medicationName")} *</label>
                     <input className="rx-input" placeholder="e.g. Amoxicillin" value={rxForm.medication_name} onChange={(e) => setRxForm(f => ({ ...f, medication_name: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="rx-label">Dosage *</label>
+                    <label className="rx-label">{t("dosage")} *</label>
                     <input className="rx-input" placeholder="e.g. 500mg" value={rxForm.dosage} onChange={(e) => setRxForm(f => ({ ...f, dosage: e.target.value }))} />
                   </div>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
-                    <label className="rx-label">Frequency *</label>
+                    <label className="rx-label">{t("frequency")} *</label>
                     <input className="rx-input" placeholder="e.g. 3 times/day after food" value={rxForm.frequency} onChange={(e) => setRxForm(f => ({ ...f, frequency: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="rx-label">Duration</label>
+                    <label className="rx-label">{t("duration")}</label>
                     <input className="rx-input" placeholder="e.g. 7 days" value={rxForm.duration} onChange={(e) => setRxForm(f => ({ ...f, duration: e.target.value }))} />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: "12px" }}>
-                  <label className="rx-label">Instructions / Notes</label>
+                  <label className="rx-label">{t("instructionsNotes")} </label>
                   <textarea
                     className="rx-input"
                     placeholder="e.g. Take after food with a full glass of water. Avoid dairy products within 2 hours."
@@ -420,7 +422,7 @@ export const Prescriptions = () => {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", alignItems: "end" }}>
                   <div>
-                    <label className="rx-label">Refills Allowed</label>
+                    <label className="rx-label">{t("refillsAllowed")}</label>
                     <input className="rx-input" type="number" min="0" value={rxForm.refills_allowed} onChange={(e) => setRxForm(f => ({ ...f, refills_allowed: parseInt(e.target.value) || 0 }))} />
                   </div>
                   <button
@@ -428,7 +430,7 @@ export const Prescriptions = () => {
                     disabled={!rxForm.medication_name || !rxForm.dosage || !rxForm.frequency}
                     style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid #10b981", background: "rgba(16,185,129,0.1)", color: "#10b981", fontSize: "13px", fontWeight: "700", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", opacity: (!rxForm.medication_name || !rxForm.dosage || !rxForm.frequency) ? 0.4 : 1, transition: "opacity 0.2s" }}
                   >
-                    + Add Medication
+                    + {t("addMedication")}
                   </button>
                 </div>
               </div>
@@ -439,14 +441,14 @@ export const Prescriptions = () => {
                   onClick={() => setShowAddRx(false)}
                   style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   onClick={handleAddPrescription}
                   disabled={rxLoading || medications.length === 0}
                   style={{ padding: "10px 24px", borderRadius: "10px", border: "none", background: "#10b981", color: "#fff", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", opacity: (rxLoading || medications.length === 0) ? 0.5 : 1 }}
                 >
-                  {rxLoading ? "Creating..." : `Create ${medications.length} Prescription${medications.length !== 1 ? "s" : ""}`}
+                  {rxLoading ? t("creating") : `${t("create")} ${medications.length} ${t("prescriptions")}`}
                 </button>
               </div>
             </div>
