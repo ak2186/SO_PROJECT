@@ -3,6 +3,7 @@ import { biomarkersAPI, googleFitAPI, permissionsAPI, appointmentsAPI, gamificat
 import { useAuth } from "../../context/AuthContext";
 import { HealthAvatar } from "../../components/HealthAvatar";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export const PatientDashboard = () => {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ export const PatientDashboard = () => {
   const [permRequests, setPermRequests] = useState([]);
   const [permLoading, setPermLoading] = useState({});
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [weekData, setWeekData] = useState(null);
   const [weeklySummary, setWeeklySummary] = useState({ avgHr: null, totalSteps: null, avgSleep: null });
@@ -180,8 +182,8 @@ export const PatientDashboard = () => {
         icon: "💡",
         type: "info",
         color: "#3b82f6",
-        title: "No data yet",
-        body: "Connect Google Fit in Settings to see your health insights",
+        title: t("noDataYet"),
+        body: t("connectGoogleFit"),
       });
       return insights;
     }
@@ -191,8 +193,8 @@ export const PatientDashboard = () => {
         icon: "⚠️",
         type: "warning",
         color: "#f59e0b",
-        title: "Elevated Heart Rate",
-        body: `Your heart rate is elevated at ${hrValue} BPM`,
+        title: t("elevatedHeartRate"),
+        body: `${t("heartRateElevatedAt")} ${hrValue} BPM`,
       });
     }
 
@@ -201,16 +203,16 @@ export const PatientDashboard = () => {
         icon: "🏆",
         type: "success",
         color: "#10b981",
-        title: "Step Goal Achieved!",
-        body: `You've walked ${stepsVal.toLocaleString()} steps today — goal of ${stepGoal.toLocaleString()} reached!`,
+        title: t("stepGoalAchieved"),
+        body: `${t("youveWalked")} ${stepsVal.toLocaleString()} ${t("stepsGoalReached")} ${stepGoal.toLocaleString()}!`,
       });
     } else if (stepsVal != null && stepsVal > 0) {
       insights.push({
         icon: "👟",
         type: "info",
         color: "#3b82f6",
-        title: "Keep Moving",
-        body: `You're at ${stepsProgress}% of your ${stepGoal.toLocaleString()} step goal. Keep moving!`,
+        title: t("keepMoving"),
+        body: `${stepsProgress}% ${t("ofYourStepGoal")} ${stepGoal.toLocaleString()}`,
       });
     }
 
@@ -219,16 +221,16 @@ export const PatientDashboard = () => {
         icon: "😴",
         type: "warning",
         color: "#f59e0b",
-        title: "Low Sleep",
-        body: `You only slept ${sleepVal}h. Try to get 7-8 hours tonight.`,
+        title: t("lowSleep"),
+        body: `${t("youOnlySlept")} ${sleepVal}${t("hTryToGet")}`,
       });
     } else if (sleepVal != null && sleepVal >= 7) {
       insights.push({
         icon: "🌙",
         type: "success",
         color: "#10b981",
-        title: "Great Sleep",
-        body: `Great sleep last night — ${sleepVal} hours!`,
+        title: t("greatSleep"),
+        body: `${t("greatSleepLastNight")} ${sleepVal} ${t("hours")}!`,
       });
     }
 
@@ -237,8 +239,8 @@ export const PatientDashboard = () => {
         icon: "💧",
         type: "warning",
         color: "#ef4444",
-        title: "Low Blood Oxygen",
-        body: `Blood oxygen is low at ${spo2Value}%`,
+        title: t("lowBloodOxygen"),
+        body: `${t("bloodOxygenLowAt")} ${spo2Value}%`,
       });
     }
 
@@ -255,8 +257,8 @@ export const PatientDashboard = () => {
         icon: "📅",
         type: "info",
         color: "#3b82f6",
-        title: "Upcoming Appointment",
-        body: `Upcoming: ${nextAppt.provider_name || "Your provider"} on ${formatted}`,
+        title: t("upcomingAppointment"),
+        body: `${t("upcoming")}: ${nextAppt.provider_name || t("yourProvider")} ${t("on")} ${formatted}`,
       });
     }
 
@@ -267,10 +269,10 @@ export const PatientDashboard = () => {
 
   const healthCards = [
     {
-      title: "Heart Rate",
+      title: t("heartRate"),
       value: hrValue != null ? hrValue : "—",
       unit: "bpm",
-      subtitle: hrValue != null ? "Current reading" : "No data yet",
+      subtitle: hrValue != null ? t("currentReading") : t("noDataYet"),
       icon: "❤️",
       color: "#ef4444",
       gradient: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.05) 100%)",
@@ -278,10 +280,10 @@ export const PatientDashboard = () => {
       iconGlow: "drop-shadow(0 0 20px rgba(239,68,68,0.6))",
     },
     {
-      title: "Blood Oxygen",
+      title: t("bloodOxygen"),
       value: spo2Value != null ? spo2Value : "—",
       unit: "%",
-      subtitle: spo2Value != null ? "SpO₂ level" : "No data yet",
+      subtitle: spo2Value != null ? t("spo2Level") : t("noDataYet"),
       icon: "💧",
       color: "#3b82f6",
       gradient: "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.05) 100%)",
@@ -289,10 +291,10 @@ export const PatientDashboard = () => {
       iconGlow: "drop-shadow(0 0 20px rgba(59,130,246,0.6))",
     },
     {
-      title: "Steps Today",
+      title: t("stepsToday"),
       value: stepsVal != null ? stepsVal.toLocaleString() : "—",
       unit: "steps",
-      subtitle: stepsVal != null ? `${stepsProgress}% of goal` : "No data yet",
+      subtitle: stepsVal != null ? `${stepsProgress}% ${t("ofGoal")}` : t("noDataYet"),
       progress: stepsVal != null ? stepsProgress : 0,
       icon: "👟",
       color: "#10b981",
@@ -301,10 +303,10 @@ export const PatientDashboard = () => {
       iconGlow: "drop-shadow(0 0 20px rgba(16,185,129,0.6))",
     },
     {
-      title: "Calories Burned",
+      title: t("caloriesBurned"),
       value: caloriesVal != null ? caloriesVal.toLocaleString() : "—",
       unit: "kcal",
-      subtitle: caloriesVal != null ? "Active energy" : "No data yet",
+      subtitle: caloriesVal != null ? t("activeEnergy") : t("noDataYet"),
       icon: "🔥",
       color: "#f59e0b",
       gradient: "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(217,119,6,0.05) 100%)",
@@ -312,10 +314,10 @@ export const PatientDashboard = () => {
       iconGlow: "drop-shadow(0 0 20px rgba(245,158,11,0.6))",
     },
     {
-      title: "Sleep",
+      title: t("sleep"),
       value: sleepVal != null ? sleepVal : "—",
       unit: "hrs",
-      subtitle: sleepVal != null ? (sleepVal >= 7 ? "Good rest" : "Below recommended") : "No data yet",
+      subtitle: sleepVal != null ? (sleepVal >= 7 ? t("goodRest") : t("belowRecommended")) : t("noDataYet"),
       icon: "😴",
       color: "#8b5cf6",
       gradient: "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(109,40,217,0.05) 100%)",
@@ -489,7 +491,7 @@ export const PatientDashboard = () => {
             margin: "0 0 14px 0",
             opacity: 0.95,
           }}>
-            Health Dashboard
+            {t("healthDashboard")}
           </p>
           <h1 className="gradient-text" style={{
             fontSize: "56px",
@@ -498,7 +500,7 @@ export const PatientDashboard = () => {
             letterSpacing: "-2px",
             lineHeight: 1.1,
           }}>
-            Welcome Back
+            {t("welcomeBack")}
           </h1>
           <p style={{
             color: "var(--text-subtle)",
@@ -506,7 +508,7 @@ export const PatientDashboard = () => {
             margin: 0,
             fontWeight: "500",
           }}>
-            Your health metrics at a glance ✨
+            {t("metricsAtGlance")} ✨
           </p>
         </div>
 
@@ -539,14 +541,14 @@ export const PatientDashboard = () => {
     
               <div style={{ flex: 1, minWidth: "250px" }}>
                 <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 8px 0" }}>
-                  Your Health Buddy
+                  {t("yourHealthBuddy")}
                   </h3>
                 
                 <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: "0 0 16px 0", lineHeight: "1.6" }}>
-                  {healthStatus.warnings === 0 && healthStatus.hasData && "Everything looks great! Your avatar is happy and healthy. Keep up the good work! 🎉"}
-                  {healthStatus.warnings >= 3 && "Your avatar is worried. Multiple health metrics need attention. Please review your vitals."}
-                  {healthStatus.warnings >= 1 && healthStatus.warnings < 3 && "Your avatar is a bit concerned. Some health metrics could be better."}
-                  {!healthStatus.hasData && "Your avatar is waiting for health data. Connect Google Fit to get started!"}
+                  {healthStatus.warnings === 0 && healthStatus.hasData && t("avatarHappy")}
+                  {healthStatus.warnings >= 3 && t("avatarWorried")}
+                  {healthStatus.warnings >= 1 && healthStatus.warnings < 3 && t("avatarConcerned")}
+                  {!healthStatus.hasData && t("avatarWaiting")}
                  </p>
       
                 <button
@@ -563,7 +565,7 @@ export const PatientDashboard = () => {
                   fontFamily: "'DM Sans', sans-serif",
                 }}
       >
-        Customize Avatar
+        {t("customizeAvatar")}
       </button>
     </div>
   </div>
@@ -595,11 +597,11 @@ export const PatientDashboard = () => {
                   </div>
                   <div>
                     <div style={{ color: "var(--text)", fontSize: "15px", fontWeight: "700", marginBottom: "2px" }}>
-                      {req.provider_name || "A doctor"} is requesting access to your health data
+                      {req.provider_name || "A doctor"} t("requestingAccess")
                     </div>
                     <div style={{ color: "var(--text-subtle)", fontSize: "13px" }}>
                       {req.provider_specialty ? `${req.provider_specialty} · ` : ""}
-                      Granting access lets this doctor view your biomarker history and readings.
+                      t("grantingAccessDesc")
                     </div>
                   </div>
                 </div>
@@ -615,7 +617,7 @@ export const PatientDashboard = () => {
                       opacity: permLoading[req.id] ? 0.5 : 1,
                     }}
                   >
-                    Deny
+                    {t("deny")}
                   </button>
                   <button
                     disabled={!!permLoading[req.id]}
@@ -628,7 +630,7 @@ export const PatientDashboard = () => {
                       opacity: permLoading[req.id] ? 0.5 : 1,
                     }}
                   >
-                    {permLoading[req.id] ? "Saving…" : "Grant Access"}
+                    {permLoading[req.id] ? t("saving") : t("grantAccess")}
                   </button>
                 </div>
               </div>
@@ -710,7 +712,7 @@ export const PatientDashboard = () => {
                   }}>
                     <div>
                       <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-subtle)", marginBottom: "2px" }}>
-                        Daily Challenge
+                        {t("dailyChallenge")}
                       </div>
                       <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>
                         {gamification.challenge.title}
@@ -748,11 +750,11 @@ export const PatientDashboard = () => {
                           flexShrink: 0,
                         }}
                       >
-                        Complete
+                        {t("complete")}
                       </button>
                     ) : (
                       <span style={{ color: "#10b981", fontWeight: "700", fontSize: "13px", flexShrink: 0 }}>
-                        ✓ Done
+                        ✓ {t("done")}
                       </span>
                     )}
                   </div>
@@ -772,7 +774,7 @@ export const PatientDashboard = () => {
                   )}
                   {gamification.badges.length === 0 && (
                     <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>
-                      No badges yet — keep going!
+                      t("noBadgesYet")  
                     </span>
                   )}
                 </div>
@@ -883,7 +885,7 @@ export const PatientDashboard = () => {
             fontWeight: "700",
             margin: "0 0 24px 0",
           }}>
-            Weekly Summary
+            {t("weeklySummary")}
           </h2>
           <div style={{
             display: "grid",
@@ -895,20 +897,20 @@ export const PatientDashboard = () => {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                 <div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
-                    Avg Heart Rate
+                    {t("avgHeartRate")}
                   </div>
                   <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
                     {weeklyAvgHr != null ? weeklyAvgHr : "—"}{" "}
                     <span style={{ fontSize: "16px", color: "var(--text-subtle)", fontWeight: "600" }}>BPM</span>
                   </div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
-                    Last 7 days
+                    {t("last7Days")}
                   </div>
                 </div>
                 <div style={{ fontSize: "24px" }}>📈</div>
               </div>
               <div style={{ color: weeklyAvgHr != null ? "#10b981" : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
-                {weeklyAvgHr != null ? `${weeklyAvgHr} BPM avg this week` : "No data this week"}
+                {weeklyAvgHr != null ? `${weeklyAvgHr} ${t("bpmAvgThisWeek")}` : t("noDataThisWeek")}
               </div>
             </div>
 
@@ -917,19 +919,19 @@ export const PatientDashboard = () => {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                 <div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
-                    Avg Daily Steps
+                    {t("avgDailySteps")}
                   </div>
                   <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
                     {weeklySteps != null ? weeklySteps.toLocaleString() : "—"}
                   </div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
-                    Last 7 days
+                    {t("last7Days")}
                   </div>
                 </div>
                 <div style={{ fontSize: "24px" }}>⚡</div>
               </div>
               <div style={{ color: weeklySteps != null ? "#10b981" : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
-                {weeklySteps != null ? `${weeklySteps.toLocaleString()} steps/day avg` : "No data this week"}
+                {weeklySteps != null ? `${weeklySteps.toLocaleString()} ${t("stepsDayAvg")}` : t("noDataThisWeek")}
               </div>
             </div>
 
@@ -938,19 +940,19 @@ export const PatientDashboard = () => {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                 <div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
-                    Avg Sleep
+                    {t("avgSleep")}
                   </div>
                   <div style={{ color: "var(--text)", fontSize: "36px", fontWeight: "800", letterSpacing: "-1px" }}>
                     {weeklySleep != null ? <>{weeklySleep}<span style={{ fontSize: "20px" }}>h</span></> : "—"}
                   </div>
                   <div style={{ color: "var(--text-subtle)", fontSize: "12px", marginTop: "4px" }}>
-                    Last 7 days
+                    {t("last7Days")}
                   </div>
                 </div>
                 <div style={{ fontSize: "24px" }}>🌙</div>
               </div>
               <div style={{ color: weeklySleep != null ? (weeklySleep >= 7 ? "#10b981" : "#f59e0b") : "var(--text-faint)", fontSize: "13px", fontWeight: "600" }}>
-                {weeklySleep != null ? (weeklySleep >= 7 ? `${weeklySleep}h avg — good quality` : `${weeklySleep}h avg — below recommended`) : "No data this week"}
+                {weeklySleep != null ? (weeklySleep >= 7 ? `${weeklySleep}${t("hAvgGoodQuality")}` : `${weeklySleep}${t("hAvgBelowRecommended")}`) : t("noDataThisWeek")}
               </div>
             </div>
           </div>
@@ -964,7 +966,7 @@ export const PatientDashboard = () => {
             fontWeight: "700",
             margin: "0 0 24px 0",
           }}>
-            Today's Activity
+            {t("todaysActivity")}
           </h2>
           <div className="activity-card">
             <div style={{
@@ -974,7 +976,7 @@ export const PatientDashboard = () => {
             }}>
               <div>
                 <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
-                  Steps
+                  {t("steps")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {stepsVal != null ? stepsVal.toLocaleString() : "—"}{" "}
@@ -984,7 +986,7 @@ export const PatientDashboard = () => {
 
               <div>
                 <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
-                  Calories
+                  {t("calories")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {caloriesVal != null ? caloriesVal.toLocaleString() : "—"}{" "}
@@ -994,7 +996,7 @@ export const PatientDashboard = () => {
 
               <div>
                 <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
-                  Heart Rate
+                  {t("heartRate")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {hrValue != null ? hrValue : "—"}{" "}
@@ -1004,7 +1006,7 @@ export const PatientDashboard = () => {
 
               <div>
                 <div style={{ color: "var(--text-subtle)", fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>
-                  Sleep
+                  {t("sleep")}
                 </div>
                 <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "800", letterSpacing: "-1px" }}>
                   {sleepVal != null ? sleepVal : "—"}{" "}
@@ -1023,7 +1025,7 @@ export const PatientDashboard = () => {
             fontWeight: "700",
             margin: "0 0 24px 0",
           }}>
-            Health Insights
+            {t("healthInsights")}
           </h2>
           <div style={{
             display: "grid",
