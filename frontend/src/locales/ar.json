@@ -287,5 +287,15 @@
     "deleteUserWarning": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بيانات المستخدم.",
     "deleting": "جاري الحذف...",
     "failedCreateProvider": "فشل إنشاء مقدم الرعاية.",
-    "failedDeleteUser": "فشل حذف المستخدم"
+    "failedDeleteUser": "فشل حذف المستخدم",
+    "providerPortal": "بوابة مقدم الرعاية",
+    "patientAppointments": "مواعيد المرضى",
+    "todaysAppointments": "مواعيد اليوم",
+    "pendingApproval": "بانتظار الموافقة",
+    "upcomingThisWeek": "القادمة هذا الأسبوع",
+    "today": "اليوم",
+    "noAppointmentsFor": "لا توجد مواعيد لـ",
+    "ageLabel": "العمر",
+    "approve": "موافقة",
+    "appointmentConfirmed": "تم تأكيد الموعد!"
 }

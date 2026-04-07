@@ -287,5 +287,15 @@
     "deleteUserWarning": "This action cannot be undone. All user data will be removed.",
     "deleting": "Deleting...",
     "failedCreateProvider": "Failed to create provider.",
-    "failedDeleteUser": "Failed to delete user"
+    "failedDeleteUser": "Failed to delete user",
+    "providerPortal": "Provider Portal",
+    "patientAppointments": "Patient Appointments",
+    "todaysAppointments": "Today's Appointments",
+    "pendingApproval": "Pending Approval",
+    "upcomingThisWeek": "Upcoming This Week",
+    "today": "Today",
+    "noAppointmentsFor": "No appointments for",
+    "ageLabel": "Age",
+    "approve": "Approve",
+    "appointmentConfirmed": "Appointment confirmed!"
 }
