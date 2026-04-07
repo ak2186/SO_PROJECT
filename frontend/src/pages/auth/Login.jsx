@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export const Login = () => {
   const { login, register } = useAuth();
@@ -15,11 +16,12 @@ export const Login = () => {
   const [signupError, setSignupError] = useState("");
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const { t } = useTranslation();
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     if (!loginForm.email || !loginForm.password) {
-      setLoginError("Please enter email and password.");
+      setLoginError(t("enterEmailPassword"));
       return;
     }
     setLoginError("");
@@ -34,7 +36,7 @@ export const Login = () => {
         navigate("/landing");
       }
     } catch (err) {
-      setLoginError(err.message || "Login failed. Check your credentials.");
+      setLoginError(err.message || t("loginFailed"));
     } finally {
       setLoginLoading(false);
     }
@@ -43,23 +45,23 @@ export const Login = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     if (!signupForm.first_name || !signupForm.last_name || !signupForm.email || !signupForm.password || !signupForm.date_of_birth || !signupForm.gender) {
-      setSignupError("Please fill all fields.");
+      setSignupError(t("fillAllFields"));
       return;
     }
     if (signupForm.password.length < 8) {
-      setSignupError("Password must be at least 8 characters long.");
+      setSignupError(t("passMin8"));
       return;
     }
     if (!/[A-Z]/.test(signupForm.password)) {
-      setSignupError("Password must contain at least one uppercase letter.");
+      setSignupError(t("passUppercase"));
       return;
     }
     if (!/[a-z]/.test(signupForm.password)) {
-      setSignupError("Password must contain at least one lowercase letter.");
+      setSignupError(t("passLowercase"));
       return;
     }
     if (!/\d/.test(signupForm.password)) {
-      setSignupError("Password must contain at least one number.");
+      setSignupError(t("passNumber"));
       return;
     }
     setSignupError("");
@@ -80,7 +82,7 @@ export const Login = () => {
         setMode("login");
       }, 1500);
     } catch (err) {
-      setSignupError(err.message || "Registration failed.");
+      setSignupError(err.message || t("registrationFailed"));
     } finally {
       setSignupLoading(false);
     }
@@ -459,12 +461,10 @@ export const Login = () => {
           </span>
 
           <h1 className={`brand-title ${mode === "signup" ? "shift" : ""}`}>
-            {mode === "signup" ? "Build Better Health Habits" : "Welcome Back to Healix"}
+            {mode === "signup" ? t("buildBetterHabits") : t("welcomeBack")}
           </h1>
           <p className={`brand-copy ${mode === "signup" ? "shift" : ""}`}>
-            {mode === "signup"
-              ? "Create your account and start tracking goals, vitals, appointments, and personalized care insights in one place."
-              : "Continue your care journey with real-time vitals, personalized goals, and connected provider support."}
+            {mode === "signup" ? t("signupBrandDesc") : t("loginBrandDesc")}
           </p>
         </div>
       </section>
@@ -473,14 +473,14 @@ export const Login = () => {
         <div className="auth-viewport">
           <div className={`auth-track ${mode === "signup" ? "signup" : ""}`}>
             <div className="auth-panel login">
-              <h2 className="auth-headline">Sign In</h2>
-              <p className="auth-sub">Track your health journey with HEALIX</p>
+              <h2 className="auth-headline">{t("signIn")}</h2>
+              <p className="auth-sub">{t("signInSub")}</p>
 
               {loginError && <div className="auth-alert error">{loginError}</div>}
 
               <form onSubmit={handleLogin}>
                 <div className="auth-field">
-                  <label className="auth-label">Email</label>
+                  <label className="auth-label">{t("email")}</label>
                   <input
                     type="email"
                     placeholder="you@example.com"
@@ -502,12 +502,12 @@ export const Login = () => {
                 </div>
 
                 <button type="submit" className="auth-button" disabled={loginLoading}>
-                  {loginLoading ? "Signing in..." : "Sign In"}
+                  {loginLoading ? t("signingIn") : t("signIn")}
                 </button>
               </form>
 
               <div className="auth-toggle">
-                Don&apos;t have an account?
+                {t("noAccount")}
                 <button
                   type="button"
                   className="auth-link"
@@ -517,24 +517,24 @@ export const Login = () => {
                     setMode("signup");
                   }}
                 >
-                  Sign Up
+                  {t("signUp")}
                 </button>
               </div>
             </div>
 
             <div className="auth-panel signup">
-              <h2 className="auth-headline">Create Account</h2>
-              <p className="auth-sub">Start your health journey with HEALIX</p>
+              <h2 className="auth-headline">{t("createAccount")}</h2>
+              <p className="auth-sub">{t("signUpSub")}</p>
 
               {signupError && <div className="auth-alert error">{signupError}</div>}
               {signupSuccess && (
-                <div className="auth-alert success">Account created! Switching to sign in...</div>
+                <div className="auth-alert success">{t("accountCreated")}</div>
               )}
 
               <form onSubmit={handleSignup}>
                 <div className="auth-grid-two">
                   <div className="auth-field">
-                    <label className="auth-label">First Name</label>
+                    <label className="auth-label">{t("firstName")}</label>
                     <input
                       type="text"
                       placeholder="First Name"
@@ -544,7 +544,7 @@ export const Login = () => {
                     />
                   </div>
                   <div className="auth-field">
-                    <label className="auth-label">Last Name</label>
+                    <label className="auth-label">{t("lastName")}</label>
                     <input
                       type="text"
                       placeholder="Last Name"
@@ -557,7 +557,7 @@ export const Login = () => {
 
                 <div className="auth-grid-two">
                   <div className="auth-field">
-                    <label className="auth-label">Date of Birth</label>
+                    <label className="auth-label">{t("dateOfBirth")}</label>
                     <input
                       type="date"
                       className="auth-input"
@@ -566,23 +566,23 @@ export const Login = () => {
                     />
                   </div>
                   <div className="auth-field">
-                    <label className="auth-label">Gender</label>
+                    <label className="auth-label">{t("gender")}</label>
                     <select
                       className="auth-input"
                       value={signupForm.gender}
                       onChange={(e) => setSignupForm((f) => ({ ...f, gender: e.target.value }))}
                     >
-                      <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                      <option value="prefer_not_to_say">Prefer not to say</option>
+                      <option value="">{t("selectGender")}</option>
+                      <option value="male">{t("male")}</option>
+                      <option value="female">{t("female")}</option>
+                      <option value="other">{t("other")}</option>
+                      <option value="prefer_not_to_say">{t("preferNotToSay")}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="auth-field">
-                  <label className="auth-label">Email</label>
+                  <label className="auth-label">{t("email")}</label>
                   <input
                     type="email"
                     placeholder="you@example.com"
@@ -593,7 +593,7 @@ export const Login = () => {
                 </div>
 
                 <div className="auth-field">
-                  <label className="auth-label">Password</label>
+                  <label className="auth-label">{t("password")}</label>
                   <input
                     type="password"
                     placeholder="Password (min 8 chars, 1 upper, 1 lower, 1 number)"
@@ -604,12 +604,12 @@ export const Login = () => {
                 </div>
 
                 <button type="submit" className="auth-button" disabled={signupLoading}>
-                  {signupLoading ? "Creating Account..." : "Create Account"}
+                  {signupLoading ? t("creatingAccount") : t("createAccount")}
                 </button>
               </form>
 
               <div className="auth-toggle">
-                Already have an account?
+                {t("haveAccount")}
                 <button
                   type="button"
                   className="auth-link"
@@ -618,7 +618,7 @@ export const Login = () => {
                     setMode("login");
                   }}
                 >
-                  Sign In
+                  {t("signIn")}
                 </button>
               </div>
             </div>
