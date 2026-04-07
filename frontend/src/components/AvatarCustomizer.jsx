@@ -1,6 +1,7 @@
 // AvatarCustomizer.jsx
 import { useState } from 'react';
 import { HealthAvatar } from './HealthAvatar';
+import { useTranslation } from "react-i18next";
 
 export const AvatarCustomizer = ({ onSave }) => {
   const existing = JSON.parse(localStorage.getItem('healix_avatar') || '{}');
@@ -13,6 +14,8 @@ export const AvatarCustomizer = ({ onSave }) => {
     eyeColor: existing.eyeColor || '#2880d8',
   });
 
+  const { t } = useTranslation();
+
   const skinTones = [
     { name: 'Fair', color: '#fde0c8' },
     { name: 'Light', color: '#f7c9a5' },
@@ -23,20 +26,20 @@ export const AvatarCustomizer = ({ onSave }) => {
   ];
 
   const maleHairStyles = [
-    { label: 'Short', value: 'short' },
-    { label: 'Fade', value: 'fade' },
-    { label: 'Quiff', value: 'quiff' },
-    { label: 'Slick', value: 'slick' },
-    { label: 'Bald', value: 'bald' },
-  ];
+  { label: t("short"), value: 'short' },
+  { label: t("fade"), value: 'fade' },
+  { label: t("quiff"), value: 'quiff' },
+  { label: t("slick"), value: 'slick' },
+  { label: t("bald"), value: 'bald' },
+];
 
-  const femaleHairStyles = [
-    { label: 'Braid', value: 'braid' },
-    { label: 'Bob', value: 'bob' },
-    { label: 'Long', value: 'long' },
-    { label: 'Curly', value: 'curly' },
-    { label: 'Wavy', value: 'wavy' },
-  ];
+const femaleHairStyles = [
+  { label: t("braid"), value: 'braid' },
+  { label: t("bob"), value: 'bob' },
+  { label: t("longHair"), value: 'long' },
+  { label: t("curly"), value: 'curly' },
+  { label: t("wavy"), value: 'wavy' },
+];
 
   const hairColors = [
     { name: 'Black', color: '#1b1b1f' },
@@ -88,7 +91,7 @@ export const AvatarCustomizer = ({ onSave }) => {
           margin: '0 0 8px 0',
         }}
       >
-        Create Your Health Avatar
+        {t("createHealthAvatar")}
       </h2>
       <p
         style={{
@@ -97,7 +100,7 @@ export const AvatarCustomizer = ({ onSave }) => {
           margin: '0 0 24px 0',
         }}
       >
-        Customize gender, hairstyle, skin, hair and eye color.
+        {t("customizeAvatarDesc")}
       </p>
 
       <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
@@ -128,7 +131,7 @@ export const AvatarCustomizer = ({ onSave }) => {
               fontWeight: 600,
             }}
           >
-            Live preview
+            {t("livePreview")}
           </div>
         </div>
 
@@ -145,7 +148,7 @@ export const AvatarCustomizer = ({ onSave }) => {
                 marginBottom: '10px',
               }}
             >
-              Gender
+              {t("gender")}
             </label>
             <div
               style={{
@@ -155,8 +158,8 @@ export const AvatarCustomizer = ({ onSave }) => {
               }}
             >
               {[
-                { label: 'Male', value: 'male', emoji: '👨' },
-                { label: 'Female', value: 'female', emoji: '👩' },
+                { label: t("male"), value: 'male', emoji: '👨' },
+                { label: t("female"), value: 'female', emoji: '👩' },
               ].map((g) => (
                 <button
                   key={g.value}
@@ -202,7 +205,7 @@ export const AvatarCustomizer = ({ onSave }) => {
                 marginBottom: '10px',
               }}
             >
-              Skin Tone
+              {t("skinTone")}
             </label>
             <div
               style={{
@@ -242,7 +245,7 @@ export const AvatarCustomizer = ({ onSave }) => {
                 marginBottom: '10px',
               }}
             >
-              Hair Style
+              {t("hairStyle")}
             </label>
             <div
               style={{
@@ -289,7 +292,7 @@ export const AvatarCustomizer = ({ onSave }) => {
                 marginBottom: '10px',
               }}
             >
-              Hair Color
+              {t("hairColor")}
             </label>
             <div
               style={{
@@ -329,7 +332,7 @@ export const AvatarCustomizer = ({ onSave }) => {
                 marginBottom: '10px',
               }}
             >
-              Eye Color
+              {t("eyeColor")}
             </label>
             <div
               style={{
@@ -373,7 +376,7 @@ export const AvatarCustomizer = ({ onSave }) => {
               cursor: 'pointer',
             }}
           >
-            Save Avatar
+            {t("saveAvatar")}
           </button>
         </div>
       </div>
