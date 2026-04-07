@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authAPI, gamificationAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 const TOTAL_STEPS = 5;
 
@@ -24,6 +25,7 @@ export const ProfileSetup = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   // Step 1
   const [s1, setS1] = useState({
@@ -107,7 +109,7 @@ export const ProfileSetup = () => {
 
   const handleSubmit = async () => {
     if (!s5.phone_number || !s5.emergency_contact_name || !s5.emergency_contact_phone) {
-      setError("Please fill in Phone Number and Emergency Contact Name and Phone.");
+      setError(setError(t("fillContactFields")));
       return;
     }
     setError("");
@@ -149,18 +151,18 @@ export const ProfileSetup = () => {
         navigate("/login");
         return;
       }
-      setError(err.message || "Failed to save profile.");
+      setError(err.message || t("failedSaveProfile"));
     } finally {
       setLoading(false);
     }
   };
 
   const stepTitles = [
-    "Basic Health Info",
-    "Medical History",
-    "Medications & Supplements",
-    "Lifestyle",
-    "Contact & Emergency",
+    t("basicHealthInfo"),
+    t("medicalHistory"),
+    t("medsAndSupplements"),
+    t("lifestyleLabel"),
+    t("contactAndEmergency"),
   ];
 
   return (
@@ -263,9 +265,9 @@ export const ProfileSetup = () => {
             </svg>
           </div>
           <div>
-            <h1 style={styles.title}>Complete Your Profile</h1>
+            <h1 style={styles.title}>{t("completeYourProfile")}</h1>
             <p style={styles.subtitle}>
-              Hi {user?.first_name || "there"}! Step {step} of {TOTAL_STEPS} — {stepTitles[step - 1]}
+              {t("hi")} {user?.first_name || t("there")}! {t("step")} {step} {t("of")} {TOTAL_STEPS} — {stepTitles[step - 1]}
             </p>
           </div>
         </div>
@@ -344,12 +346,12 @@ export const ProfileSetup = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {step === 1 && (
               <button type="button" onClick={handleSkip} style={styles.skipLink}>
-                Skip for now
+                {t("skipForNow")}
               </button>
             )}
             {step > 1 && (
               <button type="button" onClick={handleBack} style={styles.backBtn}>
-                Back
+                {t("back")}
               </button>
             )}
           </div>
@@ -359,7 +361,7 @@ export const ProfileSetup = () => {
             disabled={loading}
             style={styles.nextBtn}
           >
-            {loading ? "Saving..." : step === TOTAL_STEPS ? "Save & Continue" : "Next"}
+            {loading ? t("saving") : step === TOTAL_STEPS ? t("saveAndContinue") : t("next")}
           </button>
         </div>
       </div>
@@ -416,35 +418,36 @@ const PillGroup = ({ options, selected, onSelect }) => (
 );
 
 function StepBasicHealth({ s1, setS1F }) {
+  const { t } = useTranslation()
   return (
     <div>
-      <SectionLabel>Basic Health Information</SectionLabel>
+      <SectionLabel>{t("basicHealthInfo")}</SectionLabel>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px", marginBottom: "14px" }}>
         <div>
-          <Label>Blood Type</Label>
+          <Label>{t("bloodType")}</Label>
           <select className="ps-input ps-select" value={s1.blood_type} onChange={setS1F("blood_type")}>
-            <option value="">Select</option>
+            <option value="">{t("select")}</option>
             {BLOOD_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>
-          <Label>Height (cm)</Label>
+          <Label>{t("heightCm")}</Label>
           <input className="ps-input" type="number" placeholder="e.g. 175" value={s1.height} onChange={setS1F("height")} />
         </div>
         <div>
-          <Label>Weight (kg)</Label>
+          <Label>{t("weightKg")}</Label>
           <input className="ps-input" type="number" placeholder="e.g. 70" value={s1.weight} onChange={setS1F("weight")} />
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
         <div>
-          <Label>Date of Birth</Label>
+          <Label>{t("dateOfBirth")}</Label>
           <input className="ps-input" type="date" value={s1.date_of_birth} onChange={setS1F("date_of_birth")} />
         </div>
         <div>
-          <Label>Gender</Label>
+          <Label>{t("gender")}</Label>
           <select className="ps-input ps-select" value={s1.gender} onChange={setS1F("gender")}>
-            <option value="">Select</option>
+            <option value="">{t("select")}</option>
             {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
         </div>
@@ -454,21 +457,22 @@ function StepBasicHealth({ s1, setS1F }) {
 }
 
 function StepMedHistory({ s2, setS2F }) {
+  const { t } = useTranslation();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-      <SectionLabel>Medical History</SectionLabel>
+      <SectionLabel>{t("medicalHistory")}</SectionLabel>
       <div>
-        <Label>Health Conditions</Label>
+        <Label>{t("healthConditions")}</Label>
         <textarea
           className="ps-input ps-textarea"
           placeholder="e.g. Diabetes, Asthma, Hypertension"
           value={s2.health_conditions}
           onChange={setS2F("health_conditions")}
         />
-        <div style={styles.hint}>Comma-separated list</div>
+        <div style={styles.hint}>{t("commaSeparated")}</div>
       </div>
       <div>
-        <Label>Allergies</Label>
+        <Label>{t("allergies")}</Label>
         <textarea
           className="ps-input ps-textarea"
           placeholder="e.g. Penicillin, Peanuts, Latex"
@@ -478,7 +482,7 @@ function StepMedHistory({ s2, setS2F }) {
         <div style={styles.hint}>Comma-separated list</div>
       </div>
       <div>
-        <Label>Family Medical History</Label>
+        <Label>{t("familyHistory")}</Label>
         <textarea
           className="ps-input ps-textarea"
           placeholder="e.g. Father - Heart Disease, Mother - Diabetes"
@@ -491,6 +495,7 @@ function StepMedHistory({ s2, setS2F }) {
 }
 
 function DynamicMedList({ title, rows, onUpdate, onAdd, onRemove }) {
+  const { t } = useTranslation();
   return (
     <div style={{ marginBottom: "20px" }}>
       <SectionLabel>{title}</SectionLabel>
@@ -498,7 +503,7 @@ function DynamicMedList({ title, rows, onUpdate, onAdd, onRemove }) {
         {rows.map((row, idx) => (
           <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
             <div style={{ flex: 2 }}>
-              {idx === 0 && <Label>Name</Label>}
+              {idx === 0 && <Label>{t("name")}</Label>}
               <input
                 className="ps-input"
                 type="text"
@@ -508,7 +513,7 @@ function DynamicMedList({ title, rows, onUpdate, onAdd, onRemove }) {
               />
             </div>
             <div style={{ flex: 1.2 }}>
-              {idx === 0 && <Label>Dosage</Label>}
+              {idx === 0 && <Label>{t("dosage")}</Label>}
               <input
                 className="ps-input"
                 type="text"
@@ -518,7 +523,7 @@ function DynamicMedList({ title, rows, onUpdate, onAdd, onRemove }) {
               />
             </div>
             <div style={{ flex: 1.3 }}>
-              {idx === 0 && <Label>Frequency</Label>}
+              {idx === 0 && <Label>{t("frequency")}</Label>}
               <select
                 className="ps-input ps-select"
                 value={row.frequency}
@@ -539,17 +544,18 @@ function DynamicMedList({ title, rows, onUpdate, onAdd, onRemove }) {
         ))}
       </div>
       <button type="button" className="ps-add-btn" onClick={onAdd}>
-        + Add {title.includes("Med") ? "Medication" : "Supplement"}
+        + {title.includes(t("medicationsLabel")) ? t("addMedication") : t("addSupplement")}
       </button>
     </div>
   );
 }
 
 function StepMedications({ medications, supplements, updateMed, addMed, removeMed, updateSupp, addSupp, removeSupp }) {
+  const { t } = useTranslation();
   return (
     <div>
       <DynamicMedList
-        title="Medications"
+        title={t("medicationsLabel")}
         rows={medications}
         onUpdate={updateMed}
         onAdd={addMed}
@@ -557,7 +563,7 @@ function StepMedications({ medications, supplements, updateMed, addMed, removeMe
       />
       <div style={{ height: "1px", background: "rgba(255,255,255,0.07)", margin: "4px 0 20px" }} />
       <DynamicMedList
-        title="Supplements"
+        title={t("supplementsLabel")}
         rows={supplements}
         onUpdate={updateSupp}
         onAdd={addSupp}
@@ -568,6 +574,7 @@ function StepMedications({ medications, supplements, updateMed, addMed, removeMe
 }
 
 function StepLifestyle({ s4, radioSet }) {
+  const { t } = useTranslation();
   const row = (label, field, options) => (
     <div style={{ marginBottom: "20px" }}>
       <Label>{label}</Label>
@@ -576,51 +583,52 @@ function StepLifestyle({ s4, radioSet }) {
   );
   return (
     <div>
-      <SectionLabel>Lifestyle & Habits</SectionLabel>
-      {row("Smoking Status", "smoking_status", SMOKING_OPTS)}
-      {row("Alcohol Consumption", "alcohol_frequency", ALCOHOL_OPTS)}
-      {row("Exercise Frequency", "exercise_frequency", EXERCISE_OPTS)}
-      {row("Typical Sleep Duration", "sleep_habit", SLEEP_OPTS)}
-      {row("Dietary Preference", "dietary_preference", DIET_OPTS)}
+      <SectionLabel>{t("lifestyleAndHabits")}</SectionLabel>
+      {row(t("smokingStatus"), "smoking_status", SMOKING_OPTS)}
+      {row(t("alcoholConsumption"), "alcohol_frequency", ALCOHOL_OPTS)}
+      {row(t("exerciseFrequency"), "exercise_frequency", EXERCISE_OPTS)}
+      {row(t("typicalSleepDuration"), "sleep_habit", SLEEP_OPTS)}
+      {row(t("dietaryPreference"), "dietary_preference", DIET_OPTS)}
     </div>
   );
 }
 
 function StepContact({ s5, setS5F }) {
+  const { t } = useTranslation();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
       <div>
-        <SectionLabel>Contact & Insurance</SectionLabel>
+        <SectionLabel>{t("contactAndInsurance")}</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
           <div>
-            <Label>Phone Number *</Label>
+            <Label>{t("phoneNumber")} *</Label>
             <input className="ps-input" type="tel" placeholder="+1 (555) 000-0000" value={s5.phone_number} onChange={setS5F("phone_number")} />
           </div>
           <div>
-            <Label>Medical Insurance</Label>
+            <Label>{t("medicalInsurance")}</Label>
             <input className="ps-input" type="text" placeholder="e.g. Blue Cross Blue Shield" value={s5.medical_insurance} onChange={setS5F("medical_insurance")} />
           </div>
           <div>
-            <Label>Occupation</Label>
+            <Label>{t("occupation")}</Label>
             <input className="ps-input" type="text" placeholder="e.g. Software Engineer" value={s5.occupation} onChange={setS5F("occupation")} />
           </div>
         </div>
       </div>
       <div>
-        <SectionLabel>Emergency Contact</SectionLabel>
+        <SectionLabel>{t("emergencyContact")}</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
           <div>
-            <Label>Name *</Label>
+            <Label>{t("name")} *</Label>
             <input className="ps-input" type="text" placeholder="Contact name" value={s5.emergency_contact_name} onChange={setS5F("emergency_contact_name")} />
           </div>
           <div>
-            <Label>Phone *</Label>
+            <Label>{t("phoneNumber")} *</Label>
             <input className="ps-input" type="tel" placeholder="+1 (555) 000-0000" value={s5.emergency_contact_phone} onChange={setS5F("emergency_contact_phone")} />
           </div>
           <div>
-            <Label>Relationship</Label>
+            <Label>{t("relationship")}</Label>
             <select className="ps-input ps-select" value={s5.emergency_contact_relationship} onChange={setS5F("emergency_contact_relationship")}>
-              <option value="">Select</option>
+              <option value="">{t("select")}</option>
               {RELATIONSHIPS.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
