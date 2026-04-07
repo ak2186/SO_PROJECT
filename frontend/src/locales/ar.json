@@ -394,5 +394,14 @@
     "healthDataSummary": "ملخص البيانات الصحية",
     "loadingHealthData": "جاري تحميل البيانات الصحية...",
     "noHealthData": "لا توجد بيانات صحية مسجلة بعد.",
-    "generateReport": "إنشاء تقرير صحي PDF"
+    "generateReport": "إنشاء تقرير صحي PDF",
+    "professionalProfile": "الملف المهني",
+    "professionalProfileDesc": "حدّث بياناتك المهنية وأوراق اعتمادك.",
+    "yourName": "اسمك",
+    "specialty": "التخصص",
+    "fullName": "الاسم الكامل",
+    "licenseNumber": "رقم الترخيص",
+    "nameRequired": "الاسم مطلوب",
+    "validPhoneRequired": "أدخل رقم هاتف صحيح",
+    "profileUpdated": "تم تحديث الملف الشخصي!"
 }

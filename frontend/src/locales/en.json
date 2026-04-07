@@ -394,5 +394,14 @@
     "healthDataSummary": "Health Data Summary",
     "loadingHealthData": "Loading health data...",
     "noHealthData": "No health data recorded yet.",
-    "generateReport": "Generate Health Report PDF"
-    }
+    "generateReport": "Generate Health Report PDF",
+    "professionalProfile": "Professional Profile",
+    "professionalProfileDesc": "Update your professional details and credentials.",
+    "yourName": "Your Name",
+    "specialty": "Specialty",
+    "fullName": "Full Name",
+    "licenseNumber": "License Number",
+    "nameRequired": "Name is required",
+    "validPhoneRequired": "Enter a valid phone number",
+    "profileUpdated": "Profile updated!"
+}
