@@ -262,5 +262,6 @@
     "gfitCompleteSignIn": "Complete sign-in in the popup window, then click 'Sync Now'",
     "gfitFailedConnect": "Failed to connect Google Fit",
     "gfitDisconnected": "Google Fit disconnected",
-    "gfitExpired": "Google Fit session expired. Please reconnect."
+    "gfitExpired": "Google Fit session expired. Please reconnect.",
+    "providerDashboard": "Provider Dashboard"
 }

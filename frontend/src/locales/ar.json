@@ -262,5 +262,6 @@
     "gfitCompleteSignIn": "أكمل تسجيل الدخول في النافذة المنبثقة، ثم اضغط 'مزامنة الآن'",
     "gfitFailedConnect": "فشل ربط Google Fit",
     "gfitDisconnected": "تم قطع اتصال Google Fit",
-    "gfitExpired": "انتهت جلسة Google Fit. يرجى إعادة الربط."
+    "gfitExpired": "انتهت جلسة Google Fit. يرجى إعادة الربط.",
+    "providerDashboard": "لوحة تحكم مقدم الرعاية"
 }
