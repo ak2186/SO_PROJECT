@@ -132,5 +132,26 @@
     "upcomingAppointment": "موعد قادم",
     "upcoming": "قادم",
     "yourProvider": "مقدم الرعاية",
-    "on": "في"
-}
+    "on": "في",
+    "healthcare": "الرعاية الصحية",
+    "scheduleAppointment": "حجز موعد",
+    "noUpcomingAppts": "لا توجد مواعيد قادمة.",
+    "loadingAppointments": "جاري تحميل المواعيد...",
+    "cancel": "إلغاء",
+    "past": "السابقة",
+    "appointmentCancelled": "تم إلغاء الموعد.",
+    "failedToCancel": "فشل إلغاء الموعد.",
+    "selectProviderDateTime": "يرجى اختيار طبيب وتاريخ ووقت.",
+    "appointmentScheduled": "تم حجز الموعد!",
+    "failedToSchedule": "فشل حجز الموعد.",
+    "cancelAppointment": "إلغاء الموعد؟",
+    "cancelApptWarning": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف الموعد نهائياً.",
+    "keepIt": "الإبقاء عليه",
+    "yesCancel": "نعم، إلغاء",
+    "selectDoctor": "اختر الطبيب",
+    "noProviders": "لا يوجد أطباء متاحون.",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "reason": "السبب",
+    "confirm": "تأكيد"
+    }

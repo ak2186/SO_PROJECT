@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { appointmentsAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 export const Appointments = () => {
   const [tab, setTab] = useState("upcoming");
@@ -12,6 +13,7 @@ export const Appointments = () => {
   const [showSchedule, setShowSchedule] = useState(false);
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   // Fetch appointments from backend
   useEffect(() => {
@@ -66,15 +68,15 @@ export const Appointments = () => {
     try {
       await appointmentsAPI.cancel(cancelId);
       setAppts((prev) => prev.filter((a) => a.id !== cancelId));
-      showToast("Appointment cancelled.");
+      showToast(t("appointmentCancelled"));
     } catch {
-      showToast("Failed to cancel appointment.", "error");
+      showToast(t("failedToCancel"), "error");
     }
     setShowModal(false);
   };
 
   const handleSchedule = async () => {
-    if (!form.provider_id || !form.date || !form.time) return showToast("Please select a provider, date and time.", "error");
+    if (!form.provider_id || !form.date || !form.time) return showToast(t("selectProviderDateTime"), "error");
     const dateTime = new Date(`${form.date}T${form.time}`);
     try {
       const result = await appointmentsAPI.book({
@@ -95,9 +97,9 @@ export const Appointments = () => {
         avatar: providerName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
       };
       setAppts((prev) => [...prev, newAppt]);
-      showToast("Appointment scheduled!");
+      showToast(t("appointmentScheduled"));
     } catch (err) {
-      showToast(err.message || "Failed to schedule appointment.", "error");
+      showToast(err.message || t("failedToSchedule"), "error");
     }
     setShowSchedule(false);
     setForm({ provider_id: "", date: "", time: "", reason: "" });
@@ -132,36 +134,36 @@ export const Appointments = () => {
         {/* Header */}
         <div className="header-responsive" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
           <div>
-            <p style={{ color: "#3b82f6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Healthcare</p>
-            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>Appointments</h1>
+            <p style={{ color: "#3b82f6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>{t("healthcare")}</p>
+            <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>{t("appointments")}</h1>
           </div>
           <button
             onClick={() => setShowSchedule(true)}
             style={{ background: "#3b82f6", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "10px", fontWeight: "600", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 16px rgba(59,130,246,0.35)" }}
             className="action-btn"
           >
-            + Schedule Appointment
+            + {t("scheduleAppointment")}
           </button>
         </div>
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "28px", background: "var(--bg-3)", padding: "4px", borderRadius: "10px", width: "fit-content", animation: "fadeUp 0.5s ease 0.1s both" }}>
-          {["upcoming", "past"].map(t => (
-            <button key={t} className="tab-btn" onClick={() => setTab(t)}
-              style={{ padding: "8px 24px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: tab === t ? "#3b82f6" : "transparent", color: tab === t ? "#fff" : "var(--text-subtle)" }}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+          {["upcoming", "past"].map(tabName => (
+            <button key={tabName} className="tab-btn" onClick={() => setTab(tabName)}
+              style={{ padding: "8px 24px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: tab === tabName ? "#3b82f6" : "transparent", color: tab === tabName ? "#fff" : "var(--text-subtle)" }}>
+              {tabName === "upcoming" ? t("upcoming") : t("past")}
             </button>
-          ))}
+          ))}          
         </div>
 
         {/* Upcoming Appointments */}
         {tab === "upcoming" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {appts.length === 0 && !loading && (
-              <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No upcoming appointments.</div>
+              <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>{t("noUpcomingAppts")}</div>
             )}
             {loading && (
-              <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
+              <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>{t("loadingAppointments")}</div>
             )}
             {appts.map((a, i) => (
               <div key={a.id} className="appt-card" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "24px", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp 0.4s ease ${i * 0.08}s both`, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
@@ -180,7 +182,7 @@ export const Appointments = () => {
                 <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
                   <button onClick={() => handleCancel(a.id)} className="action-btn"
                     style={{ padding: "8px 18px", borderRadius: "8px", border: "1px solid #ef4444", background: "transparent", color: "#ef4444", fontSize: "13px", fontWeight: "600", fontFamily: "'DM Sans',sans-serif" }}>
-                    Cancel
+                    {t("cancel")}
                   </button>
                 </div>
               </div>
@@ -217,11 +219,11 @@ export const Appointments = () => {
           <div className="modal-overlay">
             <div className="modal-responsive" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "36px", width: "380px", textAlign: "center" }}>
               <div style={{ fontSize: "40px", marginBottom: "16px" }}>⚠️</div>
-              <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 10px 0" }}>Cancel Appointment?</h3>
-              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 28px 0" }}>This action cannot be undone. The appointment will be permanently removed.</p>
+              <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 10px 0" }}>{t("cancelAppointment")}</h3>
+              <p style={{ color: "var(--text-subtle)", fontSize: "14px", margin: "0 0 28px 0" }}>{t("cancelApptWarning")}</p>
               <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-                <button onClick={() => setShowModal(false)} style={{ padding: "10px 24px", borderRadius: "8px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Keep It</button>
-                <button onClick={confirmCancel} style={{ padding: "10px 24px", borderRadius: "8px", border: "none", background: "#ef4444", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Yes, Cancel</button>
+                <button onClick={() => setShowModal(false)} style={{ padding: "10px 24px", borderRadius: "8px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{t("keepIt")}</button>
+                <button onClick={confirmCancel} style={{ padding: "10px 24px", borderRadius: "8px", border: "none", background: "#ef4444", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{t("yesCancel")}</button>
               </div>
             </div>
           </div>
@@ -231,10 +233,10 @@ export const Appointments = () => {
         {showSchedule && (
           <div className="modal-overlay">
             <div className="modal-responsive" style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "16px", padding: "36px", width: "540px", maxHeight: "85vh", overflowY: "auto" }}>
-              <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 20px 0" }}>Schedule Appointment</h3>
+              <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 20px 0" }}>{t("scheduleAppointment")}</h3>
 
               {/* Doctor Selection Cards */}
-              <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Select Doctor *</label>
+              <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("selectDoctor")} *</label>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "18px", maxHeight: "240px", overflowY: "auto", paddingRight: "4px" }}>
                 {providers.map(pr => {
                   const prId = pr._id || pr.id;
@@ -258,26 +260,26 @@ export const Appointments = () => {
                     </div>
                   );
                 })}
-                {providers.length === 0 && <div style={{ color: "var(--text-faint)", fontSize: "13px", padding: "20px", textAlign: "center" }}>No providers available.</div>}
+                {providers.length === 0 && <div style={{ color: "var(--text-faint)", fontSize: "13px", padding: "20px", textAlign: "center" }}>{t("noProviders")}</div>}
               </div>
 
               <div className="form-grid-responsive" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
                 <div>
-                  <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Date *</label>
+                  <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("date")} *</label>
                   <input type="date" className="schedule-input" style={{ colorScheme: "dark" }} value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Time *</label>
+                  <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("time")} *</label>
                   <input type="time" className="schedule-input" style={{ colorScheme: "dark" }} value={form.time} onChange={e => setForm(p => ({ ...p, time: e.target.value }))} />
                 </div>
               </div>
               <div style={{ marginBottom: "14px" }}>
-                <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Reason</label>
+                <label style={{ display: "block", color: "var(--text-subtle)", fontSize: "12px", fontWeight: "600", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("reason")}</label>
                 <input type="text" placeholder="e.g. Annual checkup" className="schedule-input" value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} />
               </div>
               <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
-                <button onClick={() => setShowSchedule(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Cancel</button>
-                <button onClick={handleSchedule} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "none", background: "#3b82f6", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Confirm</button>
+                <button onClick={() => setShowSchedule(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "1px solid var(--border-solid)", background: "transparent", color: "var(--text-muted)", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{t("cancel")}</button>
+                <button onClick={handleSchedule} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "none", background: "#3b82f6", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{t("confirm")}</button>
               </div>
             </div>
           </div>
