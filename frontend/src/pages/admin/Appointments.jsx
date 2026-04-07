@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { adminAPI, appointmentsAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 export const Appointments = () => {
   const [appts, setAppts] = useState([]);
@@ -7,6 +8,7 @@ export const Appointments = () => {
   const [filter, setFilter] = useState("all");
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   // Fetch all appointments via admin endpoint
   useEffect(() => {
@@ -39,7 +41,7 @@ export const Appointments = () => {
       await appointmentsAPI.cancel(id);
     } catch { }
     setAppts(prev => prev.map(a => a.id === id ? { ...a, status: "cancelled" } : a));
-    showToast("Appointment cancelled by admin.");
+    showToast(t("appointmentCancelledAdmin"));
   };
 
   const filtered = appts.filter(a => {
@@ -79,17 +81,17 @@ export const Appointments = () => {
 
         {/* Header */}
         <div style={{ marginBottom: "36px", animation: "fadeUp 0.5s ease both" }}>
-          <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>Admin Portal</p>
-          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>All Appointments</h1>
+          <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 6px 0" }}>{t("adminPortal")}</p>
+          <h1 style={{ color: "var(--text)", fontSize: "32px", fontWeight: "700", margin: 0, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>{t("allAppointments")}</h1>
         </div>
 
         {/* Stats */}
         <div className="stats-responsive" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", animation: "fadeUp 0.5s ease 0.08s both" }}>
           {[
-            { label: "Total", value: stats.total, color: "#8b5cf6" },
-            { label: "Confirmed", value: stats.confirmed, color: "#10b981" },
-            { label: "Pending", value: stats.pending, color: "#f59e0b" },
-            { label: "Cancelled", value: stats.cancelled, color: "#ef4444" },
+            { label: t("total"), value: stats.total, color: "#8b5cf6" },
+            { label: t("confirmed"), value: stats.confirmed, color: "#10b981" },
+            { label: t("pending"), value: stats.pending, color: "#f59e0b" },
+            { label: t("cancelled"), value: stats.cancelled, color: "#ef4444" },
           ].map((s, i) => (
             <div key={i} style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", padding: "20px 24px" }}>
               <div style={{ color: s.color, fontSize: "28px", fontWeight: "700", marginBottom: "4px" }}>{s.value}</div>
@@ -105,7 +107,7 @@ export const Appointments = () => {
             <input type="text" placeholder="Search patients, providers, departments..." className="search-input" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
-            {[["all", "All"], ["confirmed", "Confirmed"], ["pending", "Pending"], ["cancelled", "Cancelled"]].map(([val, label]) => (
+            {[["all", t("all")], ["confirmed", t("confirmed")], ["pending", t("pending")], ["cancelled", t("cancelled")]].map(([val, label]) => (
               <button key={val} onClick={() => setFilter(val)}
                 style={{ padding: "8px 18px", borderRadius: "8px", border: filter === val ? "none" : "1px solid var(--border-solid)", fontWeight: "600", fontSize: "13px", cursor: "pointer", transition: "all 0.15s ease", fontFamily: "'DM Sans',sans-serif", background: filter === val ? "#8b5cf6" : "var(--bg-3)", color: filter === val ? "#fff" : "var(--text-subtle)" }}>
                 {label}
@@ -118,17 +120,17 @@ export const Appointments = () => {
         <div style={{ background: "var(--bg-3)", border: "1px solid var(--border-solid)", borderRadius: "14px", overflow: "hidden", animation: "fadeUp 0.5s ease 0.16s both" }}>
           {/* Header */}
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 0.8fr 0.8fr 0.6fr", padding: "16px 24px", background: "var(--bg)", borderBottom: "1px solid var(--border-solid)" }}>
-            {["Patient", "Provider", "Department", "Date", "Time", "Status"].map(h => (
+            {[t("patient"), t("provider"), t("department"), t("date"), t("time"), t("status")].map(h => (
               <div key={h} style={{ color: "var(--text-subtle)", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</div>
             ))}
           </div>
 
           {/* Rows */}
           {loading && (
-            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>Loading appointments...</div>
+            <div style={{ textAlign: "center", color: "var(--text-subtle)", padding: "60px", fontSize: "16px" }}>{t("loadingAppointments")}</div>
           )}
           {!loading && filtered.length === 0 && (
-            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>No appointments found.</div>
+            <div style={{ textAlign: "center", color: "var(--border-mid)", padding: "60px", fontSize: "16px" }}>{t("noAppointmentsFound")}</div>
           )}
           {filtered.map(a => (
             <div key={a.id} className="appt-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 0.8fr 0.8fr 0.6fr", padding: "18px 24px", borderBottom: "1px solid var(--border-solid)" }}>
@@ -140,17 +142,17 @@ export const Appointments = () => {
               <div>
                 {a.status === "confirmed" && (
                   <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>
-                    Confirmed
+                    {t("confirmed")}
                   </span>
                 )}
                 {a.status === "pending" && (
                   <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
-                    Pending
+                    {t("pending")}
                   </span>
                 )}
                 {a.status === "cancelled" && (
                   <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>
-                    Cancelled
+                    {t("cancelled")}
                   </span>
                 )}
               </div>

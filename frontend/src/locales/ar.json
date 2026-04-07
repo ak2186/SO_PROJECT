@@ -331,5 +331,14 @@
     "create": "إنشاء",
     "selectPatientError": "يرجى اختيار مريض.",
     "addAtLeastOneMed": "يرجى إضافة دواء واحد على الأقل.",
-    "failedCreatePrescription": "فشل إنشاء الوصفة الطبية."
+    "failedCreatePrescription": "فشل إنشاء الوصفة الطبية.",
+    "adminPortal": "بوابة المسؤول",
+    "allAppointments": "جميع المواعيد",
+    "total": "الإجمالي",
+    "confirmed": "مؤكد",
+    "cancelled": "ملغي",
+    "provider": "مقدم الرعاية",
+    "department": "القسم",
+    "noAppointmentsFound": "لا توجد مواعيد.",
+    "appointmentCancelledAdmin": "تم إلغاء الموعد بواسطة المسؤول."
 }

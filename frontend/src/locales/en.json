@@ -331,5 +331,14 @@
     "create": "Create",
     "selectPatientError": "Please select a patient.",
     "addAtLeastOneMed": "Please add at least one medication.",
-    "failedCreatePrescription": "Failed to create prescription."
+    "failedCreatePrescription": "Failed to create prescription.",
+    "adminPortal": "Admin Portal",
+    "allAppointments": "All Appointments",
+    "total": "Total",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "provider": "Provider",
+    "department": "Department",
+    "noAppointmentsFound": "No appointments found.",
+    "appointmentCancelledAdmin": "Appointment cancelled by admin."
 }
