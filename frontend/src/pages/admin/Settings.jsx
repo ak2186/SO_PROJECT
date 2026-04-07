@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export const Settings = () => {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export const Settings = () => {
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
   const [saved, setSaved] = useState(false);
+  const { t } = useTranslation();
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -22,30 +24,30 @@ export const Settings = () => {
 
   const handlePersonalSave = () => {
     const e = {};
-    if (!personal.name.trim()) e.name = "Name is required";
-    if (!personal.email.includes("@")) e.email = "Valid email required";
-    if (personal.phone && personal.phone.length < 8) e.phone = "Enter a valid phone number";
+    if (!personal.name.trim()) e.name = t("nameRequired");
+    if (!personal.email.includes("@")) e.email = t("validEmailRequired");
+    if (personal.phone && personal.phone.length < 8) e.phone = t("validPhoneRequired");
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-    showToast("Admin profile updated!");
+    showToast(t("adminProfileUpdated"));
   };
 
   const handlePasswordSave = () => {
     const e = {};
-    if (!passwords.current) e.current = "Enter your current password";
-    if (passwords.newPass.length < 8) e.newPass = "Password must be at least 8 characters";
-    if (passwords.newPass !== passwords.confirm) e.confirm = "Passwords do not match";
+    if (!passwords.current) e.current = t("enterCurrentPassword");
+    if (passwords.newPass.length < 8) e.newPass = t("passMin8");
+    if (passwords.newPass !== passwords.confirm) e.confirm = t("passwordsNoMatch");
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
     setPasswords({ current:"", newPass:"", confirm:"" });
-    showToast("Password changed successfully!");
+    showToast(t("passwordChanged"));
   };
 
   const sections = [
-    { id:"personal", label:"Admin Profile", icon:"⚙️" },
-    { id:"password", label:"Change Password", icon:"🔒" },
+    { id:"personal", label:t("adminProfile"), icon:"⚙️" },
+    { id:"password", label:t("changePassword"), icon:"🔒" },
   ];
 
   const inputStyle = (err) => ({
@@ -115,8 +117,8 @@ export const Settings = () => {
               {activeSection === "personal" && (
                 <div>
                   <div style={{ marginBottom:"28px" }}>
-                    <h2 style={{ color:"var(--text)", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>Admin Profile</h2>
-                    <p style={{ color:"var(--text-faint)", fontSize:"14px", margin:0 }}>Manage your administrator account details.</p>
+                    <h2 style={{ color:"var(--text)", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>{t("adminProfile")}</h2>
+                    <p style={{ color:"var(--text-faint)", fontSize:"14px", margin:0 }}>{t("adminProfileDesc")}</p>
                   </div>
 
                   {/* Avatar */}
@@ -125,7 +127,7 @@ export const Settings = () => {
                       {personal.name.split(" ").map(n=>n[0]).join("").slice(0,2)}
                     </div>
                     <div>
-                      <div style={{ color:"var(--text)", fontWeight:"700", fontSize:"16px" }}>{personal.name || "Your Name"}</div>
+                      <div style={{ color:"var(--text)", fontWeight:"700", fontSize:"16px" }}>{personal.name || t("yourName")}</div>
                       <div style={{ color:"#8b5cf6", fontSize:"13px", fontWeight:"600" }}>{personal.role}</div>
                     </div>
                   </div>
@@ -134,22 +136,22 @@ export const Settings = () => {
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px" }}>
                     {/* Full Name */}
                     <div style={{ gridColumn:"1/-1" }}>
-                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Full Name</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>{t("fullName")}</label>
                       <input type="text" className="settings-input" style={inputStyle(errors.name)} value={personal.name}
-                        onChange={e => setPersonal(p=>({...p,name:e.target.value}))} placeholder="Your full name" />
+                        onChange={e => setPersonal(p=>({...p,name:e.target.value}))} placeholder={t("yourFullName")} />
                       {errors.name && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.name}</p>}
                     </div>
 
                     {/* Role */}
                     <div>
-                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Role</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>{t("role")}</label>
                       <input type="text" className="settings-input" style={inputStyle(false)} value={personal.role}
-                        onChange={e => setPersonal(p=>({...p,role:e.target.value}))} placeholder="e.g. System Administrator" />
+                        onChange={e => setPersonal(p=>({...p,role:e.target.value}))} placeholder={t("egSystemAdmin")} />
                     </div>
 
                     {/* Email */}
                     <div>
-                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Email Address</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>{t("emailAddress")}</label>
                       <input type="email" className="settings-input" style={inputStyle(errors.email)} value={personal.email}
                         onChange={e => setPersonal(p=>({...p,email:e.target.value}))} placeholder="admin@healix.com" />
                       {errors.email && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.email}</p>}
@@ -157,7 +159,7 @@ export const Settings = () => {
 
                     {/* Phone */}
                     <div style={{ gridColumn:"1/-1" }}>
-                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Phone Number</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>{t("phoneNumber")}</label>
                       <input type="tel" className="settings-input" style={inputStyle(errors.phone)} value={personal.phone}
                         onChange={e => setPersonal(p=>({...p,phone:e.target.value}))} placeholder="+44 7911 000000" />
                       {errors.phone && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.phone}</p>}
@@ -167,7 +169,7 @@ export const Settings = () => {
                   <div style={{ marginTop:"28px", display:"flex", justifyContent:"flex-end" }}>
                     <button className="save-btn" onClick={handlePersonalSave}
                       style={{ padding:"12px 32px", borderRadius:"10px", border:"none", background:"#8b5cf6", color:"#fff", fontWeight:"700", fontSize:"14px", fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", gap:"8px" }}>
-                      {saved ? <span style={{ animation:"checkIn 0.3s ease" }}>✓ Saved!</span> : "Save Changes"}
+                      {saved ? <span style={{ animation:"checkIn 0.3s ease" }}>✓ {t("saved")}</span> : t("saveChanges")}
                     </button>
                   </div>
                 </div>
@@ -177,14 +179,14 @@ export const Settings = () => {
               {activeSection === "password" && (
                 <div>
                   <div style={{ marginBottom:"28px" }}>
-                    <h2 style={{ color:"var(--text)", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>Change Password</h2>
-                    <p style={{ color:"var(--text-faint)", fontSize:"14px", margin:0 }}>Choose a strong password with at least 8 characters.</p>
+                    <h2 style={{ color:"var(--text)", fontSize:"20px", fontWeight:"700", margin:"0 0 4px 0" }}>{t("changePassword")}</h2>
+                    <p style={{ color:"var(--text-faint)", fontSize:"14px", margin:0 }}>{t("changePasswordDesc")}</p>
                   </div>
 
                   <div style={{ display:"flex", flexDirection:"column", gap:"20px" }}>
                     {/* Current */}
                     <div>
-                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Current Password</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>{t("currentPassword")}</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.current)} value={passwords.current}
                         onChange={e => setPasswords(p=>({...p,current:e.target.value}))} placeholder="••••••••" />
                       {errors.current && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.current}</p>}
@@ -192,7 +194,7 @@ export const Settings = () => {
 
                     {/* New */}
                     <div>
-                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>New Password</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>{t("newPassword")}</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.newPass)} value={passwords.newPass}
                         onChange={e => setPasswords(p=>({...p,newPass:e.target.value}))} placeholder="At least 8 characters" />
                       {errors.newPass && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.newPass}</p>}
@@ -207,7 +209,7 @@ export const Settings = () => {
                             }} />
                           </div>
                           <p style={{ color: passwords.newPass.length < 6 ? "#ef4444" : passwords.newPass.length < 10 ? "#f59e0b" : "#10b981", fontSize:"12px", margin:"4px 0 0 0", fontWeight:"600" }}>
-                            {passwords.newPass.length < 6 ? "Weak" : passwords.newPass.length < 10 ? "Fair" : "Strong"}
+                            {passwords.newPass.length < 6 ? t("weak") : passwords.newPass.length < 10 ? t("fair") : t("strong")}
                           </p>
                         </div>
                       )}
@@ -215,7 +217,7 @@ export const Settings = () => {
 
                     {/* Confirm */}
                     <div>
-                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Confirm New Password</label>
+                      <label style={{ display:"block", color:"var(--text-subtle)", fontSize:"12px", fontWeight:"600", marginBottom:"8px", textTransform:"uppercase", letterSpacing:"0.5px" }}>{t("confirmNewPassword")}</label>
                       <input type="password" className="settings-input" style={inputStyle(errors.confirm)} value={passwords.confirm}
                         onChange={e => setPasswords(p=>({...p,confirm:e.target.value}))} placeholder="Repeat new password" />
                       {errors.confirm && <p style={{ color:"#ef4444", fontSize:"12px", margin:"4px 0 0 0" }}>{errors.confirm}</p>}
@@ -225,7 +227,7 @@ export const Settings = () => {
                   <div style={{ marginTop:"28px", display:"flex", justifyContent:"flex-end" }}>
                     <button className="save-btn" onClick={handlePasswordSave}
                       style={{ padding:"12px 32px", borderRadius:"10px", border:"none", background:"#8b5cf6", color:"#fff", fontWeight:"700", fontSize:"14px", fontFamily:"'DM Sans',sans-serif" }}>
-                      Update Password
+                      {t("updatePassword")}
                     </button>
                   </div>
                 </div>

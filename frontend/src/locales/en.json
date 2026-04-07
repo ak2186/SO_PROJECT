@@ -403,5 +403,10 @@
     "licenseNumber": "License Number",
     "nameRequired": "Name is required",
     "validPhoneRequired": "Enter a valid phone number",
-    "profileUpdated": "Profile updated!"
+    "profileUpdated": "Profile updated!",
+    "adminProfile": "Admin Profile",
+    "adminProfileDesc": "Manage your administrator account details.",
+    "adminProfileUpdated": "Admin profile updated!",
+    "yourFullName": "Your full name",
+    "egSystemAdmin": "e.g. System Administrator"
 }

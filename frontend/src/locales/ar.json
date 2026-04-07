@@ -403,5 +403,10 @@
     "licenseNumber": "رقم الترخيص",
     "nameRequired": "الاسم مطلوب",
     "validPhoneRequired": "أدخل رقم هاتف صحيح",
-    "profileUpdated": "تم تحديث الملف الشخصي!"
-}
+    "profileUpdated": "تم تحديث الملف الشخصي!",
+    "adminProfile": "ملف المسؤول",
+    "adminProfileDesc": "أدر تفاصيل حساب المسؤول الخاص بك.",
+    "adminProfileUpdated": "تم تحديث ملف المسؤول!",
+    "yourFullName": "اسمك الكامل",
+    "egSystemAdmin": "مثال: مسؤول النظام"
+    }
