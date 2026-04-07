@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { notificationsAPI, googleFitAPI } from "../../utils/api";
+import { useTranslation } from "react-i18next";
 
 export const Landing = () => {
   const { user } = useAuth();
@@ -10,6 +11,7 @@ export const Landing = () => {
   const isNewUser = location.state?.newUser === true;
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifs, setLoadingNotifs] = useState(true);
+  const { t } = useTranslation();
 
   // For new patients, auto-redirect to profile setup after a brief welcome
   useEffect(() => {
@@ -52,9 +54,9 @@ export const Landing = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return t("goodMorning");
+    if (hour < 17) return t("goodAfternoon");
+    return t("goodEvening");
   };
 
   const getNotifIcon = (type) => {
@@ -72,12 +74,12 @@ export const Landing = () => {
     const now = new Date();
     const diffMs = now - d;
     const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return "Just now";
-    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffMin < 1) return t("justNow");
+    if (diffMin < 60) return `${diffMin}${t("mAgo")}`;
     const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr}h ago`;
+    if (diffHr < 24) return `${diffHr}${t("hAgo")}`;
     const diffDay = Math.floor(diffHr / 24);
-    if (diffDay < 7) return `${diffDay}d ago`;
+    if (diffDay < 7) return `${diffDay}${t("dAgo")}`;
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
@@ -97,25 +99,25 @@ export const Landing = () => {
 
   const quickLinks = user?.role === "patient"
     ? [
-        { label: "Dashboard", path: "/patient", icon: "📊", desc: "View your health overview" },
-        { label: "Vitals", path: "/patient/vitals", icon: "❤️", desc: "Check your vital signs" },
-        { label: "Appointments", path: "/patient/appointments", icon: "📅", desc: "Manage appointments" },
-        { label: "Goals", path: "/patient/goals", icon: "🎯", desc: "Track your progress" },
-        { label: "Prescriptions", path: "/patient/prescriptions", icon: "💊", desc: "View medications" },
-        { label: "AI Assistant", path: "/patient/assistant", icon: "🤖", desc: "Get health insights" },
+        { label: t("dashboard"), path: "/patient", icon: "📊", desc: "View your health overview" },
+        { label: t("vitals"), path: "/patient/vitals", icon: "❤️", desc: "Check your vital signs" },
+        { label: t("appointments"), path: "/patient/appointments", icon: "📅", desc: "Manage appointments" },
+        { label: t("goals"), path: "/patient/goals", icon: "🎯", desc: "Track your progress" },
+        { label: t("prescriptions"), path: "/patient/prescriptions", icon: "💊", desc: "View medications" },
+        { label: t("aiAssistant"), path: "/patient/assistant", icon: "🤖", desc: "Get health insights" },
       ]
     : user?.role === "provider"
     ? [
-        { label: "Patients", path: "/provider/patients", icon: "👥", desc: "View patient list" },
-        { label: "Appointments", path: "/provider/appointments", icon: "📅", desc: "Manage schedule" },
-        { label: "Prescriptions", path: "/provider/prescriptions", icon: "💊", desc: "Manage prescriptions" },
-        { label: "Settings", path: "/provider/settings", icon: "⚙️", desc: "Account settings" },
+        { label: t("patients"), path: "/provider/patients", icon: "👥", desc: "View patient list" },
+        { label: t("appointments"), path: "/provider/appointments", icon: "📅", desc: "Manage schedule" },
+        { label: t("prescriptions"), path: "/provider/prescriptions", icon: "💊", desc: "Manage prescriptions" },
+        { label: t("settings"), path: "/provider/settings", icon: "⚙️", desc: "Account settings" },
       ]
     : [
-        { label: "Users", path: "/admin", icon: "👥", desc: "Manage users" },
-        { label: "Appointments", path: "/admin/appointments", icon: "📅", desc: "All appointments" },
-        { label: "Prescriptions", path: "/admin/prescriptions", icon: "💊", desc: "All prescriptions" },
-        { label: "Settings", path: "/admin/settings", icon: "⚙️", desc: "System settings" },
+        { label: t("users"), path: "/admin", icon: "👥", desc: "Manage users" },
+        { label: t("appointments"), path: "/admin/appointments", icon: "📅", desc: "All appointments" },
+        { label: t("prescriptions"), path: "/admin/prescriptions", icon: "💊", desc: "All prescriptions" },
+        { label: t("settings"), path: "/admin/settings", icon: "⚙️", desc: "System settings" },
       ];
 
   return (
@@ -141,7 +143,7 @@ export const Landing = () => {
           </div>
         </div>
         <p style={styles.welcomeMsg}>
-          Welcome to Healix — your personal health companion. Here's what's new for you today.
+          {t("welcomeMsg")}
         </p>
       </div>
 
@@ -151,15 +153,15 @@ export const Landing = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <span style={{ fontSize: "28px" }}>👋</span>
             <div>
-              <div style={{ color: "var(--text)", fontSize: "15px", fontWeight: "700" }}>Complete your profile</div>
-              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>You'll be redirected to set up your health profile in a moment...</div>
+              <div style={{ color: "var(--text)", fontSize: "15px", fontWeight: "700" }}>{t("completeProfile")}</div>
+              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>{t("redirectToProfile")}</div>
             </div>
           </div>
           <button
             onClick={() => navigate("/profile-setup")}
             style={{ padding: "8px 20px", borderRadius: "8px", border: "none", background: "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}
           >
-            Set Up Now
+            {t("setUpNow")}
           </button>
         </div>
       )}
@@ -168,25 +170,25 @@ export const Landing = () => {
       <div style={{ animation: "fadeUp .5s ease .1s both", marginBottom: "36px" }}>
         <div style={styles.sectionHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <h2 style={styles.sectionTitle}>Notifications</h2>
+            <h2 style={styles.sectionTitle}>{t("notifications")}</h2>
             {unreadCount > 0 && (
-              <span style={styles.badge}>{unreadCount} new</span>
+              <span style={styles.badge}>{unreadCount} {t("new")}</span>
             )}
           </div>
           {unreadCount > 0 && (
             <button onClick={handleMarkAllRead} style={styles.markAllBtn}>
-              Mark all read
+              {t("markAllRead")}
             </button>
           )}
         </div>
 
         <div style={styles.notifCard}>
           {loadingNotifs ? (
-            <div style={styles.notifEmpty}>Loading notifications...</div>
+            <div style={styles.notifEmpty}>{t("loadingNotifications")}</div>
           ) : notifications.length === 0 ? (
             <div style={styles.notifEmpty}>
               <span style={{ fontSize: "32px", marginBottom: "8px", display: "block" }}>🔔</span>
-              You're all caught up! No new notifications.
+              {t("allCaughtUpLanding")}
             </div>
           ) : (
             notifications.slice(0, 8).map((n) => {
@@ -228,7 +230,7 @@ export const Landing = () => {
 
       {/* Quick Links */}
       <div style={{ animation: "fadeUp .5s ease .2s both" }}>
-        <h2 style={{ ...styles.sectionTitle, marginBottom: "16px" }}>Quick Access</h2>
+        <h2 style={{ ...styles.sectionTitle, marginBottom: "16px" }}>{t("quickAccess")}</h2>
         <div style={styles.quickGrid}>
           {quickLinks.map((link) => (
             <div
