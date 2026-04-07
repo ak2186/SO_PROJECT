@@ -3,12 +3,15 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { notificationsAPI } from "../utils/api";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export const MobileNav = () => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [showMore, setShowMore] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -72,38 +75,38 @@ export const MobileNav = () => {
   // Primary tabs shown in bottom bar (max 4-5 items)
   const tabConfig = {
     patient: [
-      { label: "Home", icon: "🏠", path: basePath },
-      { label: "Vitals", icon: "❤️", path: `${basePath}/vitals` },
-      { label: "Appts", icon: "📅", path: `${basePath}/appointments` },
-      { label: "Chat", icon: "💬", path: `${basePath}/assistant` },
-      { label: "More", icon: "☰", path: "__more__" },
+      { label: t("home"), icon: "🏠", path: basePath },
+      { label: t("vitals"), icon: "❤️", path: `${basePath}/vitals` },
+      { label: t("appts"), icon: "📅", path: `${basePath}/appointments` },
+      { label: t("chat"), icon: "💬", path: `${basePath}/assistant` },
+      { label: t("more"), icon: "☰", path: "__more__" },
     ],
     provider: [
-      { label: "Patients", icon: "👥", path: `${basePath}/patients` },
-      { label: "Appts", icon: "📅", path: `${basePath}/appointments` },
-      { label: "Rx", icon: "💊", path: `${basePath}/prescriptions` },
-      { label: "More", icon: "☰", path: "__more__" },
+      { label: t("patients"), icon: "👥", path: `${basePath}/patients` },
+      { label: t("appts"), icon: "📅", path: `${basePath}/appointments` },
+      { label: t("rx"), icon: "💊", path: `${basePath}/prescriptions` },
+      { label: t("more"), icon: "☰", path: "__more__" },
     ],
     admin: [
-      { label: "Users", icon: "👥", path: basePath },
-      { label: "Appts", icon: "📅", path: `${basePath}/appointments` },
-      { label: "Rx", icon: "💊", path: `${basePath}/prescriptions` },
-      { label: "More", icon: "☰", path: "__more__" },
+      { label: t("users"), icon: "👥", path: basePath },
+      { label: t("appts"), icon: "📅", path: `${basePath}/appointments` },
+      { label: t("rx"), icon: "💊", path: `${basePath}/prescriptions` },
+      { label: t("more"), icon: "☰", path: "__more__" },
     ],
   };
 
   // Extra links in the "More" sheet
   const moreConfig = {
     patient: [
-      { label: "Goals", icon: "🎯", path: `${basePath}/goals` },
-      { label: "Prescriptions", icon: "💊", path: `${basePath}/prescriptions` },
-      { label: "Settings", icon: "⚙️", path: `${basePath}/settings` },
+      { label: t("goals"), icon: "🎯", path: `${basePath}/goals` },
+      { label: t("prescriptions"), icon: "💊", path: `${basePath}/prescriptions` },
+      { label: t("settings"), icon: "⚙️", path: `${basePath}/settings` },
     ],
     provider: [
-      { label: "Settings", icon: "⚙️", path: `${basePath}/settings` },
+      { label: t("settings"), icon: "⚙️", path: `${basePath}/settings` },
     ],
     admin: [
-      { label: "Settings", icon: "⚙️", path: `${basePath}/settings` },
+      { label: t("settings"), icon: "⚙️", path: `${basePath}/settings` },
     ],
   };
 
@@ -292,6 +295,9 @@ export const MobileNav = () => {
             {user.role}
           </span>
 
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+          
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
@@ -374,14 +380,14 @@ export const MobileNav = () => {
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
               <span style={{ color: "var(--text)", fontWeight: "700", fontSize: "15px", fontFamily: "'DM Sans', sans-serif" }}>
-                Notifications {unreadCount > 0 && <span style={{ color: accentColor, fontSize: "12px" }}>({unreadCount} new)</span>}
+                {t("notifications")} {unreadCount > 0 && <span style={{ color: accentColor, fontSize: "12px" }}>({unreadCount} {t("new")})</span>}
               </span>
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
                   style={{ background: "none", border: "none", color: accentColor, fontSize: "12px", fontWeight: "600", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
                 >
-                  Mark all read
+                  {t("markAllRead")}
                 </button>
               )}
             </div>
@@ -390,7 +396,7 @@ export const MobileNav = () => {
             <div style={{ overflowY: "auto", maxHeight: "calc(60vh - 50px)" }}>
               {notifications.length === 0 ? (
                 <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-subtle)", fontSize: "13px" }}>
-                  🔔 No notifications yet
+                  🔔 {t("noNotifications")}
                 </div>
               ) : (
                 notifications.slice(0, 10).map((n) => (
@@ -484,7 +490,7 @@ export const MobileNav = () => {
               style={{ width: "100%", border: "none", background: "transparent", cursor: "pointer" }}
             >
               <span className="mob-more-icon" style={{ background: "rgba(239,68,68,0.12)" }}>🚪</span>
-              <span className="mob-more-label" style={{ color: "#ef4444" }}>Logout</span>
+              <span className="mob-more-label" style={{ color: "#ef4444" }}>{t("logout")}</span>
             </button>
           </div>
         </>

@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { notificationsAPI, gamificationAPI } from "../utils/api";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -117,25 +120,25 @@ export const Navbar = () => {
 
   const navLinks = {
     patient: [
-      { label: "Dashboard",     path: basePath },
-      { label: "Vitals",        path: `${basePath}/vitals` },
-      { label: "Goals",         path: `${basePath}/goals` },
-      { label: "Appointments",  path: `${basePath}/appointments` },
-      { label: "Prescriptions", path: `${basePath}/prescriptions` },
-      { label: "Assistant",     path: `${basePath}/assistant` },
-      { label: "Settings",      path: `${basePath}/settings` },
+      { label: t("dashboard"),     path: basePath },
+      { label: t("vitals"),        path: `${basePath}/vitals` },
+      { label: t("goals"),         path: `${basePath}/goals` },
+      { label: t("appointments"),  path: `${basePath}/appointments` },
+      { label: t("prescriptions"), path: `${basePath}/prescriptions` },
+      { label: t("assistant"),     path: `${basePath}/assistant` },
+      { label: t("settings"),      path: `${basePath}/settings` },
     ],
     provider: [
-      { label: "Patients",      path: `${basePath}/patients` },
-      { label: "Appointments",  path: `${basePath}/appointments` },
-      { label: "Prescriptions", path: `${basePath}/prescriptions` },
-      { label: "Settings",      path: `${basePath}/settings` },
+      { label: t("patients"),      path: `${basePath}/patients` },
+      { label: t("appointments"),  path: `${basePath}/appointments` },
+      { label: t("prescriptions"), path: `${basePath}/prescriptions` },
+      { label: t("settings"),      path: `${basePath}/settings` },
     ],
     admin: [
-      { label: "User Management", path: basePath },
-      { label: "Appointments",    path: `${basePath}/appointments` },
-      { label: "Prescriptions",   path: `${basePath}/prescriptions` },
-      { label: "Settings",        path: `${basePath}/settings` },
+      { label: t("userManagement"), path: basePath },
+      { label: t("appointments"),   path: `${basePath}/appointments` },
+      { label: t("prescriptions"),  path: `${basePath}/prescriptions` },
+      { label: t("settings"),       path: `${basePath}/settings` },
     ],
   };
 
@@ -427,7 +430,7 @@ export const Navbar = () => {
                     borderBottom: "1px solid var(--border)",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "14px" }}>Notifications</span>
+                      <span style={{ color: "#f1f5f9", fontWeight: "700", fontSize: "14px" }}>{t("notifications")}</span>
                       {unreadCount > 0 && (
                         <span style={{
                           background: "rgba(59,130,246,0.15)",
@@ -438,7 +441,7 @@ export const Navbar = () => {
                           borderRadius: "20px",
                           border: "1px solid rgba(59,130,246,0.25)",
                         }}>
-                          {unreadCount} new
+                          {unreadCount} {t("new")}
                         </span>
                       )}
                     </div>
@@ -449,7 +452,7 @@ export const Navbar = () => {
                         cursor: "pointer", padding: 0,
                         fontFamily: "DM Sans, sans-serif",
                       }}>
-                        Mark all read
+                        {t("markAllRead")}
                       </button>
                     )}
                   </div>
@@ -460,9 +463,9 @@ export const Navbar = () => {
                       <div style={{ padding: "48px 16px", textAlign: "center" }}>
                         <div style={{ fontSize: "32px", marginBottom: "10px" }}>🔕</div>
                         <div style={{ color: "#f1f5f9", fontWeight: "600", fontSize: "14px", marginBottom: "4px" }}>
-                          You're all caught up
+                          {t("allCaughtUp")}
                         </div>
-                        <div style={{ color: "#475569", fontSize: "13px" }}>No notifications yet</div>
+                        <div style={{ color: "#475569", fontSize: "13px" }}>{t("noNotifications")}</div>
                       </div>
                     ) : (
                       notifications.map((n) => (
@@ -513,6 +516,9 @@ export const Navbar = () => {
                 </div>
               )}
             </div>
+            
+            {/* Language Switcher */}
+            <LanguageSwitcher />
 
             {/* Theme Toggle */}
             <button
@@ -543,7 +549,7 @@ export const Navbar = () => {
 
             {/* Logout Button */}
             <button onClick={handleLogout} className="logout-btn">
-              Logout
+              {t("logout")}
             </button>
           </div>
         </div>
@@ -576,7 +582,7 @@ export const Navbar = () => {
               justifyContent: "space-between",
             }}>
               <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "800", color: "var(--text)" }}>
-                Achievements
+                {t("achievements")}
               </h2>
               <button
                 onClick={() => setShowAchievements(false)}
@@ -601,10 +607,10 @@ export const Navbar = () => {
             {/* Tabs */}
             <div style={{ padding: "16px 28px 0", display: "flex", gap: "4px" }}>
               {[
-                { id: "overview", label: "Overview" },
-                { id: "badges", label: "Badges" },
-                { id: "xp", label: "XP Guide" },
-                { id: "challenges", label: "Challenges" },
+                { id: "overview", label: t("overview") },
+                { id: "badges", label: t("badges") },
+                { id: "xp", label: t("xpGuide") },
+                { id: "challenges", label: t("challenges") },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -619,7 +625,7 @@ export const Navbar = () => {
             {/* Content */}
             <div style={{ padding: "20px 28px 28px", overflowY: "auto", flex: 1 }}>
               {!achieveDetails ? (
-                <div style={{ textAlign: "center", padding: "40px", color: "var(--text-subtle)" }}>Loading...</div>
+                <div style={{ textAlign: "center", padding: "40px", color: "var(--text-subtle)" }}>{t("loading")}</div>
               ) : (
                 <>
                   {/* Overview Tab */}
@@ -701,7 +707,7 @@ export const Navbar = () => {
                           border: "1px solid var(--border)",
                         }}>
                           <div style={{ fontSize: "24px", fontWeight: "800", color: "#6366f1" }}>{achieveDetails.xp}</div>
-                          <div style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-subtle)", textTransform: "uppercase" }}>Total XP</div>
+                          <div style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-subtle)", textTransform: "uppercase" }}>{t("totalXP")}</div>
                         </div>
                         <div style={{
                           background: "var(--bg-3)",
@@ -713,7 +719,7 @@ export const Navbar = () => {
                           <div style={{ fontSize: "24px", fontWeight: "800", color: "#f59e0b" }}>
                             {achieveDetails.streak_count}
                           </div>
-                          <div style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-subtle)", textTransform: "uppercase" }}>Day Streak</div>
+                          <div style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-subtle)", textTransform: "uppercase" }}>{t("dayStreak")}</div>
                         </div>
                         <div style={{
                           background: "var(--bg-3)",
@@ -725,12 +731,12 @@ export const Navbar = () => {
                           <div style={{ fontSize: "24px", fontWeight: "800", color: "#10b981" }}>
                             {achieveDetails.badges.filter(b => b.earned).length}/{achieveDetails.badges.length}
                           </div>
-                          <div style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-subtle)", textTransform: "uppercase" }}>Badges</div>
+                          <div style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-subtle)", textTransform: "uppercase" }}>{t("badges")}</div>
                         </div>
                       </div>
 
                       {/* Levels Roadmap */}
-                      <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)", marginBottom: "10px" }}>Level Roadmap</div>
+                      <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)", marginBottom: "10px" }}>{t("levelRoadmap")}</div>
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         {achieveDetails.all_levels.map(l => (
                           <div key={l.level} style={{
@@ -751,7 +757,7 @@ export const Navbar = () => {
                       {/* Recent Activity */}
                       {achieveDetails.recent_activity.length > 0 && (
                         <div style={{ marginTop: "20px" }}>
-                          <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)", marginBottom: "10px" }}>Recent Activity</div>
+                          <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)", marginBottom: "10px" }}>{t("recentActivity")}</div>
                           {achieveDetails.recent_activity.slice(0, 8).map((a, i) => (
                             <div key={i} style={{
                               display: "flex",
@@ -791,7 +797,7 @@ export const Navbar = () => {
                             <div>
                               <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)" }}>{b.name}</div>
                               <div style={{ fontSize: "11px", color: "var(--text-subtle)" }}>
-                                {b.earned ? `Earned ${b.earned_at ? new Date(b.earned_at).toLocaleDateString() : ""}` : "Not earned yet"}
+                                {b.earned ? `Earned ${b.earned_at ? new Date(b.earned_at).toLocaleDateString() : ""}` : t("notEarnedYet")}
                               </div>
                             </div>
                           </div>
@@ -804,7 +810,7 @@ export const Navbar = () => {
                   {achieveTab === "xp" && (
                     <div>
                       <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "16px" }}>
-                        Earn XP by completing daily health activities. Each action can be rewarded once per day.
+                        {t("xpGuideDesc")}
                       </div>
                       {achieveDetails.xp_guide.map(g => (
                         <div key={g.action} style={{
@@ -846,7 +852,7 @@ export const Navbar = () => {
                           marginBottom: "20px",
                         }}>
                           <div style={{ fontSize: "11px", fontWeight: "700", color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                            Today's Challenge {achieveDetails.challenge.completed ? "✅" : ""}
+                            {t("todaysChallenge")} {achieveDetails.challenge.completed ? "✅" : ""}
                           </div>
                           <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)", marginBottom: "4px" }}>
                             {achieveDetails.challenge.title}
@@ -857,9 +863,9 @@ export const Navbar = () => {
                         </div>
                       )}
 
-                      <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)", marginBottom: "10px" }}>All Challenges</div>
+                      <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text)", marginBottom: "10px" }}>{t("allChallenges")}</div>
                       <div style={{ fontSize: "12px", color: "var(--text-subtle)", marginBottom: "12px" }}>
-                        A new challenge is selected each day from this pool.
+                        {t("challengePoolDesc")}
                       </div>
                       {achieveDetails.challenges.map(c => (
                         <div key={c.id} style={{
