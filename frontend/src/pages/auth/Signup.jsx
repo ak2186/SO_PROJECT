@@ -280,7 +280,7 @@ export const Signup = () => {
                 color: "#64748b",
               }}
             >
-              t("haveAccount")}{" "}
+              {t("haveAccount")}{" "}
               <a href="/login" style={{ color: "#60a5fa" }}>
                 {t("signIn")}
               </a>
