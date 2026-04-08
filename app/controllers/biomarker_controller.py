@@ -140,23 +140,39 @@ async def record_biomarker(user_id: str, data: BiomarkerCreate):
 
 
 async def get_current_readings(user_id: str):
-    """Get the most recent reading for each biomarker type"""
+    """Get today's most recent reading for each biomarker type.
+    Only returns alerts that are relevant to the specific field,
+    not all alerts from the entire biomarker document.
+    """
     db = Database.get_db()
+
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
     latest = {}
     fields = ["heart_rate", "spo2", "steps", "calories", "sleep_hours"]
 
     for field in fields:
         doc = await db.biomarkers.find_one(
-            {"user_id": user_id, field: {"$exists": True}},
+            {"user_id": user_id, field: {"$exists": True}, "recorded_at": {"$gte": today_start}},
             sort=[("recorded_at", -1)]
         )
         if doc:
             decrypt_dict_fields(doc, _FIELD_TYPES)
+            # Only include alerts relevant to this specific field
+            all_alerts = doc.get("alerts", [])
+            keywords = {
+                "heart_rate": ["heart rate"],
+                "spo2": ["oxygen", "spo2"],
+                "sleep_hours": ["sleep"],
+                "steps": ["step"],
+                "calories": ["calorie"],
+            }
+            field_alerts = [a for a in all_alerts
+                            if any(kw in a.lower() for kw in keywords.get(field, []))]
             latest[field] = {
                 "value": doc[field],
                 "recorded_at": doc["recorded_at"],
-                "alerts": doc.get("alerts", [])
+                "alerts": field_alerts,
             }
 
     return {"current_readings": latest}
