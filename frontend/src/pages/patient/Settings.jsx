@@ -473,7 +473,7 @@ export const Settings = () => {
                         onChange={e => setPersonal(p => ({ ...p, health_conditions: e.target.value }))} placeholder="e.g. Asthma, Diabetes" />
                     </div>
 
-                    {sectionDividert("healthInformation")}
+                    {sectionDivider(t("healthInformation"))}
 
                     {/* Blood Type */}
                     <div>
@@ -548,7 +548,7 @@ export const Settings = () => {
                   <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
                     <button className="save-btn" onClick={handlePersonalSave} disabled={saving}
                       style={{ padding: "12px 32px", borderRadius: "10px", border: "none", background: saving ? "#1e40af" : "#3b82f6", color: "#fff", fontWeight: "700", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: "8px", opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}>
-                      {saving ? t("saving") : saved ? <span style={{ animation: "checkIn 0.3s ease" }}>t("saved")</span> : t("saveChanges")}
+                      {saving ? t("saving") : saved ? <span style={{ animation: "checkIn 0.3s ease" }}>{t("saved")}</span> : t("saveChanges")}
                     </button>
                   </div>
                 </div>

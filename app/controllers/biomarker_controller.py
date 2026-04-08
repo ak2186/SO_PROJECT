@@ -57,7 +57,10 @@ def check_alerts(data: dict) -> list:
 
 
 async def _notify_on_alerts(user_id: str, alerts: list):
-    """Send notifications to the patient and all their linked providers when alerts fire."""
+    """Send notifications to the patient and all their linked providers when alerts fire.
+    Deduplicates: only creates a notification if the same alert message hasn't already
+    been sent today for this user.
+    """
     from app.controllers.notification_controller import create_notification
 
     if not alerts:
@@ -66,12 +69,22 @@ async def _notify_on_alerts(user_id: str, alerts: list):
     db = Database.get_db()
     alert_summary = "; ".join(alerts)
 
+    # Check if we already sent this exact alert today for this patient
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    existing = await db.notifications.find_one({
+        "user_id": user_id,
+        "message": alert_summary,
+        "created_at": {"$gte": today_start},
+    })
+    if existing:
+        return  # Already notified today with the same alert
+
     # Notify the patient
     await create_notification(
         user_id=user_id,
         title="Health Alert",
         message=alert_summary,
-        notif_type="goal",   # reuse goal type for the warning icon style
+        notif_type="goal",
     )
 
     # Find all providers linked to this patient

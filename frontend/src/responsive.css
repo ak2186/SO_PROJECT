@@ -13,13 +13,27 @@
   }
 }
 
+/* ── Ensure full-width layout on all screen sizes ── */
+.mobile-layout-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden;
+}
+
 /* ══════════════════════════════════════════════════════
    TABLET (≤ 1024px)
    ══════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
-  /* Page containers — reduce outer padding */
+  /* Page containers — reduce outer padding, fill full width */
   .page-responsive {
     padding: 28px 24px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Health cards grid — adapt for tablet */
+  .health-card {
+    min-width: 0 !important;
   }
 
   /* Goals page */
@@ -27,10 +41,10 @@
     padding: 0 20px;
   }
   .goal-card {
-    min-width: 320px;
+    min-width: 280px;
   }
   .trackable-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 
   /* Assistant page */

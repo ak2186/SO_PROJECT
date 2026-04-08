@@ -39,24 +39,24 @@ async def get_current_user_token(credentials: HTTPAuthorizationCredentials = Dep
     return token_data
 
 
-async def require_role(required_role: str, token_data: TokenData = Depends(get_current_user_token)) -> TokenData:
+def require_role(token_data: TokenData, required_roles: list[str]) -> TokenData:
     """
-    Check if user has required role
-    
+    Check if user has one of the required roles.
+
     Args:
-        required_role: Role required to access endpoint (admin, provider, patient)
         token_data: Current user's token data
-        
+        required_roles: List of roles allowed to access endpoint
+
     Returns:
         TokenData if role matches
-        
+
     Raises:
         HTTPException: If user doesn't have required role
     """
-    if token_data.role != required_role:
+    if token_data.role not in required_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Access denied. {required_role.capitalize()} role required."
+            detail=f"Access denied. {required_roles[0].capitalize()} role required."
         )
-    
+
     return token_data

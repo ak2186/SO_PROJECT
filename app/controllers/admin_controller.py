@@ -96,6 +96,15 @@ async def delete_user(user_id: str, current_admin_id: str):
 
     await db.users.delete_one({"_id": ObjectId(user_id)})
 
+    # Cascade delete all user-related data
+    await db.prescriptions.delete_many({"$or": [{"patient_id": user_id}, {"provider_id": user_id}]})
+    await db.appointments.delete_many({"$or": [{"patient_id": user_id}, {"provider_id": user_id}]})
+    await db.permissions.delete_many({"$or": [{"patient_id": user_id}, {"provider_id": user_id}]})
+    await db.notifications.delete_many({"user_id": user_id})
+    await db.biomarkers.delete_many({"user_id": user_id})
+    await db.gamification.delete_many({"user_id": user_id})
+    await db.chat_history.delete_many({"user_id": user_id})
+
     await AuditLogger.log_admin_action(
         admin_id=current_admin_id,
         action="ADMIN_DELETE_USER",

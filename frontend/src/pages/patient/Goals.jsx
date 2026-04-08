@@ -13,7 +13,7 @@ import {
   Moon,
   Smile,
 } from "lucide-react";
-import { biomarkersAPI, gamificationAPI } from "../../utils/api";
+import { googleFitAPI, gamificationAPI } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
 const GoalCard = ({
@@ -177,7 +177,7 @@ const GoalCard = ({
               {current.toLocaleString()}{" "}
               <span>/ {target.toLocaleString()}</span>
             </h2>
-            {remaining > 0 && <p>`${remaining} ${t("remainingToReachGoal")}`</p>}
+            {remaining > 0 && <p>{`${remaining} ${t("remainingToReachGoal")}`}</p>}
             {remaining <= 0 && (
               <p className="success-text">🎉 {t("goalAchievedToday")}</p>
             )}
@@ -591,13 +591,13 @@ export const Goals = () => {
   const { t } = useTranslation();
 
   const fetchGoalData = () => {
-    biomarkersAPI
-      .getCurrent()
+    // Use today's Google Fit data (date-scoped, so 0 means no activity today)
+    googleFitAPI
+      .today()
       .then((data) => {
-        const r = data?.current_readings;
-        if (!r) return;
-        if (r.steps) setCurrentSteps(r.steps.value);
-        if (r.calories) setCurrentCalories(Math.round(r.calories.value));
+        const d = data?.synced_data;
+        if (d?.steps != null) setCurrentSteps(d.steps);
+        if (d?.calories != null) setCurrentCalories(Math.round(d.calories));
       })
       .catch(() => {});
   };

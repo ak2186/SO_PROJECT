@@ -14,6 +14,7 @@ const categoryColors = {
 
 export const Prescriptions = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [prescriptions, setPrescriptions] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -24,7 +25,6 @@ export const Prescriptions = () => {
   const [addForm, setAddForm] = useState({ medication_name: "", dosage: "", frequency: "", duration: "", notes: "" });
   const [addSaving, setAddSaving] = useState(false);
   const [takenToday, setTakenToday] = useState(() => {
-  const { t } = useTranslation();
     try {
       const key = `healix_med_taken_${new Date().toISOString().split("T")[0]}`;
       return JSON.parse(localStorage.getItem(key) || "{}");

@@ -18,11 +18,12 @@ export const Layout = () => {
       <div
         className="mobile-layout-wrapper"
         style={{
-          padding: "24px",
+          padding: "0",
           fontFamily: "'DM Sans', sans-serif",
           color: "var(--text)",
-          background: "var(--bg-3)",
+          background: "var(--bg)",
           minHeight: "calc(100vh - 64px)",
+          width: "100%",
         }}
       >
         <Outlet />

@@ -5,13 +5,13 @@ import { chatAPI } from "../../utils/api";
 import { useTranslation } from "react-i18next";
 
 export const Assistant = () => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([
     { text: t("assistantWelcome"), user: false },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesContainerRef = useRef(null);
-  const { t } = useTranslation();
 
   // Load chat history from backend on mount
   useEffect(() => {

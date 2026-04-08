@@ -115,9 +115,9 @@ export const Appointments = () => {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "28px", background: "var(--bg-3)", padding: "4px", borderRadius: "10px", width: "fit-content", animation: "fadeUp 0.5s ease 0.1s both" }}>
-          {["today", "upcoming", "past"].map(t => (
+          {["today", "upcoming", "past"].map(tabName => (
             <button key={tabName} onClick={() => setTab(tabName)}
-              style={{ padding: "8px 24px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: tab === t ? "#10b981" : "transparent", color: tab === t ? "#fff" : "var(--text-subtle)", transition: "all 0.18s ease" }}>
+              style={{ padding: "8px 24px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: tab === tabName ? "#10b981" : "transparent", color: tab === tabName ? "#fff" : "var(--text-subtle)", transition: "all 0.18s ease" }}>
               {tabName === "today" ? t("today") : tabName === "upcoming" ? t("upcoming") : t("past")}
             </button>
           ))}
