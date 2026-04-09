@@ -93,6 +93,10 @@ class Database:
             # Gamification collection indexes
             await cls.db.gamification.create_index("user_id", unique=True)
 
+            # Password resets — auto-expire documents after 10 minutes
+            await cls.db.password_resets.create_index("created_at", expireAfterSeconds=600)
+            await cls.db.password_resets.create_index("email")
+
             logger.info("📊 Database indexes created successfully")
             
         except Exception as e:

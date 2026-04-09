@@ -39,20 +39,24 @@ Use this data to give personalized responses.
 
 
 async def get_patient_context(user_id: str) -> str:
-    """Fetch patient health data to give Gemini context"""
+    """Fetch anonymized patient health data to give Gemini context.
+
+    PII (name, exact identity) is intentionally excluded. Only clinical
+    data needed for personalized health responses is included.
+    """
     db = Database.get_db()
 
-    # Get patient info
+    # Get patient info — no name or identifying fields sent to Gemini
     patient = await db.users.find_one({"_id": ObjectId(user_id)})
     if not patient:
         return ""
 
+    health_conditions = patient.get("health_conditions") or "None reported"
     context = f"""
-PATIENT INFORMATION:
-- Name: {patient.get('first_name')} {patient.get('last_name')}
+PATIENT PROFILE (anonymized):
 - Age: {patient.get('age', 'Not provided')}
 - Gender: {patient.get('gender', 'Not provided')}
-- Health Conditions: {patient.get('health_conditions', 'None reported')}
+- Health Conditions: {health_conditions}
 """
 
     # Get latest biomarkers
@@ -66,7 +70,7 @@ PATIENT INFORMATION:
             decrypt_dict_fields(b, _bio_types)
             recorded = b.get("recorded_at", "")
             if isinstance(recorded, datetime):
-                recorded = recorded.strftime("%Y-%m-%d %H:%M")
+                recorded = recorded.strftime("%Y-%m-%d")
             if "heart_rate" in b:
                 context += f"- Heart Rate: {b['heart_rate']} bpm (recorded {recorded})\n"
             if "spo2" in b:
@@ -76,9 +80,9 @@ PATIENT INFORMATION:
             if "calories" in b:
                 context += f"- Calories: {b['calories']} kcal (recorded {recorded})\n"
             if b.get("alerts"):
-                context += f"  ⚠️ Alerts: {', '.join(b['alerts'])}\n"
+                context += f"  Alerts: {', '.join(b['alerts'])}\n"
 
-    # Get upcoming appointments
+    # Get upcoming appointments — provider name excluded, only timing and status
     now = datetime.utcnow()
     cursor = db.appointments.find({
         "patient_id": user_id,
@@ -88,22 +92,20 @@ PATIENT INFORMATION:
     appointments = await cursor.to_list(length=3)
 
     if appointments:
-        context += "\nUPCOMING APPOINTMENTS:\n"
+        context += f"\nUPCOMING APPOINTMENTS: {len(appointments)} scheduled\n"
         for a in appointments:
             date = a.get("appointment_date", "")
             if isinstance(date, datetime):
-                date = date.strftime("%Y-%m-%d %H:%M")
-            provider = await db.users.find_one({"_id": ObjectId(a["provider_id"])})
-            provider_name = f"{provider['first_name']} {provider['last_name']}" if provider else "Unknown"
-            context += f"- {date} with Dr. {provider_name} ({a.get('status', '').capitalize()}) - Reason: {a.get('reason', 'N/A')}\n"
+                date = date.strftime("%Y-%m-%d")
+            context += f"- {date} ({a.get('status', '').capitalize()})\n"
 
-    # Get active prescriptions
+    # Get active prescriptions — medication details included as they are needed for clinical context
     cursor = db.prescriptions.find({"patient_id": user_id, "status": "active"}).limit(5)
     prescriptions = await cursor.to_list(length=5)
 
     _rx_types = {"medication_name": str, "dosage": str, "frequency": str, "duration": str, "notes": str}
     if prescriptions:
-        context += "\nACTIVE PRESCRIPTIONS:\n"
+        context += f"\nACTIVE PRESCRIPTIONS: {len(prescriptions)} medication(s)\n"
         for p in prescriptions:
             decrypt_dict_fields(p, _rx_types)
             context += f"- {p['medication_name']} {p['dosage']} - {p['frequency']} for {p['duration']}\n"

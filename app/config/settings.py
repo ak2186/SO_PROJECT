@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     GOOGLE_FIT_CLIENT_SECRET: str = ""
     GOOGLE_FIT_REDIRECT_URI: str = "http://localhost:8000/api/googlefit/callback"
 
+    # SMTP (Gmail)
+    SMTP_EMAIL: str = ""
+    SMTP_APP_PASSWORD: str = ""
+
     # Gemini
     GEMINI_API_KEY: str = ""
     

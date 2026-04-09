@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { authAPI } from "../../utils/api";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 export const Login = () => {
@@ -18,6 +19,43 @@ export const Login = () => {
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const { t } = useTranslation();
+
+  // Forgot password state
+  const [forgotStep, setForgotStep] = useState(1); // 1=email, 2=otp, 3=new password
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState(["", "", "", "", "", ""]);
+  const [forgotNewPass, setForgotNewPass] = useState("");
+  const [forgotConfirmPass, setForgotConfirmPass] = useState("");
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+  const otpRefs = useRef([]);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const id = setTimeout(() => setResendTimer((t) => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendTimer]);
+
+  const getPassStrength = (p) => {
+    if (!p) return { width: "0%", color: "#e2e8f0", label: "" };
+    let score = 0;
+    if (p.length >= 8) score++;
+    if (/[A-Z]/.test(p)) score++;
+    if (/[a-z]/.test(p)) score++;
+    if (/\d/.test(p)) score++;
+    if (/[^A-Za-z0-9]/.test(p)) score++;
+    const map = [
+      { width: "0%",   color: "#e2e8f0", label: "" },
+      { width: "25%",  color: "#ef4444", label: t("weakPass") },
+      { width: "50%",  color: "#f97316", label: t("fairPass") },
+      { width: "75%",  color: "#eab308", label: t("goodPass") },
+      { width: "100%", color: "#10b981", label: t("strongPass") },
+    ];
+    return map[Math.min(score, 4)];
+  };
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
@@ -87,6 +125,79 @@ export const Login = () => {
     } finally {
       setSignupLoading(false);
     }
+  };
+
+  // ── Forgot password handlers ──
+
+  const handleForgotSendOtp = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) { setForgotError(t("enterEmail") || "Please enter your email"); return; }
+    setForgotError(""); setForgotSuccess(""); setForgotLoading(true);
+    try {
+      const res = await authAPI.forgotPassword(forgotEmail);
+      setForgotSuccess(res.message);
+      setResendTimer(60);
+      setForgotStep(2);
+    } catch (err) {
+      setForgotError(err.message || "Failed to send code");
+    } finally { setForgotLoading(false); }
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (value && !/^\d$/.test(value)) return;
+    const next = [...forgotOtp];
+    next[index] = value;
+    setForgotOtp(next);
+    if (value && index < 5) otpRefs.current[index + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !forgotOtp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const next = [...forgotOtp];
+    for (let i = 0; i < 6; i++) next[i] = pasted[i] || "";
+    setForgotOtp(next);
+    const focusIdx = Math.min(pasted.length, 5);
+    otpRefs.current[focusIdx]?.focus();
+  };
+
+  const handleForgotVerifyOtp = async (e) => {
+    e.preventDefault();
+    const code = forgotOtp.join("");
+    if (code.length !== 6) { setForgotError("Please enter the full 6-digit code"); return; }
+    setForgotError(""); setForgotSuccess(""); setForgotLoading(true);
+    try {
+      const res = await authAPI.verifyOtp(forgotEmail, code);
+      setResetToken(res.reset_token);
+      setForgotSuccess(res.message);
+      setForgotStep(3);
+    } catch (err) {
+      setForgotError(err.message || "Invalid code");
+    } finally { setForgotLoading(false); }
+  };
+
+  const handleForgotReset = async (e) => {
+    e.preventDefault();
+    if (forgotNewPass.length < 8) { setForgotError("Password must be at least 8 characters"); return; }
+    if (forgotNewPass !== forgotConfirmPass) { setForgotError("Passwords do not match"); return; }
+    setForgotError(""); setForgotSuccess(""); setForgotLoading(true);
+    try {
+      const res = await authAPI.resetPassword(resetToken, forgotNewPass);
+      setForgotSuccess(res.message);
+      setTimeout(() => {
+        setMode("login");
+        setForgotStep(1); setForgotEmail(""); setForgotOtp(["","","","","",""]); setForgotNewPass(""); setForgotConfirmPass(""); setForgotError(""); setForgotSuccess(""); setResetToken("");
+      }, 2000);
+    } catch (err) {
+      setForgotError(err.message || "Reset failed");
+    } finally { setForgotLoading(false); }
   };
 
   return (
@@ -246,6 +357,7 @@ export const Login = () => {
         }
 
         .auth-viewport {
+          position: relative;
           width: min(480px, 100%);
           overflow: hidden;
           border-radius: 22px;
@@ -392,6 +504,145 @@ export const Login = () => {
           font-size: 13px;
         }
 
+        .auth-forgot-overlay {
+          position: absolute;
+          inset: 0;
+          background: var(--panel);
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 22px;
+          padding: 32px;
+          box-sizing: border-box;
+          animation: forgotFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes forgotFadeIn {
+          from { opacity: 0; transform: translateY(12px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .forgot-inner {
+          width: 100%;
+          max-width: 360px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .forgot-icon-wrap {
+          width: 64px;
+          height: 64px;
+          border-radius: 20px;
+          background: linear-gradient(135deg, rgba(29,78,216,0.1), rgba(8,145,178,0.1));
+          border: 1.5px solid rgba(29,78,216,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+          font-size: 28px;
+        }
+
+        .forgot-steps {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 22px;
+        }
+
+        .forgot-step-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #d5deee;
+          transition: all 0.3s ease;
+        }
+
+        .forgot-step-dot.active {
+          width: 24px;
+          background: linear-gradient(90deg, #1d4ed8, #0891b2);
+        }
+
+        .forgot-step-dot.done {
+          background: #10b981;
+        }
+
+        .forgot-headline {
+          margin: 0 0 6px;
+          font-size: 22px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: var(--text);
+        }
+
+        .forgot-sub {
+          margin: 0 0 22px;
+          color: var(--muted);
+          font-size: 13px;
+          line-height: 1.55;
+          max-width: 28ch;
+        }
+
+        .forgot-sub strong {
+          color: var(--text);
+          font-weight: 600;
+        }
+
+        .forgot-form {
+          width: 100%;
+          text-align: left;
+        }
+
+        .otp-container {
+          display: flex;
+          gap: 8px;
+          justify-content: center;
+          margin-bottom: 20px;
+        }
+
+        .otp-box {
+          width: 46px;
+          height: 54px;
+          border-radius: 12px;
+          border: 1.5px solid #cfd9eb;
+          background: var(--input-bg);
+          color: var(--text);
+          font-size: 22px;
+          font-weight: 700;
+          text-align: center;
+          outline: none;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+          font-family: "DM Sans", monospace;
+          caret-color: #1d4ed8;
+        }
+
+        .otp-box:focus {
+          border-color: rgba(29, 78, 216, 0.65);
+          box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.13);
+          background: #fff;
+        }
+
+        .otp-box.filled {
+          border-color: rgba(16, 185, 129, 0.5);
+          background: rgba(16, 185, 129, 0.04);
+        }
+
+        .pass-strength {
+          height: 3px;
+          border-radius: 999px;
+          background: #e2e8f0;
+          margin: -4px 0 10px;
+          overflow: hidden;
+        }
+
+        .pass-strength-bar {
+          height: 100%;
+          border-radius: 999px;
+          transition: width 0.3s ease, background 0.3s ease;
+        }
+
         @media (max-width: 960px) {
           .auth-page {
             grid-template-columns: 1fr;
@@ -513,6 +764,21 @@ export const Login = () => {
                 </button>
               </form>
 
+              <div style={{ textAlign: "center", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  className="auth-link"
+                  onClick={() => {
+                    setForgotError(""); setForgotSuccess(""); setForgotStep(1);
+                    setForgotEmail(""); setForgotOtp(["","","","","",""]);
+                    setMode("forgot");
+                  }}
+                  style={{ fontSize: "13px" }}
+                >
+                  {t("forgotPassword")}
+                </button>
+              </div>
+
               <div className="auth-toggle">
                 {t("noAccount")}
                 <button
@@ -630,6 +896,167 @@ export const Login = () => {
               </div>
             </div>
           </div>
+
+          {/* ── Forgot Password Overlay ── */}
+          {mode === "forgot" && (
+            <div className="auth-forgot-overlay">
+              <div className="forgot-inner">
+
+                {/* Icon */}
+                <div className="forgot-icon-wrap">
+                  {forgotStep === 1 && "✉️"}
+                  {forgotStep === 2 && "🔐"}
+                  {forgotStep === 3 && "🔒"}
+                </div>
+
+                {/* Step dots */}
+                <div className="forgot-steps">
+                  {[1, 2, 3].map((s) => (
+                    <div
+                      key={s}
+                      className={`forgot-step-dot ${forgotStep === s ? "active" : forgotStep > s ? "done" : ""}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Heading */}
+                <h2 className="forgot-headline">
+                  {forgotStep === 1 && t("forgotHeading1")}
+                  {forgotStep === 2 && t("forgotHeading2")}
+                  {forgotStep === 3 && t("forgotHeading3")}
+                </h2>
+
+                <p className="forgot-sub">
+                  {forgotStep === 1 && t("forgotSub1")}
+                  {forgotStep === 2 && (<>{t("codeSentTo")} <strong>{forgotEmail}</strong>{t("enterBelow")}</>)}
+                  {forgotStep === 3 && t("forgotSub3")}
+                </p>
+
+                {forgotError && <div className="auth-alert error" style={{ width: "100%", boxSizing: "border-box", marginBottom: "14px" }}>{forgotError}</div>}
+                {forgotSuccess && forgotStep !== 2 && <div className="auth-alert success" style={{ width: "100%", boxSizing: "border-box", marginBottom: "14px" }}>{forgotSuccess}</div>}
+
+                {/* Step 1: Email */}
+                {forgotStep === 1 && (
+                  <form className="forgot-form" onSubmit={handleForgotSendOtp}>
+                    <div className="auth-field">
+                      <label className="auth-label">{t("emailAddress")}</label>
+                      <input
+                        type="email"
+                        placeholder="you@example.com"
+                        className="auth-input"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <button type="submit" className="auth-button" disabled={forgotLoading}>
+                      {forgotLoading ? t("sending") : t("sendResetCode")}
+                    </button>
+                  </form>
+                )}
+
+                {/* Step 2: OTP */}
+                {forgotStep === 2 && (
+                  <form className="forgot-form" onSubmit={handleForgotVerifyOtp}>
+                    <div className="otp-container" onPaste={handleOtpPaste}>
+                      {forgotOtp.map((digit, i) => (
+                        <input
+                          key={i}
+                          ref={(el) => (otpRefs.current[i] = el)}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          className={`otp-box${digit ? " filled" : ""}`}
+                          value={digit}
+                          onChange={(e) => handleOtpChange(i, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                          autoFocus={i === 0}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="submit"
+                      className="auth-button"
+                      disabled={forgotLoading || forgotOtp.join("").length !== 6}
+                    >
+                      {forgotLoading ? t("verifying") : t("verifyCode")}
+                    </button>
+                    <div style={{ textAlign: "center", marginTop: "14px", fontSize: "13px", color: "var(--muted)" }}>
+                      {resendTimer > 0 ? (
+                        <>{t("resendIn")} <strong style={{ color: "var(--text)" }}>{resendTimer}s</strong></>
+                      ) : (
+                        <button
+                          type="button"
+                          className="auth-link"
+                          onClick={() => {
+                            setForgotOtp(["", "", "", "", "", ""]);
+                            setForgotError("");
+                            setForgotSuccess("");
+                            setForgotStep(1);
+                          }}
+                        >
+                          {t("resendCode")}
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                )}
+
+                {/* Step 3: New Password */}
+                {forgotStep === 3 && (
+                  <form className="forgot-form" onSubmit={handleForgotReset}>
+                    <div className="auth-field">
+                      <label className="auth-label">{t("newPasswordLabel")}</label>
+                      <input
+                        type="password"
+                        placeholder={t("minChars")}
+                        className="auth-input"
+                        value={forgotNewPass}
+                        onChange={(e) => setForgotNewPass(e.target.value)}
+                        autoFocus
+                      />
+                      {forgotNewPass && (() => {
+                        const s = getPassStrength(forgotNewPass);
+                        return (
+                          <div style={{ marginTop: "6px" }}>
+                            <div className="pass-strength">
+                              <div className="pass-strength-bar" style={{ width: s.width, background: s.color }} />
+                            </div>
+                            <div style={{ fontSize: "11px", color: s.color, fontWeight: 600, textAlign: "right" }}>{s.label}</div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div className="auth-field">
+                      <label className="auth-label">{t("confirmPasswordLabel")}</label>
+                      <input
+                        type="password"
+                        placeholder={t("reEnterPassword")}
+                        className="auth-input"
+                        value={forgotConfirmPass}
+                        onChange={(e) => setForgotConfirmPass(e.target.value)}
+                        style={forgotConfirmPass && forgotConfirmPass !== forgotNewPass ? { borderColor: "rgba(239,68,68,0.6)" } : {}}
+                      />
+                    </div>
+                    <button type="submit" className="auth-button" disabled={forgotLoading}>
+                      {forgotLoading ? t("resetting") : t("resetPasswordBtn")}
+                    </button>
+                  </form>
+                )}
+
+                <div style={{ marginTop: "18px" }}>
+                  <button
+                    type="button"
+                    className="auth-link"
+                    style={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}
+                    onClick={() => { setMode("login"); setForgotError(""); setForgotSuccess(""); }}
+                  >
+                    {t("backToSignIn")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

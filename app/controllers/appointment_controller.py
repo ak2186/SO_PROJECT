@@ -176,8 +176,10 @@ async def cancel_appointment(appointment_id: str, user_id: str, role: str):
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    # Only the patient who booked or the provider or admin can cancel
+    # Only the patient who booked or the assigned provider or admin can cancel
     if role == "patient" and appointment["patient_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to cancel this appointment")
+    if role == "provider" and appointment["provider_id"] != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to cancel this appointment")
 
     if appointment["status"] == "cancelled":

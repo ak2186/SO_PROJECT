@@ -3,16 +3,20 @@ Authentication Controller
 Handles user registration and login logic
 """
 
-from fastapi import HTTPException, status
-from app.models.user import UserCreate, UserInDB, UserResponse, UserLogin, Token
+import random
+from datetime import datetime, timedelta
+
+from fastapi import HTTPException, status, Request
+from bson import ObjectId
+from jose import jwt, JWTError
+
+from app.models.user import UserCreate, UserInDB, UserResponse, UserLogin, Token, TokenData, UserUpdate
 from app.utils.password import hash_password, verify_password
 from app.utils.jwt import create_access_token, create_refresh_token, verify_refresh_token
 from app.config.database import Database
-from datetime import datetime
-from bson import ObjectId
+from app.config.settings import settings
 from app.utils.audit_logger import AuditLogger
-from fastapi import Request
-from app.models.user import UserUpdate
+from app.utils.email import send_otp_email
 
 
 def _user_response(user: dict) -> UserResponse:
@@ -301,3 +305,134 @@ async def update_user_profile(user_id: str, update_data: UserUpdate) -> UserResp
         )
 
     return _user_response(user)
+
+
+# ── Forgot Password Flow ────────────────────────────────────
+
+
+async def forgot_password(email: str) -> dict:
+    """Generate a 6-digit OTP, store it hashed, and email it.
+
+    Always returns a generic success message to avoid leaking
+    whether the email exists in the system.
+    """
+    db = Database.get_db()
+
+    # Rate-limit: max 3 requests per email per hour
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    recent_count = await db.password_resets.count_documents(
+        {"email": email, "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent_count >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many reset requests. Please try again later.",
+        )
+
+    user = await db.users.find_one({"email": {"$regex": f"^{email}$", "$options": "i"}})
+    if not user:
+        # Don't reveal that the email doesn't exist
+        return {"message": "If this email is registered, you will receive a reset code shortly."}
+
+    canonical_email = user["email"]  # use the casing stored in DB
+    otp = f"{random.randint(0, 999999):06d}"
+    otp_hash = hash_password(otp)
+
+    await db.password_resets.insert_one({
+        "email": canonical_email,
+        "otp_hash": otp_hash,
+        "attempts": 0,
+        "created_at": datetime.utcnow(),
+    })
+
+    send_otp_email(canonical_email, otp)
+
+    return {"message": "If this email is registered, you will receive a reset code shortly."}
+
+
+async def verify_otp(email: str, otp: str) -> dict:
+    """Verify OTP and return a short-lived reset token."""
+    db = Database.get_db()
+
+    record = await db.password_resets.find_one(
+        {"email": {"$regex": f"^{email}$", "$options": "i"}},
+        sort=[("created_at", -1)],
+    )
+    if not record:
+        raise HTTPException(status_code=400, detail="No reset request found. Please request a new code.")
+
+    # Check expiry (10 minutes)
+    if datetime.utcnow() - record["created_at"] > timedelta(minutes=10):
+        await db.password_resets.delete_one({"_id": record["_id"]})
+        raise HTTPException(status_code=400, detail="Code has expired. Please request a new one.")
+
+    # Check attempt limit
+    if record["attempts"] >= 5:
+        await db.password_resets.delete_one({"_id": record["_id"]})
+        raise HTTPException(status_code=400, detail="Too many failed attempts. Please request a new code.")
+
+    # Verify OTP
+    if not verify_password(otp, record["otp_hash"]):
+        await db.password_resets.update_one(
+            {"_id": record["_id"]},
+            {"$inc": {"attempts": 1}},
+        )
+        remaining = 5 - (record["attempts"] + 1)
+        raise HTTPException(status_code=400, detail=f"Invalid code. {remaining} attempt(s) remaining.")
+
+    # OTP correct — generate a short-lived reset token
+    reset_token = jwt.encode(
+        {
+            "email": email,
+            "purpose": "password_reset",
+            "exp": datetime.utcnow() + timedelta(minutes=5),
+        },
+        settings.JWT_SECRET_KEY,
+        algorithm=settings.JWT_ALGORITHM,
+    )
+
+    # Delete the used OTP record
+    await db.password_resets.delete_one({"_id": record["_id"]})
+
+    return {"message": "Code verified", "reset_token": reset_token}
+
+
+async def reset_password(reset_token: str, new_password: str) -> dict:
+    """Validate the reset token and set a new password."""
+    try:
+        payload = jwt.decode(
+            reset_token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
+
+    if payload.get("purpose") != "password_reset":
+        raise HTTPException(status_code=400, detail="Invalid reset token.")
+
+    email = payload.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid reset token.")
+
+    db = Database.get_db()
+    user = await db.users.find_one({"email": {"$regex": f"^{email}$", "$options": "i"}})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    new_hash = hash_password(new_password)
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"hashed_password": new_hash, "updated_at": datetime.utcnow()}},
+    )
+
+    # Clean up any remaining OTP records for this email
+    await db.password_resets.delete_many({"email": email})
+
+    await AuditLogger.log(
+        action="PASSWORD_RESET",
+        user_id=str(user["_id"]),
+        user_role=user.get("role"),
+        resource_type="user",
+        resource_id=str(user["_id"]),
+    )
+
+    return {"message": "Password reset successfully. You can now log in."}

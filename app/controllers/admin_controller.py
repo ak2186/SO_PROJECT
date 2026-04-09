@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Optional
 from app.config.database import get_database
@@ -59,10 +60,11 @@ async def get_all_users(
     query = {}
 
     if search:
+        escaped = re.escape(search)
         query["$or"] = [
-            {"first_name": {"$regex": search, "$options": "i"}},
-            {"last_name": {"$regex": search, "$options": "i"}},
-            {"email": {"$regex": search, "$options": "i"}},
+            {"first_name": {"$regex": escaped, "$options": "i"}},
+            {"last_name": {"$regex": escaped, "$options": "i"}},
+            {"email": {"$regex": escaped, "$options": "i"}},
         ]
     if role:
         query["role"] = role

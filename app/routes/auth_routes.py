@@ -5,7 +5,10 @@ API endpoints for registration and login
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.models.user import UserCreate, UserResponse, UserLogin, Token, UserUpdate
-from app.controllers.auth_controller import register_user, login_user, get_current_user, update_user_profile, change_password, refresh_access_token
+from app.controllers.auth_controller import (
+    register_user, login_user, get_current_user, update_user_profile,
+    change_password, refresh_access_token, forgot_password, verify_otp, reset_password,
+)
 from app.middleware.auth_middleware import get_current_user_token
 from app.models.user import TokenData
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -103,6 +106,37 @@ async def refresh(body: dict):
     if not refresh_token:
         raise HTTPException(status_code=400, detail="refresh_token is required")
     return await refresh_access_token(refresh_token)
+
+
+@router.post("/forgot-password")
+async def forgot_pwd(body: dict):
+    """Send a password-reset OTP to the user's email."""
+    email = body.get("email", "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    return await forgot_password(email)
+
+
+@router.post("/verify-otp")
+async def verify_otp_route(body: dict):
+    """Verify the OTP and return a short-lived reset token."""
+    email = body.get("email", "").strip().lower()
+    otp = body.get("otp", "").strip()
+    if not email or not otp:
+        raise HTTPException(status_code=400, detail="Email and OTP are required")
+    return await verify_otp(email, otp)
+
+
+@router.post("/reset-password")
+async def reset_pwd(body: dict):
+    """Reset the password using a valid reset token."""
+    reset_token = body.get("reset_token", "")
+    new_password = body.get("new_password", "")
+    if not reset_token or not new_password:
+        raise HTTPException(status_code=400, detail="Reset token and new password are required")
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    return await reset_password(reset_token, new_password)
 
 
 @router.post("/logout")
