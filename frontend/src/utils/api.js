@@ -3,7 +3,7 @@
  * Handles all HTTP requests to the FastAPI backend with JWT auth
  */
 
-const API_BASE = "/api";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Get the stored JWT token
