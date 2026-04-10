@@ -26,14 +26,14 @@ export const PatientDashboard = () => {
   const [xpToast, setXpToast] = useState(null);
 
   const healthStatus = {
-  warnings: [
-    hrValue != null && hrValue > 100,
-    spo2Value != null && spo2Value < 95,
-    sleepVal != null && sleepVal < 7,
-  ].filter(Boolean).length,
-  hasData: hrValue != null || spo2Value != null || stepsVal != null,
-};
-    const [avatar, setAvatar] = useState(() => {
+    warnings: [
+      hrValue != null && hrValue > 100,
+      spo2Value != null && spo2Value < 95,
+      sleepVal != null && sleepVal < 7,
+    ].filter(Boolean).length,
+    hasData: hrValue != null || spo2Value != null || stepsVal != null,
+  };
+  const [avatar, setAvatar] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('healix_avatar') || '{}');
     } catch {
@@ -93,11 +93,11 @@ export const PatientDashboard = () => {
     }
     permissionsAPI.getMyRequests()
       .then((data) => setPermRequests(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .catch(() => { });
 
     googleFitAPI.week()
       .then((data) => setWeekData(data))
-      .catch(() => {});
+      .catch(() => { });
 
     // Fetch biomarker history for the last 7 days to compute weekly summary
     const weekAgo = new Date();
@@ -115,7 +115,7 @@ export const PatientDashboard = () => {
           avgSleep: sleepVals.length > 0 ? +(sleepVals.reduce((s, v) => s + v, 0) / sleepVals.length).toFixed(1) : null,
         });
       })
-      .catch(() => {});
+      .catch(() => { });
 
     appointmentsAPI.getMyAppointments({ limit: 5, status: "confirmed" })
       .then((data) => {
@@ -124,11 +124,11 @@ export const PatientDashboard = () => {
           if (upcoming) setNextAppt(upcoming);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     gamificationAPI.getMe()
       .then((data) => setGamification(data))
-      .catch(() => {});
+      .catch(() => { });
 
     try {
       const stored = JSON.parse(localStorage.getItem('healix_avatar') || '{}');
@@ -142,7 +142,7 @@ export const PatientDashboard = () => {
     setPermLoading((prev) => ({ ...prev, [permissionId]: true }));
     permissionsAPI.respond(permissionId, action)
       .then(() => setPermRequests((prev) => prev.filter((r) => r.id !== permissionId)))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setPermLoading((prev) => ({ ...prev, [permissionId]: false })));
   };
 
@@ -513,12 +513,12 @@ export const PatientDashboard = () => {
         </div>
 
         {/* Health Avatar */}
-          <div style={{
-            marginBottom: "48px",
-            animation: "fadeUp 0.8s ease 0.1s both",
-            position: "relative",
-            zIndex: 1,
-            }}>
+        <div style={{
+          marginBottom: "48px",
+          animation: "fadeUp 0.8s ease 0.1s both",
+          position: "relative",
+          zIndex: 1,
+        }}>
           <div style={{
             background: "var(--bg-3)",
             border: "1px solid var(--border-solid)",
@@ -528,30 +528,30 @@ export const PatientDashboard = () => {
             alignItems: "center",
             gap: "32px",
             flexWrap: "wrap",
-            }}>
-              <HealthAvatar
-  gender={avatar.gender || 'male'}
-  skinTone={avatar.skinTone || '#f7c9a5'}
-  hairColor={avatar.hairColor || '#2e2935'}
-  hairStyle={avatar.hairStyle || 'short'}
-  eyeColor={avatar.eyeColor || '#2880d8'}
-  healthStatus={healthStatus}
-  size={180}
-/>
-    
-              <div style={{ flex: 1, minWidth: "250px" }}>
-                <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 8px 0" }}>
-                  {t("yourHealthBuddy")}
-                  </h3>
-                
-                <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: "0 0 16px 0", lineHeight: "1.6" }}>
-                  {healthStatus.warnings === 0 && healthStatus.hasData && t("avatarHappy")}
-                  {healthStatus.warnings >= 3 && t("avatarWorried")}
-                  {healthStatus.warnings >= 1 && healthStatus.warnings < 3 && t("avatarConcerned")}
-                  {!healthStatus.hasData && t("avatarWaiting")}
-                 </p>
-      
-                <button
+          }}>
+            <HealthAvatar
+              gender={avatar.gender || 'male'}
+              skinTone={avatar.skinTone || '#f7c9a5'}
+              hairColor={avatar.hairColor || '#2e2935'}
+              hairStyle={avatar.hairStyle || 'short'}
+              eyeColor={avatar.eyeColor || '#2880d8'}
+              healthStatus={healthStatus}
+              size={180}
+            />
+
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <h3 style={{ color: "var(--text)", fontSize: "20px", fontWeight: "700", margin: "0 0 8px 0" }}>
+                {t("yourHealthBuddy")}
+              </h3>
+
+              <p style={{ color: "var(--text-subtle)", fontSize: "15px", margin: "0 0 16px 0", lineHeight: "1.6" }}>
+                {healthStatus.warnings === 0 && healthStatus.hasData && t("avatarHappy")}
+                {healthStatus.warnings >= 3 && t("avatarWorried")}
+                {healthStatus.warnings >= 1 && healthStatus.warnings < 3 && t("avatarConcerned")}
+                {!healthStatus.hasData && t("avatarWaiting")}
+              </p>
+
+              <button
                 onClick={() => navigate('/patient/settings')}
                 style={{
                   padding: "10px 20px",
@@ -564,12 +564,12 @@ export const PatientDashboard = () => {
                   cursor: "pointer",
                   fontFamily: "'DM Sans', sans-serif",
                 }}
-      >
-        {t("customizeAvatar")}
-      </button>
-    </div>
-  </div>
-</div>
+              >
+                {t("customizeAvatar")}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Permission Requests */}
         {permRequests.length > 0 && (
@@ -735,7 +735,7 @@ export const PatientDashboard = () => {
                               badges: [...prev.badges, ...res.new_badges],
                             }));
                             showXpToast(res.level_up ? `Level Up! You're now ${res.level_name}` : `+${res.xp_gained} XP`);
-                          } catch {}
+                          } catch { }
                         }}
                         style={{
                           padding: "8px 18px",
@@ -774,7 +774,7 @@ export const PatientDashboard = () => {
                   )}
                   {gamification.badges.length === 0 && (
                     <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>
-                      t("noBadgesYet")  
+                      t("noBadgesYet")
                     </span>
                   )}
                 </div>
@@ -1065,26 +1065,26 @@ export const PatientDashboard = () => {
 
       </div>
 
-        {/* XP Toast */}
-        {xpToast && (
-          <div style={{
-            position: "fixed",
-            bottom: "32px",
-            right: "32px",
-            background: "linear-gradient(135deg, #6366f1, #06b6d4)",
-            color: "#fff",
-            padding: "14px 24px",
-            borderRadius: "14px",
-            fontSize: "15px",
-            fontWeight: "700",
-            fontFamily: "'DM Sans', sans-serif",
-            boxShadow: "0 12px 40px rgba(99,102,241,0.4)",
-            zIndex: 9999,
-            animation: "fadeUp 0.4s ease both",
-          }}>
-            {xpToast}
-          </div>
-        )}
+      {/* XP Toast */}
+      {xpToast && (
+        <div style={{
+          position: "fixed",
+          bottom: "32px",
+          right: "32px",
+          background: "linear-gradient(135deg, #6366f1, #06b6d4)",
+          color: "#fff",
+          padding: "14px 24px",
+          borderRadius: "14px",
+          fontSize: "15px",
+          fontWeight: "700",
+          fontFamily: "'DM Sans', sans-serif",
+          boxShadow: "0 12px 40px rgba(99,102,241,0.4)",
+          zIndex: 9999,
+          animation: "fadeUp 0.4s ease both",
+        }}>
+          {xpToast}
+        </div>
+      )}
     </>
   );
 };

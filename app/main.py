@@ -47,19 +47,27 @@ async def lifespan(app: FastAPI):
     from app.utils.password import hash_password
     db = Database.get_db()
     existing_admin = await db.users.find_one({"email": settings.ADMIN_EMAIL})
+    from datetime import datetime
+    admin_doc = {
+        "email": settings.ADMIN_EMAIL,
+        "hashed_password": hash_password(settings.ADMIN_PASSWORD),
+        "first_name": "Admin",
+        "last_name": "Healix",
+        "role": "admin",
+        "status": "active",
+        "updated_at": datetime.utcnow(),
+    }
+
     if not existing_admin:
-        from datetime import datetime
-        await db.users.insert_one({
-            "email": settings.ADMIN_EMAIL,
-            "hashed_password": hash_password(settings.ADMIN_PASSWORD),
-            "first_name": "Admin",
-            "last_name": "Healix",
-            "role": "admin",
-            "status": "active",
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
-        })
+        admin_doc["created_at"] = datetime.utcnow()
+        await db.users.insert_one(admin_doc)
         logger.info("👤 Admin account seeded")
+    else:
+        await db.users.update_one(
+            {"email": settings.ADMIN_EMAIL},
+            {"$set": admin_doc},
+        )
+        logger.info("👤 Admin account synced from environment")
 
     yield  # App runs here (keeps running until shutdown)
     

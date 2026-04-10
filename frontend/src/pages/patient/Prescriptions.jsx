@@ -87,7 +87,7 @@ export const Prescriptions = () => {
       setLoading(true);
       fetchPrescriptions();
     } catch (err) {
-      showToast(err.message ||  t("failedAddMedication"));
+      showToast(err.message || t("failedAddMedication"));
     } finally {
       setAddSaving(false);
     }
@@ -119,7 +119,7 @@ export const Prescriptions = () => {
       type: "prescription",
     }).then(() => {
       localStorage.setItem(reminderKey, "1");
-    }).catch(() => {});
+    }).catch(() => { });
   }, [prescriptions, user]);
 
   const handleDownload = (rx) => {
@@ -233,7 +233,7 @@ export const Prescriptions = () => {
                 { key: "medication_name", label: t("medicationName"), placeholder: "e.g. Metformin", required: true },
                 { key: "dosage", label: t("dosage"), placeholder: t("eg500mg"), required: true },
                 { key: "frequency", label: t("frequency"), placeholder: t("egTwiceDaily"), required: true },
-                { key: "duration", label:  `${t("duration")} (${t("optional")})`, placeholder: t("eg3Months") },
+                { key: "duration", label: `${t("duration")} (${t("optional")})`, placeholder: t("eg3Months") },
                 { key: "notes", label: `${t("notes")} (${t("optional")})`, placeholder: t("anyAdditionalNotes") },
               ].map(({ key, label, placeholder, required }) => (
                 <div key={key} style={{ marginBottom: "16px" }}>
@@ -316,7 +316,7 @@ export const Prescriptions = () => {
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0 }}>
                       {/* Taken today toggle */}
                       <button className="rx-btn" onClick={() => toggleTaken(rx.id)}
-                        style={{ padding: "9px 18px", borderRadius: "8px", border: "none", background: taken ? "#10b981" : "var(--bg)", color: taken ? "#fff" : "var(--text-muted)", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap", border: taken ? "none" : "1px solid var(--border-solid)" }}>
+                        style={{ padding: "9px 18px", borderRadius: "8px", background: taken ? "#10b981" : "var(--bg)", color: taken ? "#fff" : "var(--text-muted)", fontWeight: "600", fontSize: "13px", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap", border: taken ? "none" : "1px solid var(--border-solid)" }}>
                         {taken ? "✓ " + t("taken") : t("markTaken")}
                       </button>
 

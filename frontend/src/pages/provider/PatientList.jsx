@@ -57,7 +57,7 @@ export const PatientList = () => {
           setPatients(mapped);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 

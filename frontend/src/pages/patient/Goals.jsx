@@ -99,7 +99,7 @@ const GoalCard = ({
         localStorage.setItem(streakDateKey, todayStr);
         // Award XP for goal achievement
         const xpAction = title.toLowerCase().includes("step") ? "step_goal" : "calorie_goal";
-        gamificationAPI.awardXP(xpAction).catch(() => {});
+        gamificationAPI.awardXP(xpAction).catch(() => { });
       }
     }
   }, [current, remaining]);
@@ -209,7 +209,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
       const next = Math.max(0, count + delta);
       setCount(next);
       localStorage.setItem(countKey, String(next));
-      if (next >= target) gamificationAPI.awardXP("water_goal").catch(() => {});
+      if (next >= target) gamificationAPI.awardXP("water_goal").catch(() => { });
     };
 
     // Check if goal achieved
@@ -328,7 +328,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
               onChange={(e) => {
                 setWake(e.target.value);
                 localStorage.setItem(wakeKey, e.target.value);
-                gamificationAPI.awardXP("sleep_log").catch(() => {});
+                gamificationAPI.awardXP("sleep_log").catch(() => { });
               }}
             />
           </div>
@@ -365,7 +365,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
       const next = Math.max(0, done + delta);
       setDone(next);
       localStorage.setItem(doneKey, String(next));
-      if (next >= target) gamificationAPI.awardXP("exercise_goal").catch(() => {});
+      if (next >= target) gamificationAPI.awardXP("exercise_goal").catch(() => { });
     };
 
     // Save new target
@@ -482,7 +482,7 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
     const pick = (val) => {
       setSelected(val);
       localStorage.setItem(moodKey, String(val));
-      gamificationAPI.awardXP("mood_log").catch(() => {});
+      gamificationAPI.awardXP("mood_log").catch(() => { });
     };
 
     const achieved = selected > 0;
@@ -515,16 +515,15 @@ const TrackableCard = ({ storageKey, title, icon, color }) => {
             <button
               key={m.value}
               onClick={() => pick(m.value)}
-              className={`mood-btn ${
-                selected === m.value ? "mood-selected" : ""
-              }`}
+              className={`mood-btn ${selected === m.value ? "mood-selected" : ""
+                }`}
               style={
                 selected === m.value
                   ? {
-                      borderColor: color,
-                      background: `${color}18`,
-                      color: "var(--text)",
-                    }
+                    borderColor: color,
+                    background: `${color}18`,
+                    color: "var(--text)",
+                  }
                   : {}
               }
             >
@@ -560,7 +559,7 @@ const QuickLogItem = ({ item }) => {
     localStorage.setItem(todayKey, next ? "1" : "0");
     if (next) {
       const idx = ["mindful", "stretch", "outside", "meds"].findIndex(k => item.key.includes(k)) + 1;
-      gamificationAPI.awardXP(`checklist_item_${idx}`).catch(() => {});
+      gamificationAPI.awardXP(`checklist_item_${idx}`).catch(() => { });
     }
   };
   return (
@@ -599,7 +598,7 @@ export const Goals = () => {
         if (d?.steps != null) setCurrentSteps(d.steps);
         if (d?.calories != null) setCurrentCalories(Math.round(d.calories));
       })
-      .catch(() => {});
+      .catch(() => { });
   };
 
   useEffect(() => {
